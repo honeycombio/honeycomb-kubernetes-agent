@@ -6,9 +6,6 @@ RUN ulimit -n 65536
 # Disable prompts from apt.
 ENV DEBIAN_FRONTEND noninteractive
 
-# Copy the Fluentd configuration file.
-COPY td-agent.conf /etc/td-agent/td-agent.conf
-
 RUN apt-get update && apt-get install -y curl
 
 RUN curl https://packages.treasuredata.com/GPG-KEY-td-agent | apt-key add -
@@ -26,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 RUN sed -i -e "s/USER=td-agent/USER=root/" -e "s/GROUP=td-agent/GROUP=root/" /etc/init.d/td-agent
 
 RUN td-agent-gem install --no-document fluent-plugin-kubernetes_metadata_filter -v 0.24.0
-RUN td-agent-gem install --no-document fluent-plugin-honeycomb -v 0.2.0
+RUN td-agent-gem install --no-document fluent-plugin-honeycomb -v 0.2.1
 
 
 # Remove docs and postgres references
@@ -39,6 +36,9 @@ RUN rm -rf /opt/td-agent/embedded/share/doc \
 RUN apt-get remove -y make g++ && apt-get autoremove -y && apt-get clean -y
 
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Copy the Fluentd configuration file.
+COPY td-agent.conf /etc/td-agent/td-agent.conf
 
 ENV LD_PRELOAD /opt/td-agent/embedded/lib/libjemalloc.so
 

@@ -34,9 +34,14 @@ spec:
         - name: varlibdockercontainers
           mountPath: /var/lib/docker/containers
           readOnly: true
+        - name: config
+          mountPath: /etc/td-agent/
         env:
         - name: HONEYCOMB_WRITEKEY
-          value: YOUR_WRITEKEY_HERE
+          valueFrom:
+            secretKeyRef:
+              name: honeycomb-writekey
+              key: key
         - name: HONEYCOMB_DATASET
           value: YOUR_DATASET_HERE
       terminationGracePeriodSeconds: 30
@@ -47,4 +52,11 @@ spec:
       - name: varlibdockercontainers
         hostPath:
           path: /var/lib/docker/containers
+      - name: config
+        configMap:
+          name: td-agent-config
+          items:
+            - key: td-agent.conf
+              path: td-agent.conf
+
 
