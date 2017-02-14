@@ -7,8 +7,7 @@ Honeycomb's Kubernetes agent helps you aggregate logs across your cluster.
 
 `fluentd-hny` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in the cluster.
 
-![Architecture diagram](/static/fluentd-hny.png)
-
+<img src="static/fluentd-hny.png" alt="architecture diagram" width="75%">
 
 ## Setup
 
