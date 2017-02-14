@@ -20,7 +20,7 @@
     kubectl create configmap td-agent-config --from-file=td-agent.conf
     ```
 
-3. If you wish, edit `fluent-hny-ds.yml` to set the `HONEYCOMB_DATASET` to the dataset name you want.
+3. If you wish, edit `fluent-hny-ds.yml` to set the `HONEYCOMB_DATASET` environment variable to the dataset name you want.
     Then create the logging DaemonSet:
     ```
     kubectl create -f ./fluentd-hny-ds.yml
