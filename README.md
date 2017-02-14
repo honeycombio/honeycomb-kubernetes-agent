@@ -1,22 +1,32 @@
-Configuration for Kubernetes cluster level logging to [Honeycomb](https://honeycomb.io).
+# Cluster-level Kubernetes Logging with Honeycomb
+
+Honeycomb's Kubernetes agent helps you aggregate logs across your cluster.
+
+
+## How it Works
+
+`fluentd-hny` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in the cluster.
+
+![Architecture diagram](/static/fluentd-hny.png)
+
 
 ## Setup
 
 1. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and store it as a Kubernetes secret:
-```
-kubectl create secret generic honeycomb-writekey --from-literal=key=$WRITEKEY
-```
+    ```
+    kubectl create secret generic honeycomb-writekey --from-literal=key=$WRITEKEY
+    ```
 
 2. Create a configMap with the `td-agent`configuration:
-```
-kubectl create configmap td-agent-config --from-file=td-agent.conf
-```
+    ```
+    kubectl create configmap td-agent-config --from-file=td-agent.conf
+    ```
 
 3. If you wish, edit `fluent-hny-ds.yml` to set the `HONEYCOMB_DATASET` to the dataset name you want.
-   Then create the logging DaemonSet:
-```
-kubectl create -f ./fluentd-hny-ds.yml
-```
+    Then create the logging DaemonSet:
+    ```
+    kubectl create -f ./fluentd-hny-ds.yml
+    ```
 
 You may want to further edit the `td-agent` configuration (`td-agent.conf`) or the `fluentd-hny` spec (`fluentd-hny-ds.yml`) to suit your specific needs.
 
