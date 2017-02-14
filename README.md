@@ -1,11 +1,10 @@
 # Cluster-level Kubernetes Logging with Honeycomb
 
-Honeycomb's Kubernetes agent helps you aggregate logs across your cluster.
-
+[Honeycomb's](https://honeycomb.io) Kubernetes agent aggregates logs across a Kubernetes cluster. Stop managing log storage in all your clusters and start tracking down real problems.
 
 ## How it Works
 
-`fluentd-hny` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in the cluster.
+`fluentd-hny` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in the cluster. By default, containers' stdout/stderr are written by the docker Daemon to the node filesystem. `fluentd-hny` reads these logs, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
 
 <img src="static/fluentd-hny.png" alt="architecture diagram" width="75%">
 
