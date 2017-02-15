@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: fluentd-hny
-        image: honeycombio/fluentd-honeycomb:1.6
+        image: honeycombio/fluentd-honeycomb:1.15
         command:
           - '/bin/sh'
           - '-c'
