@@ -4,7 +4,7 @@
 
 ## How it Works
 
-`fluentd-hny` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in the cluster. By default, containers' stdout/stderr are written by the docker Daemon to the node filesystem. `fluentd-hny` reads these logs, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
+`fluentd-hny` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in the cluster. By default, containers' stdout/stderr are written by the Docker daemon to the node filesystem. `fluentd-hny` reads these logs, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
 
 <img src="static/fluentd-hny.png" alt="architecture diagram" width="75%">
 
