@@ -4,29 +4,39 @@
 
 ## How it Works
 
-`fluentd-hny` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in the cluster. By default, containers' stdout/stderr are written by the Docker daemon to the node filesystem. `fluentd-hny` reads these logs, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
+`honeycomb-agent` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each pod in a cluster. By default, containers' stdout/stderr are written by the Docker daemon to the node filesystem. `honeycomb-agent` reads these logs, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
 
-<img src="static/fluentd-hny.png" alt="architecture diagram" width="75%">
+<img src="static/honeycomb-agent.png" alt="architecture diagram" width="75%">
 
-## Setup
+## Quickstart
 
 1. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and store it as a Kubernetes secret:
     ```
     kubectl create secret generic honeycomb-writekey --from-literal=key=$WRITEKEY
     ```
 
-2. Create a configMap with the `td-agent`configuration:
+2. If you want, edit `honeycomb-agent-ds.yml` and set the `HONEYCOMB_DATASET` environment variable to the dataset name you want (by default, data will go to a dataset named "kubernetes").
+
+3. Create the logging DaemonSet:
     ```
-    kubectl create configmap td-agent-config --from-file=td-agent.conf
+    kubectl create -f ./honeycomb-agent-ds.yml
     ```
 
-3. If you wish, edit `fluent-hny-ds.yml` to set the `HONEYCOMB_DATASET` environment variable to the dataset name you want.
-    Then create the logging DaemonSet:
+## Additional configuration
+The Honeycomb agent uses [fluentd](http://www.fluentd.org/) to aggregate and ship logs. You might want to modify its configuration to suit your needs: for example, to add custom parsing of specific logs, or to send different classes of logs to different datasets. To do that:
+
+1. Edit the configuration file `td-agent.conf` with your changes.
+
+2. Create a `ConfigMap` with your updated configuration file:
     ```
-    kubectl create -f ./fluentd-hny-ds.yml
+    kubectl create configmap honeycomb-agent-config --from-file=td-agent.conf
     ```
 
-You may want to further edit the `td-agent` configuration (`td-agent.conf`) or the `fluentd-hny` spec (`fluentd-hny-ds.yml`) to suit your specific needs.
+3. Create an updated logging DaemonSet that reads the ConfigMap:
+    ```
+    kubectl create -f ./honeycomb-agent-ds-custom.yml
+    ```
+
 
 ## Development Notes
 

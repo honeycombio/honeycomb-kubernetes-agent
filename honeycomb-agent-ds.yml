@@ -1,0 +1,54 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: honeycomb-agent-v1.1
+  namespace: kube-system
+  labels:
+    k8s-app: honeycomb-agent
+    kubernetes.io/cluster-service: "true"
+    version: v1.1
+spec:
+  template:
+    metadata:
+      labels:
+        k8s-app: honeycomb-agent
+        kubernetes.io/cluster-service: "true"
+        version: v1.1
+    spec:
+      containers:
+      - name: honeycomb-agent
+        image: honeycombio/fluentd-honeycomb:1.15
+        command:
+          - '/bin/sh'
+          - '-c'
+          - '/usr/sbin/td-agent 2>&1 >> /var/log/fluentd.log'
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        env:
+        - name: HONEYCOMB_WRITEKEY
+          valueFrom:
+            secretKeyRef:
+              name: honeycomb-writekey
+              key: key
+        - name: HONEYCOMB_DATASET
+          value: kubernetes
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+
+

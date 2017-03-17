@@ -1,22 +1,22 @@
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: fluentd-hny-v1.1
+  name: honeycomb-agent-v1.1
   namespace: kube-system
   labels:
-    k8s-app: fluentd-hny
+    k8s-app: honeycomb-agent
     kubernetes.io/cluster-service: "true"
     version: v1.1
 spec:
   template:
     metadata:
       labels:
-        k8s-app: fluentd-hny
+        k8s-app: honeycomb-agent
         kubernetes.io/cluster-service: "true"
         version: v1.1
     spec:
       containers:
-      - name: fluentd-hny
+      - name: honeycomb-agent
         image: honeycombio/fluentd-honeycomb:1.15
         command:
           - '/bin/sh'
@@ -54,7 +54,7 @@ spec:
           path: /var/lib/docker/containers
       - name: config
         configMap:
-          name: td-agent-config
+          name: honeycomb-agent-config
           items:
             - key: td-agent.conf
               path: td-agent.conf
