@@ -4,6 +4,8 @@
 
 [Honeycomb's](https://honeycomb.io) Kubernetes agent aggregates logs across a Kubernetes cluster. Stop managing log storage in all your clusters and start tracking down real problems.
 
+To learn more, check out [our docs](https://honeycomb.io/docs), and our [Kubernetes-specific docs](https://honeycomb.io/docs/connect/kubernetes/).
+
 ## How it Works
 
 `honeycomb-agent` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each node in a cluster. By default, containers' stdout/stderr are written by the Docker daemon to the node filesystem. `honeycomb-agent` reads these logs, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
