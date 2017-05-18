@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 RUN sed -i -e "s/USER=td-agent/USER=root/" -e "s/GROUP=td-agent/GROUP=root/" /etc/init.d/td-agent
 
 RUN td-agent-gem install --no-document fluent-plugin-kubernetes_metadata_filter -v 0.24.0
-RUN td-agent-gem install --no-document fluent-plugin-honeycomb -v 0.4.0
+RUN td-agent-gem install --no-document fluent-plugin-honeycomb -v 0.4.1
 
 
 # Remove docs and postgres references

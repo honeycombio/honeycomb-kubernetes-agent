@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: honeycomb-agent
-        image: honeycombio/fluentd-honeycomb:1.21
+        image: honeycombio/fluentd-honeycomb:1.23
         command:
           - '/bin/sh'
           - '-c'
