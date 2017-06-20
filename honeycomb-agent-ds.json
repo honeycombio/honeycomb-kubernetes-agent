@@ -1,0 +1,87 @@
+{
+   "apiVersion": "extensions/v1beta1",
+   "kind": "DaemonSet",
+   "metadata": {
+      "labels": {
+         "k8s-app": "honeycomb-agent",
+         "kubernetes.io/cluster-service": "true",
+         "version": "v1.1"
+      },
+      "name": "honeycomb-agent-v1.1",
+      "namespace": "kube-system"
+   },
+   "spec": {
+      "template": {
+         "metadata": {
+            "labels": {
+               "k8s-app": "honeycomb-agent",
+               "kubernetes.io/cluster-service": "true",
+               "version": "v1.1"
+            }
+         },
+         "spec": {
+            "containers": [
+               {
+                  "command": [
+                     "/bin/sh",
+                     "-c",
+                     "/usr/sbin/td-agent 2>&1 >> /var/log/fluentd.log"
+                  ],
+                  "env": [
+                     {
+                        "name": "HONEYCOMB_WRITEKEY",
+                        "valueFrom": {
+                           "secretKeyRef": {
+                              "key": "key",
+                              "name": "honeycomb-writekey"
+                           }
+                        }
+                     },
+                     {
+                        "name": "HONEYCOMB_DATASET",
+                        "value": "kubernetes"
+                     }
+                  ],
+                  "image": "honeycombio/fluentd-honeycomb:1.23",
+                  "name": "honeycomb-agent",
+                  "resources": {
+                     "limits": {
+                        "memory": "200Mi"
+                     },
+                     "requests": {
+                        "cpu": "100m",
+                        "memory": "200Mi"
+                     }
+                  },
+                  "volumeMounts": [
+                     {
+                        "mountPath": "/var/log",
+                        "name": "varlog"
+                     },
+                     {
+                        "mountPath": "/var/lib/docker/containers",
+                        "name": "varlibdockercontainers",
+                        "readOnly": true
+                     }
+                  ]
+               }
+            ],
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+               {
+                  "hostPath": {
+                     "path": "/var/log"
+                  },
+                  "name": "varlog"
+               },
+               {
+                  "hostPath": {
+                     "path": "/var/lib/docker/containers"
+                  },
+                  "name": "varlibdockercontainers"
+               }
+            ]
+         }
+      }
+   }
+}
