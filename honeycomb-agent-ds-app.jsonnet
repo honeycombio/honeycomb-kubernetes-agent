@@ -1,7 +1,7 @@
-local honeycomb = import "honeycomb-agent-ds.json";
+local honeycomb = import "honeycomb-agent-ds-base.libsonnet";
 local custom = import "honeycomb-agent-ds-custom.libsonnet";
 
-// Import DaemonSet JSON, append volume to it. The output of this
-// equivalent to `honeycomb-agent-ds-custom.json`.
-honeycomb +
+// Import Honeycomb agent DaemonSet, append volume to it. The output
+// of this equivalent to `honeycomb-agent-ds-custom.json`.
+honeycomb.base("honeycomb-agent-v1.1", "kube-system") +
 custom.daemonSet.configVolumeMixin("config")
