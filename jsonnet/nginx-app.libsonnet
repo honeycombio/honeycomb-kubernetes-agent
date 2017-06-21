@@ -6,6 +6,39 @@ local containerPort = container.portsType;
 local deployment = k.extensions.v1beta1.deployment;
 local service = k.core.v1.service;
 local servicePort = k.core.v1.service.mixin.spec.portsType;
+local volume = deployment.mixin.spec.template.spec.volumesType;
+local volumeMount = container.volumeMountsType;
+
+// ----------------------------------------------------------------------------
+// Mixins.
+// ----------------------------------------------------------------------------
+
+local honeytail = {
+  deployment:: {
+    // configVolumeMixin takes a volume name and produces a mixin
+    // that will append the Honeycomb agent `ConfigMap` to a
+    // `DaemonSet` (as, e.g., the Honeycomb agent is), and then mount
+    // that `ConfigMap` in the subset of containers in the
+    // `DaemonSet` specified by the predicate `containerSelector`.
+    loggingVolumeMixin(volName, mountPath, containerSelector=function(c) true)::
+      local loggingVol = volume.name(volName) + {emptyDir: {}};
+      local loggingMount = volumeMount.new(volName, mountPath);
+
+      // Add volume to DaemonSet.
+      deployment.mixin.spec.template.spec.volumes([loggingVol]) +
+
+      // Add volume mount to every container in the DaemonSet.
+      deployment.mapContainers(
+        function (c)
+          if containerSelector(c)
+          then c + container.volumeMounts([loggingMount])
+          else c)
+  }
+};
+
+// ----------------------------------------------------------------------------
+// App.
+// ----------------------------------------------------------------------------
 
 local targetPort = 80;
 
@@ -27,6 +60,7 @@ local nginxService =
     service.mixin.metadata.labels(podLabels);
 
 k.core.v1.list.new([
-  nginxDeployment,
+  nginxDeployment +
+    honeytail.deployment.loggingVolumeMixin("logging-vol", "/logs"),
   nginxService
 ])

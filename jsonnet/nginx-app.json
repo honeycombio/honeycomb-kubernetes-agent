@@ -24,7 +24,20 @@
                            {
                               "containerPort": 80
                            }
+                        ],
+                        "volumeMounts": [
+                           {
+                              "mountPath": "/logs",
+                              "name": "logging-vol",
+                              "readOnly": false
+                           }
                         ]
+                     }
+                  ],
+                  "volumes": [
+                     {
+                        "emptyDir": { },
+                        "name": "logging-vol"
                      }
                   ]
                }
