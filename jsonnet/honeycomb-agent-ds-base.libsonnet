@@ -19,12 +19,7 @@ local honeycombLabels = {
 };
 
 local dsContainer =
-  container.new("honeycomb-agent", "honeycombio/fluentd-honeycomb:1.23") +
-  container.command([
-    "/bin/sh",
-    "-c",
-    "/usr/sbin/td-agent 2>&1 >> /var/log/fluentd.log",
-  ]) +
+  container.new("honeycomb-agent", "honeycombio/honeycomb-kubernetes-agent:1.1") +
   container.mixin.resources.limits({memory: "200Mi"}) +
   container.mixin.resources.requests({memory: "200Mi", cpu: "100m"}) +
   container.env([
