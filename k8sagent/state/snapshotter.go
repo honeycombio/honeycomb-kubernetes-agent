@@ -3,10 +3,12 @@ package state
 import (
 	"fmt"
 
-	"github.com/honeycomb/honeycomb-kubernetes-agent/k8sagent/api"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
+
+	api_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/rest"
 )
 
 // ----------------------------------------------------------------------------
@@ -25,7 +27,7 @@ type Snapshotter interface {
 // ----------------------------------------------------------------------------
 
 type snapshotterImpl struct {
-	config *api.Config
+	config *config.Config
 	client *kubernetes.Clientset
 	host   *v1.Node
 	record Record
@@ -33,10 +35,10 @@ type snapshotterImpl struct {
 
 // NewSnapshotter creates a new state snapshotter.
 func NewSnapshotter(
-	config *api.Config, record Record, kubeconfig string, name string,
+	config *config.Config, record Record, name string,
 ) (Snapshotter, error) {
 	// Get clientset to query API server.
-	kubeClientConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	kubeClientConfig, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +50,7 @@ func NewSnapshotter(
 
 	// Try to resolve local node with `name`.
 	// TODO: Consider using `FieldSelector` to select this node.
-	nodes, err := clientset.Nodes().List(v1.ListOptions{})
+	nodes, err := clientset.Nodes().List(api_v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -73,13 +75,14 @@ func NewSnapshotter(
 	}, nil
 }
 
-// Labels queries the API server for list of pods that have some set of labels.
+// Snapshot queries the API server for list of pods that have some set of labels.
 func (s *snapshotterImpl) Snapshot() error {
-	for _, parser := range s.config.Parsers {
+	for index, parser := range s.config.Parsers {
 		// NOTE: The `""` here denotes that we should search all
 		// namespaces for pods.
+		fmt.Println("label selector", parser.LabelSelector)
 		pods, err := s.client.Pods("").List(
-			v1.ListOptions{
+			api_v1.ListOptions{
 				LabelSelector: parser.LabelSelector,
 				FieldSelector: fmt.Sprintf("spec.nodeName=%s", s.host.Name),
 			})
@@ -87,7 +90,7 @@ func (s *snapshotterImpl) Snapshot() error {
 			return err
 		}
 
-		s.record.Replace(parser.Dataset, pods)
+		s.record.Replace(index, pods)
 	}
 
 	return nil
