@@ -1,4 +1,4 @@
-local k = import "ksonnet.beta.2/k.libsonnet";
+local k = import "/Users/alex/src/go/src/github.com/ksonnet/ksonnet-lib/ksonnet.beta.2/k.libsonnet";
 
 // Destructuring imports.
 local ds = k.extensions.v1beta1.daemonSet;
@@ -18,10 +18,6 @@ local honeycombLabels = {
   version: "v1.1",
 };
 
-local varlogVol = volume.fromHostPath("varlog", "/var/log");
-local varlibVol =
-  volume.fromHostPath("varlibdockercontainers", "/var/lib/docker/containers");
-
 local dsContainer =
   container.new("honeycomb-agent", "honeycombio/fluentd-honeycomb:1.23") +
   container.command([
@@ -31,10 +27,6 @@ local dsContainer =
   ]) +
   container.mixin.resources.limits({memory: "200Mi"}) +
   container.mixin.resources.requests({memory: "200Mi", cpu: "100m"}) +
-  container.volumeMounts([
-    volumeMount.new(varlogVol.name, varlogVol.hostPath.path),
-    volumeMount.new(varlibVol.name, varlibVol.hostPath.path, true)
-  ]) +
   container.env([
     envVar.fromSecretRef("HONEYCOMB_WRITEKEY", "honeycomb-writekey", "key"),
     envVar.new("HONEYCOMB_DATASET", "kubernetes"),
@@ -56,6 +48,5 @@ local dsContainer =
     // Template.
     ds.mixin.spec.template.metadata.labels(honeycombLabels) +
     ds.mixin.spec.template.spec.containers(dsContainer) +
-    ds.mixin.spec.template.spec.terminationGracePeriodSeconds(30) +
-    ds.mixin.spec.template.spec.volumes([varlogVol, varlibVol])
+    ds.mixin.spec.template.spec.terminationGracePeriodSeconds(30)
 }

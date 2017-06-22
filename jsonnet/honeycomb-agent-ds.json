@@ -56,7 +56,8 @@
                   "volumeMounts": [
                      {
                         "mountPath": "/var/log",
-                        "name": "varlog"
+                        "name": "varlog",
+                        "readOnly": false
                      },
                      {
                         "mountPath": "/var/lib/docker/containers",
