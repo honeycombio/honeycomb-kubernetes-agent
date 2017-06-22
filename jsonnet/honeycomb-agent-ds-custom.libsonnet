@@ -32,6 +32,36 @@ local volumeMount = container.volumeMountsType;
         function (c)
           if containerSelector(c)
           then c + container.volumeMounts([configMount])
-          else c)
+          else c),
+
+    // addhostMountedPodLogs takes a two volume names and produces a
+    // mixin that will mount the Kubernetes pod logs into a set of
+    // containers specified by `containerSelector`.
+    addHostMountedPodLogs(
+      varlogVolName, podLogVolName, containerSelector=function(c) true
+    )::
+      // Pod logs are located on the host at
+      // `/var/lib/docker/containers`. Define volumes and mounts for
+      // these paths, so the Honeytailer can access them.
+      local varlogVol = volume.fromHostPath(varlogVolName, "/var/log");
+      local varlogMount =
+        volumeMount.new(varlogVol.name, varlogVol.hostPath.path);
+      local podLogsVol =
+        volume.fromHostPath(
+          podLogVolName,
+          "/var/lib/docker/containers");
+      local podLogMount =
+        volumeMount.new(podLogsVol.name, podLogsVol.hostPath.path, true);
+
+      // Add volume to DaemonSet, and attach mounts to every
+      // container for which `containerSelector` is true.
+      ds.mixin.spec.template.spec.volumes([varlogVol, podLogsVol]) +
+
+      // Add volume mount to every container in the DaemonSet.
+      ds.mapContainers(
+        function (c)
+          if containerSelector(c)
+          then c + container.volumeMounts([varlogMount, podLogMount])
+          else c),
   }
 }
