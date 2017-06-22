@@ -26,12 +26,12 @@ type snapshotterImpl struct {
 	client        *kubernetes.Clientset
 	name          string
 	labelSelector string
-	podList       *v1.PodList
+	record        Record
 }
 
 // NewSnapshotter creates a new state snapshotter.
 func NewSnapshotter(
-	kubeconfig string, name string, labelSelector string,
+	record Record, kubeconfig string, name string, labelSelector string,
 ) (Snapshotter, error) {
 	kubeClientConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -47,6 +47,7 @@ func NewSnapshotter(
 		client:        clientset,
 		name:          name,
 		labelSelector: labelSelector,
+		record:        record,
 	}, nil
 }
 
@@ -66,11 +67,7 @@ func (s *snapshotterImpl) Snapshot() error {
 			if err != nil {
 				return err
 			}
-			s.podList = pods
-
-			for _, pod := range pods.Items {
-				fmt.Println(pod.Name)
-			}
+			s.record.Replace(pods)
 
 			return nil
 		}
