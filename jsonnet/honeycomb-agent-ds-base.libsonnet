@@ -25,6 +25,7 @@ local dsContainer =
   container.env([
     envVar.fromSecretRef("HONEYCOMB_WRITEKEY", "honeycomb-writekey", "key"),
     envVar.new("HONEYCOMB_DATASET", "kubernetes"),
+    envVar.fromFieldPath("NODE_NAME", "spec.nodeName")
   ]);
 
 // ----------------------------------------------------------------------------
