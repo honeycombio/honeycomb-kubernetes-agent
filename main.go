@@ -35,27 +35,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	metadataProcessor := &KubernetesMetadataProcessor{}
-
 	podRecord := getPodRecord(config)
 
 	for index, parserConfig := range config.Parsers {
 		pods, _ := podRecord.Pods(index)
-		paths := getPodPaths(pods)
-		fmt.Println("PATHS", index, paths)
-		for _, path := range paths {
-			handler := &EventsHandler{
-				config: parserConfig,
-				parser: &NoOpParser{},
+		for _, pod := range pods.Items {
+			for _, container := range pod.Spec.Containers {
+				path := getPodPath(pod, container)
+				handler := &EventsHandler{
+					config: parserConfig,
+					parser: &NoOpParser{},
+				}
+
+				metadataProcessor := &KubernetesMetadataProcessor{
+					podRecord: podRecord,
+					pod:       pod,
+					container: container,
+				}
+				handler.AddPostProcessor(metadataProcessor)
+				handler.Init()
+
+				// TODO should clean up channels as files go away
+				out := make(chan string, 1000)
+
+				tailer.TailFile(path, out)
+				go handler.Handle(out)
 			}
-			handler.AddPostProcessor(metadataProcessor)
-			handler.Init()
-
-			// TODO should clean up channels as files go away
-			out := make(chan string, 1000)
-
-			tailer.TailFile(path, out)
-			go handler.Handle(out)
 		}
 	}
 	fmt.Println("running")
@@ -84,18 +89,8 @@ func getPodRecord(config *config.Config) state.Record {
 	return record
 }
 
-func getPodPaths(pods *apiv1.PodList) []string {
-	paths := make([]string, 0)
-	for _, pod := range pods.Items {
-		for _, container := range pod.Spec.Containers {
-			podUID := string(pod.UID)
-			containerName := container.Name
-			// TODO should be smarter about this
-			path := fmt.Sprintf("/var/log/pods/%s/%s_0.log", podUID, containerName)
-			paths = append(paths, path)
-		}
-	}
-	return paths
+func getPodPath(pod apiv1.Pod, container apiv1.Container) string {
+	return fmt.Sprintf("/var/log/pods/%s/%s_0.log", string(pod.UID), container.Name)
 }
 
 type EventsHandler struct {
@@ -151,50 +146,30 @@ type Processor interface {
 }
 
 type KubernetesMetadataProcessor struct {
-	namespace string
+	podRecord   state.Record
+	pod         apiv1.Pod
+	container   apiv1.Container
+	podMetadata *PodMetadata
 }
 
 func (k *KubernetesMetadataProcessor) Init() error {
-	//config, err := rest.InClusterConfig()
-	//if err != nil {
-	//	return err
-	//}
-
-	//clientset, err := kubernetes.NewForConfig(config)
-	//if err != nil {
-	//	return err
-	//}
-
-	//go func() {
-	//	for {
-	//		pods, err := clientset.CoreV1().Pods(k.namespace).List(metav1.ListOptions{})
-	//		if err != nil {
-	//			return
-	//		}
-	//		fmt.Println("Got pod metadata", pods)
-	//		time.Sleep(1)
-	//	}
-	//}()
+	// TODO we should update these at runtime
+	k.podMetadata = &PodMetadata{
+		PodUID:  string(k.pod.UID),
+		PodName: k.pod.Name,
+		Labels:  k.pod.Labels,
+	}
 	return nil
 }
 
 type PodMetadata struct {
-	PodID   string
+	PodUID  string
 	PodName string
 	Labels  map[string]string
 }
 
-func (k *KubernetesMetadataProcessor) parsePodData(pod apiv1.Pod) *PodMetadata {
-	return &PodMetadata{
-		PodID:   string(pod.UID),
-		PodName: pod.Name,
-		Labels:  pod.Labels,
-	}
-}
-
 func (k *KubernetesMetadataProcessor) Process(data map[string]interface{}) {
-	// TODO actually map log line->pod metadata here, will need to plumb the
-	// pod UID through to here, keep a map podUID->metadata
+	data["kubernetes"] = k.podMetadata
 }
 
 // Just parses the log line as JSON

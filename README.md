@@ -26,11 +26,13 @@ To learn more, check out the [Honeycomb general quickstart](https://honeycomb.io
 
 ## Production-Ready Use
 
+### Service-specific parsing
+
 It's best if all of your containers output structured JSON logs. But that's not
 always realistic. In particular, you're likely to operate third-party services,
 such as proxies or databases, that don't log JSON.
 
-In order to get useful data from these services, you can use Kubernetes [label
+In order to get usefully structured data from these services, you can use Kubernetes [label
 selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
 to describe how to parse logs for specific services.
 
@@ -42,8 +44,6 @@ parsers:
 - labelSelector: "app=nginx"
   parser: nginx
 ```
-
-
 ### Post-Processing Events
 
 You might want to do additional munging of events before sending them to
