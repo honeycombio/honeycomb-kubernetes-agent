@@ -8,7 +8,7 @@ To learn more, check out the [Honeycomb general quickstart](https://honeycomb.io
 
 ## How it Works
 
-`honeycomb-agent` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each node in a cluster. By default, containers' stdout/stderr are written by the Docker daemon to the node filesystem. `honeycomb-agent` reads and parses these logs, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
+`honeycomb-agent` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each node in a cluster. It reads container log files from the node's filesystme, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
 
 <img src="static/honeycomb-agent.png" alt="architecture diagram" width="75%">
 
