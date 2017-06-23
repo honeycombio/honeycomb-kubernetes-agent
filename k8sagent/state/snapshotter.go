@@ -3,8 +3,6 @@ package state
 import (
 	"fmt"
 
-	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
-
 	api_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -27,15 +25,15 @@ type Snapshotter interface {
 // ----------------------------------------------------------------------------
 
 type snapshotterImpl struct {
-	config *config.Config
-	client *kubernetes.Clientset
-	host   *v1.Node
-	record Record
+	labelSelectors []string
+	client         *kubernetes.Clientset
+	host           *v1.Node
+	record         Record
 }
 
 // NewSnapshotter creates a new state snapshotter.
-func NewSnapshotter(
-	config *config.Config, record Record, name string,
+func NewSnapshotter(labelSelectors []string,
+	record Record, name string,
 ) (Snapshotter, error) {
 	// Get clientset to query API server.
 	kubeClientConfig, err := rest.InClusterConfig()
@@ -68,29 +66,28 @@ func NewSnapshotter(
 
 	// Success.
 	return &snapshotterImpl{
-		config: config,
-		client: clientset,
-		host:   host,
-		record: record,
+		labelSelectors: labelSelectors,
+		client:         clientset,
+		host:           host,
+		record:         record,
 	}, nil
 }
 
 // Snapshot queries the API server for list of pods that have some set of labels.
 func (s *snapshotterImpl) Snapshot() error {
-	for index, parser := range s.config.Parsers {
+	for _, labelSelector := range s.labelSelectors {
 		// NOTE: The `""` here denotes that we should search all
 		// namespaces for pods.
-		fmt.Println("label selector", parser.LabelSelector)
 		pods, err := s.client.Pods("").List(
 			api_v1.ListOptions{
-				LabelSelector: parser.LabelSelector,
+				LabelSelector: labelSelector,
 				FieldSelector: fmt.Sprintf("spec.nodeName=%s", s.host.Name),
 			})
 		if err != nil {
 			return err
 		}
 
-		s.record.Replace(index, pods)
+		s.record.Replace(labelSelector, pods)
 	}
 
 	return nil

@@ -19,7 +19,7 @@ To learn more, check out the [Honeycomb general quickstart](https://honeycomb.io
     kubectl create secret generic honeycomb-writekey --from-literal=key=$WRITEKEY
     ```
 
-2. Create the logging DaemonSet:
+2. Create the agent DaemonSet:
     ```
     kubectl create -f ./honeycomb-agent-ds.yml
     ```

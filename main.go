@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/Sirupsen/logrus"
@@ -35,14 +34,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	podRecord := getPodRecord(config)
+	podRecord, err := getPodRecord(config)
 
-	for index, parserConfig := range config.Parsers {
-		pods, _ := podRecord.Pods(index)
+	if err != nil {
+		fmt.Printf("Error fetching pod list:\n\t%v\n", err)
+		os.Exit(1)
+	}
+
+	for _, parserConfig := range config.Parsers {
+		pods, _ := podRecord.Pods(parserConfig.LabelSelector)
 		for _, pod := range pods.Items {
 			for _, container := range pod.Spec.Containers {
 				path := getPodPath(pod, container)
-				handler := &EventsHandler{
+				handler := &JSONLogHandler{
 					config: parserConfig,
 					parser: &NoOpParser{},
 				}
@@ -55,11 +59,8 @@ func main() {
 				handler.AddPostProcessor(metadataProcessor)
 				handler.Init()
 
-				// TODO should clean up channels as files go away
-				out := make(chan string, 1000)
-
-				tailer.TailFile(path, out)
-				go handler.Handle(out)
+				tailer := tailer.NewTailer(path, handler)
+				go tailer.Run()
 			}
 		}
 	}
@@ -68,71 +69,82 @@ func main() {
 	select {}
 }
 
-func getPodRecord(config *config.Config) state.Record {
+func getPodRecord(config *config.Config) (state.Record, error) {
 	// Get name of node this daemon is running on. This is usually
 	// passed in via `fieldPath` from Kubernetes.
 	nodeName := os.Getenv("NODE_NAME")
 
-	record := state.NewRecord(len(config.Parsers))
+	record := state.NewRecord()
 
 	// TODO: Find local name programmatically, get file from ConfigMap
 	// or command args.
-	snap, err := state.NewSnapshotter(config, record, nodeName)
+	selectors := make([]string, len(config.Parsers))
+	for i, p := range config.Parsers {
+		selectors[i] = p.LabelSelector
+	}
+	snap, err := state.NewSnapshotter(selectors, record, nodeName)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	if err := snap.Snapshot(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return record
+	return record, nil
 }
 
 func getPodPath(pod apiv1.Pod, container apiv1.Container) string {
 	return fmt.Sprintf("/var/log/pods/%s/%s_0.log", string(pod.UID), container.Name)
 }
 
-type EventsHandler struct {
+type JSONLogHandler struct {
 	config         *config.ParserConfig
 	parser         Parser
 	postprocessors []Processor
 	builder        *libhoney.Builder
 }
 
-func (e *EventsHandler) Init() {
-	e.builder = libhoney.NewBuilder()
-	e.builder.Dataset = e.config.Dataset
-	e.parser.Init()
-	for _, postprocessor := range e.postprocessors {
+func (h *JSONLogHandler) Init() {
+	h.builder = libhoney.NewBuilder()
+	h.builder.Dataset = h.config.Dataset
+	h.parser.Init()
+	for _, postprocessor := range h.postprocessors {
 		postprocessor.Init()
 	}
 }
 
-func (e *EventsHandler) Handle(lines chan string) {
+type jsonLogLine struct {
+	Log    string
+	Stream string
+	Time   string
+}
+
+func (h *JSONLogHandler) Handle(rawLines <-chan string) {
 	// no multiline parsing yet
-	for {
-		select {
-		case line, ok := <-lines:
-			if !ok {
-				return
-			}
-			parsed, err := e.parser.Parse(line)
-			logrus.Debugln("parsed line", parsed, err)
-			if err != nil {
-				continue
-			}
-			for _, p := range e.postprocessors {
-				p.Process(parsed)
-			}
-			fmt.Println("Sending line", parsed)
-			e.builder.SendNow(parsed)
+	for rawLine := range rawLines {
+		line := &jsonLogLine{}
+		err := json.Unmarshal([]byte(rawLine), line)
+		if err != nil {
+			logrus.WithError(err).Warnln("Error parsing JSON line")
+			continue
 		}
+
+		parsed, err := h.parser.Parse(line.Log)
+		logrus.Debugln("parsed line", parsed, err)
+		if err != nil {
+			continue
+		}
+		for _, p := range h.postprocessors {
+			p.Process(parsed)
+		}
+		fmt.Println("Sending line", parsed)
+		h.builder.SendNow(parsed)
 	}
 }
 
-func (e *EventsHandler) AddPostProcessor(p Processor) {
-	e.postprocessors = append(e.postprocessors, p)
+func (h *JSONLogHandler) AddPostProcessor(p Processor) {
+	h.postprocessors = append(h.postprocessors, p)
 }
 
 type Parser interface {
@@ -146,37 +158,34 @@ type Processor interface {
 }
 
 type KubernetesMetadataProcessor struct {
-	podRecord   state.Record
-	pod         apiv1.Pod
-	container   apiv1.Container
-	podMetadata *PodMetadata
+	podRecord state.Record
+	pod       apiv1.Pod
+	container apiv1.Container
 }
 
 func (k *KubernetesMetadataProcessor) Init() error {
-	// TODO we should update these at runtime
-	k.podMetadata = &PodMetadata{
-		PodUID:  string(k.pod.UID),
-		PodName: k.pod.Name,
-		Labels:  k.pod.Labels,
-	}
 	return nil
 }
 
-type PodMetadata struct {
-	PodUID  string
-	PodName string
-	Labels  map[string]string
-}
-
 func (k *KubernetesMetadataProcessor) Process(data map[string]interface{}) {
-	data["kubernetes"] = k.podMetadata
+	data["kubernetes.pod"] = k.pod
+	data["kubernetes.container"] = k.container
 }
 
-// Just parses the log line as JSON
+// Doesn't do any parsing
 type NoOpParser struct{}
 
-func (n *NoOpParser) Init() error { return nil }
-func (n *NoOpParser) Parse(line string) (map[string]interface{}, error) {
+func (p *NoOpParser) Init() error { return nil }
+func (p *NoOpParser) Parse(line string) (map[string]interface{}, error) {
+	return map[string]interface{}{"log": line}, nil
+}
+
+// Parses line as JSON
+type JSONParser struct{}
+
+func (p *JSONParser) Init() error { return nil }
+
+func (p *JSONParser) Parse(line string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	err := json.Unmarshal([]byte(line), &data)
 	if err != nil {

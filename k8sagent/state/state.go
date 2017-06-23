@@ -7,8 +7,8 @@ import "k8s.io/client-go/pkg/api/v1"
 // ----------------------------------------------------------------------------
 
 type Record interface {
-	Replace(index int, pl *v1.PodList)
-	Pods(index int) (*v1.PodList, bool)
+	Replace(string, *v1.PodList)
+	Pods(string) (*v1.PodList, bool)
 }
 
 // ----------------------------------------------------------------------------
@@ -16,25 +16,21 @@ type Record interface {
 // ----------------------------------------------------------------------------
 
 type recordImpl struct {
-	matchingPods []*v1.PodList
+	matchingPods map[string]*v1.PodList
 }
 
-func NewRecord(length int) *recordImpl {
+func NewRecord() *recordImpl {
 	return &recordImpl{
-		matchingPods: make([]*v1.PodList, length),
+		matchingPods: make(map[string]*v1.PodList),
 	}
 }
 
-func (r *recordImpl) Replace(index int, pl *v1.PodList) {
+func (r *recordImpl) Replace(labelSelector string, pl *v1.PodList) {
 	// TODO: Lock me.
-	r.matchingPods[index] = pl
+	r.matchingPods[labelSelector] = pl
 }
 
-func (r *recordImpl) Pods(index int) (*v1.PodList, bool) {
-	// TODO: Lock me.
-	if index < 0 || index >= len(r.matchingPods) {
-		return nil, false
-	}
-	pl := r.matchingPods[index]
-	return pl, true
+func (r *recordImpl) Pods(labelSelector string) (*v1.PodList, bool) {
+	pl, ok := r.matchingPods[labelSelector]
+	return pl, ok
 }
