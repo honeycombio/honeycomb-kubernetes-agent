@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	APIHost  string `yaml:"apiHost"`
-	WriteKey string `yaml:"writekey"`
-	Parsers  []*ParserConfig
+	APIHost   string `yaml:"apiHost"`
+	WriteKey  string `yaml:"writekey"`
+	Parsers   []*ParserConfig
+	Verbosity string
 }
 
 type ParserConfig struct {
@@ -18,6 +19,7 @@ type ParserConfig struct {
 	SampleRate    int `yaml:"sampleRate"`
 	Namespace     string
 	LabelSelector string `yaml:"labelSelector"`
+	ContainerName string `yaml:"containerName"`
 }
 
 func ReadFromFile(filePath string) (*Config, error) {

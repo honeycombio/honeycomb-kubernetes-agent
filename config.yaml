@@ -10,3 +10,5 @@ parsers:
 - dataset: mysql
   labelSelector: "app=mysql"
   parser: mysql
+
+verbosity: debug
