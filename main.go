@@ -71,7 +71,20 @@ func main() {
 	}
 	nodeSelector := fmt.Sprintf("spec.nodeName=%s", nodeName)
 
+	go readResponses()
+
 	for _, watcherConfig := range config.Watchers {
+		parserFactory, err := parsers.NewParserFactory(watcherConfig.Parser, nil) // TODO allow options
+		if err != nil {
+			fmt.Printf("Error instantiating parser:\n\t%v\n", err)
+			os.Exit(1)
+		}
+
+		handlerFactory := &handlerFactory{
+			config:        watcherConfig,
+			parserFactory: parserFactory,
+		}
+
 		podWatcher := k8sagent.NewPodWatcher(
 			watcherConfig.Namespace,
 			watcherConfig.LabelSelector,
@@ -85,16 +98,13 @@ func main() {
 				PodGetter:     podWatcher,
 				ContainerName: containerName,
 				UID:           pod.UID}
-			handlerFactory := &handlerFactory{
-				config: watcherConfig,
-			}
 			handlerFactory.AddProcessor(k)
 			pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
 			var filterFunc func(fileName string) bool
 
 			if watcherConfig.ContainerName != "" {
 				// only watch logs for containers matching the given name, if
-				// specified
+				// one is specified
 				re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(containerName))
 				filterFunc = func(fileName string) bool {
 					ok, _ := regexp.Match(re, []byte(fileName))
@@ -112,14 +122,15 @@ func main() {
 }
 
 type handlerFactory struct {
-	config     *config.WatcherConfig
-	processors []Processor
+	config        *config.WatcherConfig
+	parserFactory parsers.ParserFactory
+	processors    []Processor
 }
 
 func (h *handlerFactory) New(path string) tailer.LineHandler {
 	handler := &JSONLogHandler{
 		config: h.config,
-		parser: &parsers.NoOpParser{},
+		parser: h.parserFactory.New(),
 	}
 	for _, p := range h.processors {
 		handler.AddProcessor(p)
@@ -152,7 +163,6 @@ type JSONLogHandler struct {
 func (h *JSONLogHandler) Init() {
 	h.builder = libhoney.NewBuilder()
 	h.builder.Dataset = h.config.Dataset
-	h.parser.Init()
 	// TODO handle postprocessors
 }
 
@@ -202,4 +212,16 @@ func parseFlags() (CmdLineOptions, error) {
 		}
 	}
 	return options, nil
+}
+
+func readResponses() {
+	for resp := range libhoney.Responses() {
+		if resp.Err != nil || (resp.StatusCode != 200 && resp.StatusCode != 202) {
+			logrus.WithFields(logrus.Fields{
+				"error":        resp.Err,
+				"status":       resp.StatusCode,
+				"responseBody": string(resp.Body),
+			}).Error("Failed to send event to Honeycomb")
+		}
+	}
 }

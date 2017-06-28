@@ -5,8 +5,6 @@ import "encoding/json"
 // Parses line as JSON
 type JSONParser struct{}
 
-func (p *JSONParser) Init() error { return nil }
-
 func (p *JSONParser) Parse(line string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	err := json.Unmarshal([]byte(line), &data)
@@ -14,4 +12,12 @@ func (p *JSONParser) Parse(line string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+type JSONParserFactory struct{}
+
+func (pf *JSONParserFactory) Init(options interface{}) error { return nil }
+
+func (pf *JSONParserFactory) New() Parser {
+	return &JSONParser{}
 }
