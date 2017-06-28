@@ -17,13 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
-)
-
-const (
-	// StatefulSetInitAnnotation if present, and set to false, indicates that a Pod's readiness should be ignored.
-	StatefulSetInitAnnotation = "pod.alpha.kubernetes.io/initialized"
 )
 
 // +genclient=true
@@ -35,9 +30,9 @@ const (
 // The StatefulSet guarantees that a given network identity will always
 // map to the same storage identity.
 type StatefulSet struct {
-	metav1.TypeMeta `json:",inline"`
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	v1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Spec defines the desired identities of pods in this set.
 	// +optional
@@ -63,7 +58,7 @@ type StatefulSetSpec struct {
 	// If empty, defaulted to labels on the pod template.
 	// More info: http://kubernetes.io/docs/user-guide/labels#label-selectors
 	// +optional
-	Selector *metav1.LabelSelector `json:"selector,omitempty" protobuf:"bytes,2,opt,name=selector"`
+	Selector *unversioned.LabelSelector `json:"selector,omitempty" protobuf:"bytes,2,opt,name=selector"`
 
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected. Each pod stamped out by the StatefulSet
@@ -91,7 +86,7 @@ type StatefulSetSpec struct {
 
 // StatefulSetStatus represents the current state of a StatefulSet.
 type StatefulSetStatus struct {
-	// most recent generation observed by this StatefulSet.
+	// most recent generation observed by this autoscaler.
 	// +optional
 	ObservedGeneration *int64 `json:"observedGeneration,omitempty" protobuf:"varint,1,opt,name=observedGeneration"`
 
@@ -101,8 +96,8 @@ type StatefulSetStatus struct {
 
 // StatefulSetList is a collection of StatefulSets.
 type StatefulSetList struct {
-	metav1.TypeMeta `json:",inline"`
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	Items           []StatefulSet `json:"items" protobuf:"bytes,2,rep,name=items"`
+	unversioned.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Items                []StatefulSet `json:"items" protobuf:"bytes,2,rep,name=items"`
 }

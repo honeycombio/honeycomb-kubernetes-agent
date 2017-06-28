@@ -29,14 +29,14 @@ const (
 	defaultAPIHost    = "https://api.honeycomb.io/"
 	version           = "1.3.3"
 
-	// defaultmaxBatchSize how many events to collect in a batch
-	defaultmaxBatchSize = 50
-	// defaultbatchTimeout how frequently to send unfilled batches
-	defaultbatchTimeout = 100 * time.Millisecond
-	// defaultmaxConcurrentBatches how many batches to maintain in parallel
-	defaultmaxConcurrentBatches = 80
-	// defaultpendingWorkCapacity how many events to queue up for busy batches
-	defaultpendingWorkCapacity = 10000
+	// DefaultMaxBatchSize how many events to collect in a batch
+	DefaultMaxBatchSize = 50
+	// DefaultBatchTimeout how frequently to send unfilled batches
+	DefaultBatchTimeout = 100 * time.Millisecond
+	// DefaultMaxConcurrentBatches how many batches to maintain in parallel
+	DefaultMaxConcurrentBatches = 80
+	// DefaultPendingWorkCapacity how many events to queue up for busy batches
+	DefaultPendingWorkCapacity = 10000
 )
 
 var (
@@ -50,7 +50,7 @@ var (
 
 	blockOnResponses = false
 	sd, _            = statsd.New(statsd.Mute(true)) // init working default, to be overridden
-	responses        = make(chan Response, 2*defaultpendingWorkCapacity)
+	responses        = make(chan Response, 2*DefaultPendingWorkCapacity)
 	defaultBuilder   = &Builder{
 		APIHost:    defaultAPIHost,
 		SampleRate: defaultSampleRate,
@@ -109,10 +109,10 @@ type Config struct {
 	// Configuration for the underlying sender. It is safe (and recommended) to
 	// leave these values at their defaults. You cannot change these values
 	// after calling Init()
-	MaxBatchSize         uint          // how many events to collect into a batch before sending
-	SendFrequency        time.Duration // how often to send off batches
-	MaxConcurrentBatches uint          // how many batches can be inflight simultaneously
-	PendingWorkCapacity  uint          // how many events to allow to pile up
+	MaxBatchSize         uint          // how many events to collect into a batch before sending. Overrides DefaultMaxBatchSize.
+	SendFrequency        time.Duration // how often to send off batches. Overrides DefaultBatchTimeout.
+	MaxConcurrentBatches uint          // how many batches can be inflight simultaneously. Overrides DefaultMaxConcurrentBatches.
+	PendingWorkCapacity  uint          // how many events to allow to pile up. Overrides DefaultPendingWorkCapacity
 
 	// Transport can be provided to the http.Client attempting to talk to
 	// Honeycomb servers. Intended for use in tests in order to assert on
@@ -270,16 +270,16 @@ func Init(config Config) error {
 		config.APIHost = defaultAPIHost
 	}
 	if config.MaxBatchSize == 0 {
-		config.MaxBatchSize = defaultmaxBatchSize
+		config.MaxBatchSize = DefaultMaxBatchSize
 	}
 	if config.SendFrequency == 0 {
-		config.SendFrequency = defaultbatchTimeout
+		config.SendFrequency = DefaultBatchTimeout
 	}
 	if config.MaxConcurrentBatches == 0 {
-		config.MaxConcurrentBatches = defaultmaxConcurrentBatches
+		config.MaxConcurrentBatches = DefaultMaxConcurrentBatches
 	}
 	if config.PendingWorkCapacity == 0 {
-		config.PendingWorkCapacity = defaultpendingWorkCapacity
+		config.PendingWorkCapacity = DefaultPendingWorkCapacity
 	}
 
 	blockOnResponses = config.BlockOnResponse
@@ -522,10 +522,10 @@ func (e *Event) SendPresampled() error {
 	txOnce.Do(func() {
 		if tx == nil {
 			tx = &txDefaultClient{
-				maxBatchSize:         defaultmaxBatchSize,
-				batchTimeout:         defaultbatchTimeout,
-				maxConcurrentBatches: defaultmaxConcurrentBatches,
-				pendingWorkCapacity:  defaultpendingWorkCapacity,
+				maxBatchSize:         DefaultMaxBatchSize,
+				batchTimeout:         DefaultBatchTimeout,
+				maxConcurrentBatches: DefaultMaxConcurrentBatches,
+				pendingWorkCapacity:  DefaultPendingWorkCapacity,
 			}
 			tx.Start()
 		}
