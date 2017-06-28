@@ -2,7 +2,8 @@ package config
 
 import (
 	"io/ioutil"
-
+	"os"
+	
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -32,5 +33,7 @@ func ReadFromFile(filePath string) (*Config, error) {
 	if err = yaml.Unmarshal(contents, config); err != nil {
 		return nil, err
 	}
+	config.WriteKey = os.Getenv("HONEYCOMB_WRITEKEY")
+
 	return config, nil
 }

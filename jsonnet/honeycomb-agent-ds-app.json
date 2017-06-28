@@ -22,11 +22,6 @@
          "spec": {
             "containers": [
                {
-                  "command": [
-                     "/bin/sh",
-                     "-c",
-                     "/usr/sbin/td-agent 2>&1 >> /var/log/fluentd.log"
-                  ],
                   "env": [
                      {
                         "name": "HONEYCOMB_WRITEKEY",
@@ -40,9 +35,17 @@
                      {
                         "name": "HONEYCOMB_DATASET",
                         "value": "kubernetes"
+                     },
+                     {
+                        "name": "NODE_NAME",
+                        "valueFrom": {
+                           "fieldRef": {
+                              "fieldPath": "spec.nodeName"
+                           }
+                        }
                      }
                   ],
-                  "image": "honeycombio/fluentd-honeycomb:1.23",
+                  "image": "056999937450.dkr.ecr.us-west-2.amazonaws.com/jyao/honeycomb:latest",
                   "name": "honeycomb-agent",
                   "resources": {
                      "limits": {
@@ -55,23 +58,38 @@
                   },
                   "volumeMounts": [
                      {
+                        "mountPath": "/etc/honeycomb",
+                        "name": "config",
+                        "readOnly": false
+                     },
+                     {
                         "mountPath": "/var/log",
-                        "name": "varlog"
+                        "name": "varlog",
+                        "readOnly": false
                      },
                      {
                         "mountPath": "/var/lib/docker/containers",
                         "name": "varlibdockercontainers",
                         "readOnly": true
-                     },
-                     {
-                        "mountPath": "/etc/td-agent/",
-                        "name": "config"
                      }
                   ]
                }
             ],
+            "serviceAccountName": "honeycomb-serviceaccount",
             "terminationGracePeriodSeconds": 30,
             "volumes": [
+               {
+                  "configMap": {
+                     "items": [
+                        {
+                           "key": "config.yaml",
+                           "path": "config.yaml"
+                        }
+                     ],
+                     "name": "honeycomb-agent-config"
+                  },
+                  "name": "config"
+               },
                {
                   "hostPath": {
                      "path": "/var/log"
@@ -83,18 +101,6 @@
                      "path": "/var/lib/docker/containers"
                   },
                   "name": "varlibdockercontainers"
-               },
-               {
-                  "configMap": {
-                     "items": [
-                        {
-                           "key": "td-agent.conf",
-                           "path": "td-agent.conf"
-                        }
-                     ],
-                     "name": "honeycomb-agent-config"
-                  },
-                  "name": "config"
                }
             ]
          }

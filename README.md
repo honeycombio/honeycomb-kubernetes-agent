@@ -14,17 +14,21 @@ To learn more, check out the [Honeycomb general quickstart](https://honeycomb.io
 
 ## Quickstart
 
-1. Copy the example configuration file `config.yaml` from this repository.
+1. Copy the example configuration file `config.yaml` from this repository. This config file sets up (1) your Honeycomb writekey as a Kubernetes secret (2) your Honeycomb config as a ConfigMap and (3) the necessary ServiceAccount and RBACs to allow the Honeycomb service to query the pods.
 
-2. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and replace it in the config file.
+2. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and base64 encode it with:
+   ```
+   echo $WRITEKEY | base64
+   ```
+   Use this value to replace `<BASE-64-ENCODED-HONEYCOMB-WRITEKEY>` in `config.yaml`.
 
-3. Create a `ConfigMap` from the file:
+3. Upload `config.yaml` to the Kubernetes API to create the necessary components:
     ```
-    kubectl create honeycomb-agent-config --from-file=config.yaml --namespace=kube-system
+    kubectl create -f ./config.yaml --namespace=kube-system
 
 2. Create the agent DaemonSet:
     ```
-    kubectl create -f ./honeycomb-agent-ds.yml
+    kubectl create -f ./jsonnet/honeycomb-agent-ds-app.json
     ```
 
 ## Production-Ready Use

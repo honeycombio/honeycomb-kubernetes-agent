@@ -1,4 +1,5 @@
-local k = import "/Users/alex/src/go/src/github.com/ksonnet/ksonnet-lib/ksonnet.beta.2/k.libsonnet";
+// CHANGE THIS IMPORT TO POINT TO YOUR LOCAL KSONNET
+local k = import "/Users/jyao/heptio/hausdorff-ksonnet/ksonnet.beta.2/k.libsonnet";
 
 local ds = k.extensions.v1beta1.daemonSet;
 local container = k.extensions.v1beta1.daemonSet.mixin.spec.template.spec.containersType;
@@ -21,8 +22,8 @@ local volumeMount = container.volumeMountsType;
       local configVol = volume.fromConfigMap(
         volName,
         "honeycomb-agent-config",
-        keyToPath.new("td-agent.conf", "td-agent.conf"));
-      local configMount = volumeMount.new(volName, "/etc/td-agent/");
+        keyToPath.new("config.yaml", "config.yaml"));
+      local configMount = volumeMount.new(volName, "/etc/honeycomb");
 
       // Add volume to DaemonSet.
       ds.mixin.spec.template.spec.volumes([configVol]) +
@@ -50,6 +51,7 @@ local volumeMount = container.volumeMountsType;
         volume.fromHostPath(
           podLogVolName,
           "/var/lib/docker/containers");
+      // podLogsVol is read-only because the directory is shared with other pods
       local podLogMount =
         volumeMount.new(podLogsVol.name, podLogsVol.hostPath.path, true);
 

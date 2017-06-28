@@ -1,8 +1,59 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: honeycomb-writekey
+  namespace: kube-system
+type: Opaque
+data:
+  key: <BASE-64-ENCODED-HONEYCOMB-WRITEKEY>
 ---
-apiHost: https://api.honeycomb.io
-writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
-parsers:
-- dataset: kubernetestest
-  parser: json
-
-verbosity: debug
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: honeycomb-agent-config
+  namespace: kube-system
+data:
+  config.yaml: |-
+    apiHost: https://api.honeycomb.io
+    watchers:
+      - dataset: kubernetestest
+        parser: json
+        namespace: "default"
+        labelSelector: "app=nginx"
+      - dataset: mysql
+        labelSelector: "app=mysql"
+        parser: mysql
+    verbosity: debug
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: honeycomb-serviceaccount
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: honeycomb-serviceaccount
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: honeycomb-serviceaccount
+subjects:
+- kind: ServiceAccount
+  name: honeycomb-serviceaccount
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: honeycomb-serviceaccount
+  namespace: kube-system
+rules:
+  - apiGroups:
+    - "*"
+    resources:
+    - pods
+    verbs:
+    - list
+    - watch
