@@ -40,8 +40,9 @@ func main() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
+	// k8s secrets are liable to end up with a trailing newline, so trim that.
 	err = libhoney.Init(libhoney.Config{
-		WriteKey: config.WriteKey,
+		WriteKey: strings.TrimSpace(config.WriteKey),
 	})
 	if err != nil {
 		fmt.Printf("Error initializing Honeycomb transmission:\n\t%v\n", err)
