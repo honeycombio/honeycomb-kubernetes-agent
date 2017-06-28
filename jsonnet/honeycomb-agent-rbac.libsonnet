@@ -1,5 +1,8 @@
-// CHANGE THIS IMPORT TO POINT TO YOUR LOCAL KSONNET
-local k = import "/Users/jyao/heptio/hausdorff-ksonnet/ksonnet.beta.2/k.libsonnet";
+// ==========================
+// NOTE: this code doesn't work yet because of https://github.com/ksonnet/ksonnet-lib/issues/43
+// ==========================
+
+local k = import "ksonnet.beta.2/k.libsonnet";
 
 // Destructuring imports.
 local svcAccount = k.core.v1.serviceAccount;

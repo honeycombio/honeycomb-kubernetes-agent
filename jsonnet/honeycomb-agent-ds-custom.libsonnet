@@ -1,5 +1,4 @@
-// CHANGE THIS IMPORT TO POINT TO YOUR LOCAL KSONNET
-local k = import "/Users/jyao/heptio/hausdorff-ksonnet/ksonnet.beta.2/k.libsonnet";
+local k = import "ksonnet.beta.2/k.libsonnet";
 
 local ds = k.extensions.v1beta1.daemonSet;
 local container = k.extensions.v1beta1.daemonSet.mixin.spec.template.spec.containersType;

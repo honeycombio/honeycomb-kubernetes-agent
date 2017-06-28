@@ -1,5 +1,4 @@
-// CHANGE THIS IMPORT TO POINT TO YOUR LOCAL KSONNET
-local k = import "/Users/jyao/heptio/hausdorff-ksonnet/ksonnet.beta.2/k.libsonnet";
+local k = import "ksonnet.beta.2/k.libsonnet";
 
 // Destructuring imports.
 local ds = k.extensions.v1beta1.daemonSet;
@@ -20,7 +19,7 @@ local honeycombLabels = {
 };
 
 local dsContainer =
-  container.new("honeycomb-agent", "056999937450.dkr.ecr.us-west-2.amazonaws.com/jyao/honeycomb:latest") +
+  container.new("honeycomb-agent", "honeycombio/honeycomb-kubernetes-agent:1.1") +
   container.mixin.resources.limits({memory: "200Mi"}) +
   container.mixin.resources.requests({memory: "200Mi", cpu: "100m"}) +
   container.env([

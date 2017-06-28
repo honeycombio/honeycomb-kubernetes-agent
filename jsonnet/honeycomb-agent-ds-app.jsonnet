@@ -13,4 +13,5 @@ local dameonSet = honeycomb.base("honeycomb-agent-v1.1", serviceAccountName, nam
 
 local rbacComponents = rbac.getRbacComponents(serviceAccountName, namespace);
 
+// NOTE: rbacComponents doesn't work due to https://github.com/ksonnet/ksonnet-lib/issues/43
 dameonSet // + rbacComponents
