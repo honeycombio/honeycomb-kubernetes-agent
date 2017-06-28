@@ -1,4 +1,4 @@
-local k = import "/Users/alex/src/go/src/github.com/ksonnet/ksonnet-lib/ksonnet.beta.2/k.libsonnet";
+local k = import "ksonnet.beta.2/k.libsonnet";
 
 // Destructuring imports.
 local ds = k.extensions.v1beta1.daemonSet;
@@ -9,7 +9,7 @@ local keyToPath = volume.mixin.configMap.itemsType;
 local volumeMount = container.volumeMountsType;
 
 // ----------------------------------------------------------------------------
-// Honeycomb agent parts. Containers, volumes, etc.
+// Honeycomb agent parts. Containers, env variables, etc.
 // ----------------------------------------------------------------------------
 
 local honeycombLabels = {
@@ -29,13 +29,13 @@ local dsContainer =
   ]);
 
 // ----------------------------------------------------------------------------
-// App definition. Honeycomb agent DaemonDet
+// App definition. Honeycomb agent DaemonSet
 // ----------------------------------------------------------------------------
 
 {
   // base takes a name and a namespace and outputs the default
   // DaemonSet for the Honeycomb agent.
-  base(name, namespace)::
+  base(name, serviceAccountName, namespace)::
     ds.new() +
     // Metadata.
     ds.mixin.metadata.name(name) +
@@ -43,6 +43,7 @@ local dsContainer =
     ds.mixin.metadata.labels(honeycombLabels) +
     // Template.
     ds.mixin.spec.template.metadata.labels(honeycombLabels) +
+    ds.mixin.spec.template.spec.serviceAccountName(serviceAccountName) +
     ds.mixin.spec.template.spec.containers(dsContainer) +
     ds.mixin.spec.template.spec.terminationGracePeriodSeconds(30)
 }

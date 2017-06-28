@@ -1,8 +1,0 @@
----
-apiHost: https://api.honeycomb.io
-writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
-parsers:
-- dataset: kubernetestest
-  parser: json
-
-verbosity: debug

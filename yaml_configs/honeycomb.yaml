@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: honeycomb-agent-config
+  namespace: kube-system
+data:
+  config.yaml: |-
+    apiHost: https://api.honeycomb.io
+    watchers:
+      - dataset: kubernetestest
+        parser: json
+        namespace: "default"
+        labelSelector: "app=nginx"
+      - dataset: mysql
+        labelSelector: "app=mysql"
+        parser: mysql
+    verbosity: debug
