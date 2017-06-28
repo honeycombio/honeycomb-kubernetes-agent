@@ -9,11 +9,11 @@ import (
 type Config struct {
 	APIHost   string `yaml:"apiHost"`
 	WriteKey  string `yaml:"writekey"`
-	Parsers   []*ParserConfig
+	Watchers  []*WatcherConfig
 	Verbosity string
 }
 
-type ParserConfig struct {
+type WatcherConfig struct {
 	Parser        string
 	Dataset       string
 	SampleRate    int `yaml:"sampleRate"`

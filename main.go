@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
@@ -13,13 +14,22 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/tailer"
 	libhoney "github.com/honeycombio/libhoney-go"
+	flag "github.com/jessevdk/go-flags"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
+type CmdLineOptions struct {
+	ConfigPath string `long:"config" description:"Path to configuration file" default:"/etc/honeycomb/config.yaml"`
+}
+
 func main() {
-	config, err := config.ReadFromFile("/etc/honeytail/config.yaml")
+	flags, err := parseFlags()
+	if err != nil {
+		fmt.Printf("Error parsing options:\n\t%v\n", err)
+	}
+	config, err := config.ReadFromFile(flags.ConfigPath)
 	if err != nil {
 		fmt.Printf("Error reading configuration:\n\t%v\n", err)
 		os.Exit(1)
@@ -38,8 +48,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if len(config.Parsers) == 0 {
-		fmt.Printf("No parsers defined in the configuration!")
+	if len(config.Watchers) == 0 {
+		fmt.Printf("No watchers defined in the configuration!")
 		os.Exit(1)
 	}
 
@@ -61,28 +71,31 @@ func main() {
 	}
 	nodeSelector := fmt.Sprintf("spec.nodeName=%s", nodeName)
 
-	for _, parserConfig := range config.Parsers {
-		watcher := k8sagent.NewPodWatcher(
-			parserConfig.Namespace,
-			parserConfig.LabelSelector,
+	for _, watcherConfig := range config.Watchers {
+		podWatcher := k8sagent.NewPodWatcher(
+			watcherConfig.Namespace,
+			watcherConfig.LabelSelector,
 			nodeSelector,
 			kubeClient)
 
-		for pod := range watcher.Pods() {
+		containerName := watcherConfig.ContainerName
+
+		for pod := range podWatcher.Pods() {
 			k := &processors.KubernetesMetadataProcessor{
-				PodGetter:     watcher,
-				ContainerName: parserConfig.ContainerName,
+				PodGetter:     podWatcher,
+				ContainerName: containerName,
 				UID:           pod.UID}
 			handlerFactory := &handlerFactory{
-				config: parserConfig,
+				config: watcherConfig,
 			}
 			handlerFactory.AddProcessor(k)
 			pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
 			var filterFunc func(fileName string) bool
 
-			if parserConfig.ContainerName != "" {
-				// only watch logs for containers matching the given name
-				re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(parserConfig.ContainerName))
+			if watcherConfig.ContainerName != "" {
+				// only watch logs for containers matching the given name, if
+				// specified
+				re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(containerName))
 				filterFunc = func(fileName string) bool {
 					ok, _ := regexp.Match(re, []byte(fileName))
 					return ok
@@ -99,7 +112,7 @@ func main() {
 }
 
 type handlerFactory struct {
-	config     *config.ParserConfig
+	config     *config.WatcherConfig
 	processors []Processor
 }
 
@@ -130,7 +143,7 @@ func newKubeClient() (*kubernetes.Clientset, error) {
 }
 
 type JSONLogHandler struct {
-	config         *config.ParserConfig
+	config         *config.WatcherConfig
 	parser         parsers.Parser
 	postprocessors []Processor
 	builder        *libhoney.Builder
@@ -176,4 +189,17 @@ func (h *JSONLogHandler) AddProcessor(p Processor) {
 
 type Processor interface {
 	Process(data map[string]interface{})
+}
+
+func parseFlags() (CmdLineOptions, error) {
+	var options CmdLineOptions
+	flagParser := flag.NewParser(&options, flag.PrintErrors)
+	if extraArgs, err := flagParser.Parse(); err != nil || len(extraArgs) != 0 {
+		if err != nil {
+			return options, err
+		} else {
+			return options, fmt.Errorf("\tUnexpected extra arguments: %s\n", strings.Join(extraArgs, " "))
+		}
+	}
+	return options, nil
 }

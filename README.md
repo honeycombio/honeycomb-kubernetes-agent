@@ -14,10 +14,13 @@ To learn more, check out the [Honeycomb general quickstart](https://honeycomb.io
 
 ## Quickstart
 
-1. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and store it as a Kubernetes secret:
+1. Copy the example configuration file `config.yaml` from this repository.
+
+2. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and replace it in the config file.
+
+3. Create a `ConfigMap` from the file:
     ```
-    kubectl create secret generic honeycomb-writekey --from-literal=key=$WRITEKEY
-    ```
+    kubectl create honeycomb-agent-config --from-file=config.yaml --namespace=kube-system
 
 2. Create the agent DaemonSet:
     ```
@@ -32,7 +35,10 @@ It's best if all of your containers output structured JSON logs. But that's not
 always realistic. In particular, you're likely to operate third-party services,
 such as proxies or databases, that don't log JSON.
 
-In order to get usefully structured data from these services, you can use Kubernetes [label
+You may also want to aggregate logs from specific services, rather than from
+everything that might be running in a cluster.
+
+In order to get usefully structured data from services, you can use Kubernetes [label
 selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
 to describe how to parse logs for specific services.
 
@@ -40,7 +46,7 @@ For example, to parse logs from pods with the label `app: nginx` as NGINX logs,
 you'd specify the following configuration:
 
 ```
-parsers:
+watchers:
 - labelSelector: "app=nginx"
   parser: nginx
 ```
@@ -51,7 +57,7 @@ Honeycomb. For each label selector, you can specify a list of `processors`,
 which will be applied in order. For example:
 
 ```
-parsers:
+watchers:
 - labelSelector: "app=nginx"
   parser: nginx
   processors:
@@ -66,9 +72,10 @@ parsers:
     rate: 20
 ```
 
-See the [processor reference](TODO) for a full list of options.
+See the [docs](/docs/example-configurations.md) for more examples.
 
 
 ## Development Notes
 
 To test with locally-built images, run `eval $(minikube docker-env)`, then build the image with `docker build -t honeycombio/honeycomb-kubernetes-agent .`. See the [minikube docs](https://github.com/kubernetes/minikube#reusing-the-docker-daemon) for more details on building local images.
+You will also need to mount `/mnt/sda1/var/lib/docker/containers` as a `volumeMount`.

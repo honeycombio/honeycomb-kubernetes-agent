@@ -1,14 +1,8 @@
 ---
 apiHost: https://api.honeycomb.io
-writekey: "YOUR_WRITE_KEY_HERE"
+writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
 parsers:
 - dataset: kubernetestest
   parser: json
-  sampleRate: 22
-  namespace: "minikube"
-  labelSelector: "app=nginx"
-- dataset: mysql
-  labelSelector: "app=mysql"
-  parser: mysql
 
 verbosity: debug

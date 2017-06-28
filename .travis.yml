@@ -1,16 +1,16 @@
-language: python # why not
+language: go
 
 services:
  - docker
 
 script:
- - docker build -t honeycombio/fluentd-honeycomb:1.${TRAVIS_BUILD_NUMBER} ./fluentd-hny-image
+ - docker build -t honeycombio/honeycomb-kubernetes-agent:1.${TRAVIS_BUILD_NUMBER} .
 
 after_success:
  - if [ "$TRAVIS_BRANCH" == "master" ]; then
    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-   docker push honeycombio/fluentd-honeycomb:1.${TRAVIS_BUILD_NUMBER};
+   docker push honeycombio/honeycomb-kubernetes-agent:1.${TRAVIS_BUILD_NUMBER};
    fi
 
 after_failure:
- - docker logs honeycombio/fluentd-honeycomb:1.${TRAVIS_BUILD_NUMBER}
+ - docker logs honeycombio/honeycomb-kubernetes-agent:1.${TRAVIS_BUILD_NUMBER}

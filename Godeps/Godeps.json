@@ -183,6 +183,11 @@
 			"Comment": "v1.0.0-9-gfaf842b",
 			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
 		},
+        {
+			"ImportPath": "github.com/jessevdk/go-flags",
+			"Comment": "v1-334-g6b9493b",
+			"Rev": "6b9493b3cb60367edd942144879646604089e3f7"
+		},
 		{
 			"ImportPath": "github.com/jonboulle/clockwork",
 			"Rev": "72f9bd7c4e0c2a40055ab3d0f09654f730cce982"

@@ -1,9 +1,8 @@
 # Design
 
-The Honeycomb agent is a monitoring tool that continuously observes
-the log files of an application (_e.g._, nginx, mysql, _etc_.), parses
-them, and sends them to the [Honeycomb server][1], which renders them
-in a dashboard.
+The Honeycomb agent is an observability tool that continuously observes
+the log files of an application (_e.g._, nginx, MySQL, _etc_.), parses
+them, and sends them to the [Honeycomb API][1].
 
 This document describes the core abstractions of the Honeycomb agent,
 and how to use it in your Kubernetes cluster. Specifically:
@@ -26,7 +25,7 @@ After you have set up a Kubernetes environment (_e.g._, minikube, or a
 [cluster on AWS][2]), run the following command.
 
 ```shell
-kubectl apply -f jsonnet/honeycomb-agent-ds.json
+kubectl apply -f honeycomb-agent-ds.json
 ```
 
 This deploys Honeycomb agent is deployed to Kubernetes as a
@@ -54,18 +53,17 @@ Here is the example YAML config file:
 ```yaml
 apiHost: https://api.honeycomb.io
 writekey: "YOUR_WRITE_KEY_HERE"
-parsers:
+watchers:
 - dataset: kubernetestest
   parser: json
   sampleRate: 22
-  namespace: "minikube"
   labelSelector: "app=nginx"
 - dataset: mysql
   labelSelector: "app=mysql"
   parser: mysql
 ```
 
-The `parsers` field defines label patterns (called "label selectors")
+The `watchers` field defines label patterns (called "label selectors")
 that tell the Honeycomb agent which pods to read `stdout` of, as well
 as which parser to use when it reads the data.
 
