@@ -77,5 +77,5 @@ See the [docs](/docs/example-configurations.md) for more examples.
 
 ## Development Notes
 
-To test with locally-built images, run `eval $(minikube docker-env)`, then build the image with `docker build -t honeycombio/honeycomb-kubernetes-agent .`. See the [minikube docs](https://github.com/kubernetes/minikube#reusing-the-docker-daemon) for more details on building local images.
-You will also need to mount `/mnt/sda1/var/lib/docker/containers` as a `volumeMount`.
+To test inside Minikube with a locally-built image, run `eval $(minikube docker-env)`, then build the image with `make container`. See the [minikube docs](https://github.com/kubernetes/minikube#reusing-the-docker-daemon) for more details on building local images.
+You will also need to mount `/mnt/sda1/var/lib/docker/containers` as a `volumeMount`, and make sure that you specify `imagePullPolicy: IfNotPresent` or `imagePullPolicy: Never` in the container spec.
