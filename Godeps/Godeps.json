@@ -154,6 +154,10 @@
 			"Rev": "bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5"
 		},
 		{
+			"ImportPath": "github.com/gopherjs/gopherjs/js",
+			"Rev": "9659c814f1d54d63f9c623449a7111d3864c1361"
+		},
+		{
 			"ImportPath": "github.com/honeycombio/gonx",
 			"Comment": "v1.3.0-5-g45c9e83",
 			"Rev": "45c9e836929976702894f73f10fb9ec43e0279d2"
@@ -188,7 +192,7 @@
 			"Comment": "v1.0.0-9-gfaf842b",
 			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
 		},
-        {
+		{
 			"ImportPath": "github.com/jessevdk/go-flags",
 			"Comment": "v1-334-g6b9493b",
 			"Rev": "6b9493b3cb60367edd942144879646604089e3f7"
@@ -196,6 +200,11 @@
 		{
 			"ImportPath": "github.com/jonboulle/clockwork",
 			"Rev": "72f9bd7c4e0c2a40055ab3d0f09654f730cce982"
+		},
+		{
+			"ImportPath": "github.com/jtolds/gls",
+			"Comment": "v4.2.1",
+			"Rev": "77f18212c9c7edc9bd6a33d383a7b545ce62f064"
 		},
 		{
 			"ImportPath": "github.com/juju/ratelimit",
@@ -218,8 +227,47 @@
 			"Rev": "ca53cad383cad2479bbba7f7a1a05797ec1386e4"
 		},
 		{
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Rev": "d8ed2627bdf02c080bf22230dbb337003b7aba2d"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/assertions",
+			"Comment": "1.6.0-27-g4ea54c1",
+			"Rev": "4ea54c1f28ad3ae597e76607dea3871fa177e263"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/assertions/internal/go-render/render",
+			"Comment": "1.6.0-27-g4ea54c1",
+			"Rev": "4ea54c1f28ad3ae597e76607dea3871fa177e263"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/assertions/internal/oglematchers",
+			"Comment": "1.6.0-27-g4ea54c1",
+			"Rev": "4ea54c1f28ad3ae597e76607dea3871fa177e263"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey",
+			"Comment": "1.6.2-21-g9e8dc3f",
+			"Rev": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey/gotest",
+			"Comment": "1.6.2-21-g9e8dc3f",
+			"Rev": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey/reporting",
+			"Comment": "1.6.2-21-g9e8dc3f",
+			"Rev": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857"
+		},
+		{
 			"ImportPath": "github.com/spf13/pflag",
 			"Rev": "5ccb023bc27df288a957c5e994cd44fd19619465"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.0-88-ge3a8ff8",
+			"Rev": "e3a8ff8ce36581f87a15341206f205b1da467059"
 		},
 		{
 			"ImportPath": "github.com/ugorji/go/codec",
