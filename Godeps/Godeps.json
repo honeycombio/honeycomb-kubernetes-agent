@@ -154,6 +154,11 @@
 			"Rev": "bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5"
 		},
 		{
+			"ImportPath": "github.com/honeycombio/gonx",
+			"Comment": "v1.3.0-5-g45c9e83",
+			"Rev": "45c9e836929976702894f73f10fb9ec43e0279d2"
+		},
+		{
 			"ImportPath": "github.com/honeycombio/libhoney-go",
 			"Comment": "v1.3.2-3-g0c0e8c4",
 			"Rev": "0c0e8c402eeef843eafc2bad6dccb16baf565d2f"
