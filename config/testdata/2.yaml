@@ -1,0 +1,6 @@
+watchers:
+  - dataset: nginx
+    parser:
+      name: nginx
+      options:
+        log_format: default

@@ -1,0 +1,5 @@
+---
+watchers:
+  - parser:
+    - a
+    - b

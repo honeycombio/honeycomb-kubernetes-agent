@@ -5,7 +5,7 @@ Parse logs from pods labelled with `app: nginx`:
 ```
 ---
 writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
-parsers:
+watchers:
   - labelSelector: app=nginx
     parser: nginx
 
@@ -17,7 +17,7 @@ parsers:
 Send logs from different services to different datasets:
 ```
 writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
-parsers:
+watchers:
   - labelSelector: "app=nginx"
     parser: nginx
     dataset: nginx-kubernetes
@@ -32,7 +32,7 @@ Sample events from a `frontend-web` deployment: only send one in 20 events from
 the `prod` namespace, and one in 10 events from the `staging` namespace.
 ```
 writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
-parsers:
+watchers:
   - labelSelector: "app=frontend-web"
     namespace: prod
     parser: json
@@ -60,7 +60,7 @@ Only process logs from the `sidecar` container in a multi-container pod:
 ```
 ---
 writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
-parsers:
+watchers:
   - labelSelector: "app=frontend-web"
     containerName: sidecar
     parser: json

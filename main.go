@@ -75,7 +75,7 @@ func main() {
 	go readResponses()
 
 	for _, watcherConfig := range config.Watchers {
-		parserFactory, err := parsers.NewParserFactory(watcherConfig.Parser, nil) // TODO allow options
+		parserFactory, err := parsers.NewParserFactory(watcherConfig.Parser)
 		if err != nil {
 			fmt.Printf("Error instantiating parser:\n\t%v\n", err)
 			os.Exit(1)

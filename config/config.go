@@ -14,12 +14,36 @@ type Config struct {
 }
 
 type WatcherConfig struct {
-	Parser        string
+	Parser        *ParserConfig
 	Dataset       string
-	SampleRate    int `yaml:"sampleRate"`
 	Namespace     string
 	LabelSelector string `yaml:"labelSelector"`
 	ContainerName string `yaml:"containerName"`
+	Processors    []map[string]interface{}
+}
+
+type ParserConfig struct {
+	Name    string
+	Options map[string]interface{}
+}
+
+func (p *ParserConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var name string
+	if err := unmarshal(&name); err == nil {
+		p.Name = name
+		return nil
+	}
+	aux := &struct {
+		Name    string
+		Options map[string]interface{}
+	}{}
+	err := unmarshal(&aux)
+	if err == nil {
+		p.Name = aux.Name
+		p.Options = aux.Options
+		return nil
+	}
+	return err
 }
 
 func ReadFromFile(filePath string) (*Config, error) {

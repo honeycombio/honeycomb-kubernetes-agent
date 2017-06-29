@@ -1,5 +1,7 @@
 package parsers
 
+import "github.com/honeycombio/honeycomb-kubernetes-agent/config"
+
 type Parser interface {
 	Parse(line string) (map[string]interface{}, error)
 }
@@ -9,9 +11,9 @@ type ParserFactory interface {
 	New() Parser
 }
 
-func NewParserFactory(parserName string, options interface{}) (ParserFactory, error) {
+func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 	var factory ParserFactory
-	switch parserName {
+	switch config.Name {
 	case "json":
 		factory = &JSONParserFactory{}
 	case "nop":
@@ -21,7 +23,7 @@ func NewParserFactory(parserName string, options interface{}) (ParserFactory, er
 		// TODO switch back to this:
 		//return nil, fmt.Errorf("Unknown parser type %s", parserName)
 	}
-	err := factory.Init(options)
+	err := factory.Init(config.Options)
 	if err != nil {
 		return nil, err
 	}
