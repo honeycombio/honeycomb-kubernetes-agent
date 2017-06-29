@@ -18,5 +18,5 @@ MAINTAINER Team Honeycomb <bees@honeycomb.io>
 
 ADD bin/ARG_ARCH/ARG_BIN /ARG_BIN
 
-USER nobody:nobody
+USER root:root
 ENTRYPOINT ["/ARG_BIN"]
