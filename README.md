@@ -8,24 +8,26 @@ To learn more, check out the [Honeycomb general quickstart](https://honeycomb.io
 
 ## How it Works
 
-`honeycomb-agent` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each node in a cluster. It reads container log files from the node's filesystme, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
+`honeycomb-agent` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each node in a cluster. It reads container log files from the node's filesystem, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
 
 <img src="static/honeycomb-agent.png" alt="architecture diagram" width="75%">
 
 ## Quickstart
 
-1. Copy the example configuration file `config.yaml` from this repository.
+The following steps will deploy the Honeycomb agent to each node in your cluster, and configure it to process logs from all pods.
 
-2. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and replace it in the config file.
+1. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and create a Kubernetes secret from it:
+    ```
+    kubectl create secret generic honeycomb-writekey --from-literal=key=$WRITEKEY --namespace=kube-system
+    ```
 
-3. Create a `ConfigMap` from the file:
+2.  Run the agent
     ```
-    kubectl create honeycomb-agent-config --from-file=config.yaml --namespace=kube-system
-
-2. Create the agent DaemonSet:
+    kubectl apply -f examples/quickstart.yaml
     ```
-    kubectl create -f ./honeycomb-agent-ds.yml
-    ```
+    This will create a service account for the agent so that it can list pods
+    from the API, create a minimal configuration, and then create a DaemonSet
+    from the agent.
 
 ## Production-Ready Use
 
@@ -73,9 +75,3 @@ watchers:
 ```
 
 See the [docs](/docs/example-configurations.md) for more examples.
-
-
-## Development Notes
-
-To test inside Minikube with a locally-built image, run `eval $(minikube docker-env)`, then build the image with `make container`. See the [minikube docs](https://github.com/kubernetes/minikube#reusing-the-docker-daemon) for more details on building local images.
-You will also need to mount `/mnt/sda1/var/lib/docker/containers` as a `volumeMount`, and make sure that you specify `imagePullPolicy: IfNotPresent` or `imagePullPolicy: Never` in the container spec.
