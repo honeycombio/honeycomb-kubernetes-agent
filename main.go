@@ -13,7 +13,7 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/tailer"
-	libhoney "github.com/honeycombio/libhoney-go"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	flag "github.com/jessevdk/go-flags"
 
 	"k8s.io/client-go/kubernetes"
@@ -46,9 +46,8 @@ func main() {
 	}
 
 	// k8s secrets are liable to end up with a trailing newline, so trim that.
-	err = libhoney.Init(libhoney.Config{
-		WriteKey: strings.TrimSpace(config.WriteKey),
-	})
+	err = transmission.Start(strings.TrimSpace(config.WriteKey))
+
 	if err != nil {
 		fmt.Printf("Error initializing Honeycomb transmission:\n\t%v\n", err)
 		os.Exit(1)
@@ -76,8 +75,6 @@ func main() {
 		os.Exit(1)
 	}
 	nodeSelector := fmt.Sprintf("spec.nodeName=%s", nodeName)
-
-	go readResponses()
 
 	for _, watcherConfig := range config.Watchers {
 		parserFactory, err := parsers.NewParserFactory(watcherConfig.Parser)
@@ -160,16 +157,4 @@ func parseFlags() (CmdLineOptions, error) {
 		}
 	}
 	return options, nil
-}
-
-func readResponses() {
-	for resp := range libhoney.Responses() {
-		if resp.Err != nil || (resp.StatusCode != 200 && resp.StatusCode != 202) {
-			logrus.WithFields(logrus.Fields{
-				"error":        resp.Err,
-				"status":       resp.StatusCode,
-				"responseBody": string(resp.Body),
-			}).Error("Failed to send event to Honeycomb")
-		}
-	}
 }

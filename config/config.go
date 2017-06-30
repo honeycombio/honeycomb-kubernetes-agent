@@ -14,9 +14,13 @@ type Config struct {
 }
 
 type WatcherConfig struct {
-	Parser        *ParserConfig
-	Dataset       string
-	Namespace     string
+	Parser    *ParserConfig
+	Dataset   string
+	Namespace string
+	// Distinguish between nil and empty string in the LabelSelector
+	// nil means watch no pods, empty string means watch all of them
+	// Maybe we need a better API? But k8s is pretty insistent that empty
+	// string means "select all pods".
 	LabelSelector *string  `yaml:"labelSelector"`
 	FilePaths     []string `yaml:"paths"`
 	ContainerName string   `yaml:"containerName"`
