@@ -125,7 +125,7 @@ func main() {
 type handlerFactory struct {
 	config        *config.WatcherConfig
 	parserFactory parsers.ParserFactory
-	processors    []Processor
+	processors    []processors.Processor
 }
 
 func (h *handlerFactory) New(path string) tailer.LineHandler {
@@ -140,7 +140,7 @@ func (h *handlerFactory) New(path string) tailer.LineHandler {
 	return handler
 }
 
-func (h *handlerFactory) AddProcessor(p Processor) {
+func (h *handlerFactory) AddProcessor(p processors.Processor) {
 	h.processors = append(h.processors, p)
 }
 
@@ -157,7 +157,7 @@ func newKubeClient() (*kubernetes.Clientset, error) {
 type JSONLogHandler struct {
 	config         *config.WatcherConfig
 	parser         parsers.Parser
-	postprocessors []Processor
+	postprocessors []processors.Processor
 	builder        *libhoney.Builder
 }
 
@@ -194,12 +194,8 @@ func (h *JSONLogHandler) Handle(rawLine string) {
 	h.builder.SendNow(parsed)
 }
 
-func (h *JSONLogHandler) AddProcessor(p Processor) {
+func (h *JSONLogHandler) AddProcessor(p processors.Processor) {
 	h.postprocessors = append(h.postprocessors, p)
-}
-
-type Processor interface {
-	Process(data map[string]interface{})
 }
 
 func parseFlags() (CmdLineOptions, error) {
