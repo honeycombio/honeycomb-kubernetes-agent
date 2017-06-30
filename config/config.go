@@ -17,8 +17,9 @@ type WatcherConfig struct {
 	Parser        *ParserConfig
 	Dataset       string
 	Namespace     string
-	LabelSelector string `yaml:"labelSelector"`
-	ContainerName string `yaml:"containerName"`
+	LabelSelector *string  `yaml:"labelSelector"`
+	FilePaths     []string `yaml:"paths"`
+	ContainerName string   `yaml:"containerName"`
 	Processors    []map[string]interface{}
 }
 

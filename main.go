@@ -40,6 +40,11 @@ func main() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
+	// Read write key from environment if not specified in config file
+	if config.WriteKey == "" {
+		config.WriteKey = os.Getenv("HONEYCOMB_WRITEKEY")
+	}
+
 	// k8s secrets are liable to end up with a trailing newline, so trim that.
 	err = libhoney.Init(libhoney.Config{
 		WriteKey: strings.TrimSpace(config.WriteKey),
@@ -86,35 +91,42 @@ func main() {
 			parserFactory: parserFactory,
 		}
 
-		podWatcher := k8sagent.NewPodWatcher(
-			watcherConfig.Namespace,
-			watcherConfig.LabelSelector,
-			nodeSelector,
-			kubeClient)
-
-		containerName := watcherConfig.ContainerName
-
-		for pod := range podWatcher.Pods() {
-			k := &processors.KubernetesMetadataProcessor{
-				PodGetter:     podWatcher,
-				ContainerName: containerName,
-				UID:           pod.UID}
-			handlerFactory.AddProcessor(k)
-			pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
-			var filterFunc func(fileName string) bool
-
-			if watcherConfig.ContainerName != "" {
-				// only watch logs for containers matching the given name, if
-				// one is specified
-				re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(containerName))
-				filterFunc = func(fileName string) bool {
-					ok, _ := regexp.Match(re, []byte(fileName))
-					return ok
-				}
-			}
-			pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory)
-			go pathWatcher.Run()
+		for _, path := range watcherConfig.FilePaths {
+			go tailer.NewPathWatcher(path, nil, handlerFactory).Run()
 		}
+
+		if watcherConfig.LabelSelector != nil {
+			podWatcher := k8sagent.NewPodWatcher(
+				watcherConfig.Namespace,
+				*watcherConfig.LabelSelector,
+				nodeSelector,
+				kubeClient)
+
+			containerName := watcherConfig.ContainerName
+
+			for pod := range podWatcher.Pods() {
+				k := &processors.KubernetesMetadataProcessor{
+					PodGetter:     podWatcher,
+					ContainerName: containerName,
+					UID:           pod.UID}
+				handlerFactory.AddProcessor(k)
+				pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
+				var filterFunc func(fileName string) bool
+
+				if watcherConfig.ContainerName != "" {
+					// only watch logs for containers matching the given name, if
+					// one is specified
+					re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(containerName))
+					filterFunc = func(fileName string) bool {
+						ok, _ := regexp.Match(re, []byte(fileName))
+						return ok
+					}
+				}
+				pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory)
+				go pathWatcher.Run()
+			}
+		}
+
 	}
 
 	fmt.Println("running")
