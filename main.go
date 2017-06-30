@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
@@ -86,12 +86,12 @@ func main() {
 			os.Exit(1)
 		}
 
-		handlerFactory := &handlerFactory{
-			config:        watcherConfig,
-			parserFactory: parserFactory,
-		}
-
 		for _, path := range watcherConfig.FilePaths {
+			handlerFactory := &handlers.DockerJSONLogHandlerFactory{
+				Config:        watcherConfig,
+				ParserFactory: parserFactory,
+			}
+
 			go tailer.NewPathWatcher(path, nil, handlerFactory).Run()
 		}
 
@@ -105,6 +105,11 @@ func main() {
 			containerName := watcherConfig.ContainerName
 
 			for pod := range podWatcher.Pods() {
+				handlerFactory := &handlers.DockerJSONLogHandlerFactory{
+					Config:        watcherConfig,
+					ParserFactory: parserFactory,
+				}
+
 				k := &processors.KubernetesMetadataProcessor{
 					PodGetter:     podWatcher,
 					ContainerName: containerName,
@@ -134,28 +139,6 @@ func main() {
 	select {}
 }
 
-type handlerFactory struct {
-	config        *config.WatcherConfig
-	parserFactory parsers.ParserFactory
-	processors    []processors.Processor
-}
-
-func (h *handlerFactory) New(path string) tailer.LineHandler {
-	handler := &JSONLogHandler{
-		config: h.config,
-		parser: h.parserFactory.New(),
-	}
-	for _, p := range h.processors {
-		handler.AddProcessor(p)
-	}
-	handler.Init()
-	return handler
-}
-
-func (h *handlerFactory) AddProcessor(p processors.Processor) {
-	h.processors = append(h.processors, p)
-}
-
 func newKubeClient() (*kubernetes.Clientset, error) {
 	// Get clientset to query API server.
 	kubeClientConfig, err := rest.InClusterConfig()
@@ -164,50 +147,6 @@ func newKubeClient() (*kubernetes.Clientset, error) {
 	}
 
 	return kubernetes.NewForConfig(kubeClientConfig)
-}
-
-type JSONLogHandler struct {
-	config         *config.WatcherConfig
-	parser         parsers.Parser
-	postprocessors []processors.Processor
-	builder        *libhoney.Builder
-}
-
-func (h *JSONLogHandler) Init() {
-	h.builder = libhoney.NewBuilder()
-	h.builder.Dataset = h.config.Dataset
-	// TODO handle postprocessors
-}
-
-type jsonLogLine struct {
-	Log    string
-	Stream string
-	Time   string
-}
-
-func (h *JSONLogHandler) Handle(rawLine string) {
-	// multiline parsing should be done with stateful parsers for now
-	line := &jsonLogLine{}
-	err := json.Unmarshal([]byte(rawLine), line)
-	if err != nil {
-		logrus.WithError(err).Info("Error parsing JSON line")
-		return
-	}
-
-	parsed, err := h.parser.Parse(line.Log)
-	if err != nil {
-		logrus.WithError(err).Debug("Failed to parse line")
-		return
-	}
-	for _, p := range h.postprocessors {
-		p.Process(parsed)
-	}
-	logrus.WithField("parsed", parsed).Debug("Sending line")
-	h.builder.SendNow(parsed)
-}
-
-func (h *JSONLogHandler) AddProcessor(p processors.Processor) {
-	h.postprocessors = append(h.postprocessors, p)
 }
 
 func parseFlags() (CmdLineOptions, error) {

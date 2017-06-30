@@ -5,24 +5,17 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/hpcloud/tail"
 )
-
-type LineHandler interface {
-	Handle(string)
-}
-
-type HandlerFactory interface {
-	New(string) LineHandler
-}
 
 type Tailer struct {
 	path    string
 	done    chan bool
-	handler LineHandler
+	handler handlers.LineHandler
 }
 
-func NewTailer(path string, handler LineHandler) *Tailer {
+func NewTailer(path string, handler handlers.LineHandler) *Tailer {
 	t := &Tailer{
 		path:    path,
 		handler: handler,
@@ -77,12 +70,12 @@ type PathWatcher struct {
 	pattern        string
 	filter         filterFunc
 	watched        map[string]struct{}
-	handlerFactory HandlerFactory
+	handlerFactory handlers.HandlerFactory
 	checkInterval  time.Duration
 	done           chan bool
 }
 
-func NewPathWatcher(pattern string, filter filterFunc, handlerFactory HandlerFactory) *PathWatcher {
+func NewPathWatcher(pattern string, filter filterFunc, handlerFactory handlers.HandlerFactory) *PathWatcher {
 	p := &PathWatcher{
 		pattern:        pattern,
 		filter:         filter,
