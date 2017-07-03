@@ -70,12 +70,12 @@ type PathWatcher struct {
 	pattern        string
 	filter         filterFunc
 	watched        map[string]struct{}
-	handlerFactory handlers.HandlerFactory
+	handlerFactory handlers.LineHandlerFactory
 	checkInterval  time.Duration
 	done           chan bool
 }
 
-func NewPathWatcher(pattern string, filter filterFunc, handlerFactory handlers.HandlerFactory) *PathWatcher {
+func NewPathWatcher(pattern string, filter filterFunc, handlerFactory handlers.LineHandlerFactory) *PathWatcher {
 	p := &PathWatcher{
 		pattern:        pattern,
 		filter:         filter,

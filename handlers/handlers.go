@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
@@ -11,40 +12,68 @@ import (
 )
 
 type LineHandler interface {
-	Init()
 	Handle(string)
 }
 
-type HandlerFactory interface {
-	New(string) LineHandler
-	AddProcessor(processors.Processor)
+type LineHandlerFactory interface {
+	New(path string) LineHandler
 }
 
-type DockerJSONLogHandlerFactory struct {
-	Config        *config.WatcherConfig
-	ParserFactory parsers.ParserFactory
-	Processors    []processors.Processor
+type LineHandlerFactoryImpl struct {
+	config        *config.WatcherConfig
+	parserFactory parsers.ParserFactory
+	processors    []processors.Processor
+	unwrapper     Unwrapper
 }
 
-func (hf *DockerJSONLogHandlerFactory) AddProcessor(p processors.Processor) {
-	hf.Processors = append(hf.Processors, p)
-}
-
-func (hf *DockerJSONLogHandlerFactory) New(path string) LineHandler {
-	handler := &DockerJSONLogHandler{
-		Config:     hf.Config,
-		Parser:     hf.ParserFactory.New(),
-		Processors: hf.Processors,
+func NewLineHandlerFactory(
+	config *config.WatcherConfig,
+	parserFactory parsers.ParserFactory,
+	unwrapper Unwrapper,
+	processors ...processors.Processor) *LineHandlerFactoryImpl {
+	return &LineHandlerFactoryImpl{
+		config:        config,
+		parserFactory: parserFactory,
+		unwrapper:     unwrapper,
+		processors:    processors,
 	}
-	handler.Init()
+}
+
+func (hf *LineHandlerFactoryImpl) New(path string) LineHandler {
+	handler := &LineHandlerImpl{
+		config:     hf.config,
+		parser:     hf.parserFactory.New(),
+		processors: hf.processors,
+		unwrapper:  hf.unwrapper,
+	}
+	handler.builder = libhoney.NewBuilder()
+	handler.builder.Dataset = handler.config.Dataset
 	return handler
 }
 
-type DockerJSONLogHandler struct {
-	Config     *config.WatcherConfig
-	Parser     parsers.Parser
-	Processors []processors.Processor
+type LineHandlerImpl struct {
+	config     *config.WatcherConfig
+	unwrapper  Unwrapper
+	parser     parsers.Parser
+	processors []processors.Processor
 	builder    *libhoney.Builder
+}
+
+func (h *LineHandlerImpl) Handle(rawLine string) {
+	parsed, err := h.unwrapper.Unwrap(rawLine, h.parser)
+	if err != nil {
+		logrus.WithError(err).Debug("Failed to parse line")
+		return
+	}
+	for _, p := range h.processors {
+		p.Process(parsed)
+	}
+	logrus.WithField("parsed", parsed).Debug("Sending line")
+	h.builder.SendNow(parsed)
+}
+
+type Unwrapper interface {
+	Unwrap(string, parsers.Parser) (map[string]interface{}, error)
 }
 
 type dockerJSONLogLine struct {
@@ -53,28 +82,21 @@ type dockerJSONLogLine struct {
 	Time   string
 }
 
-func (h *DockerJSONLogHandler) Init() {
-	h.builder = libhoney.NewBuilder()
-	h.builder.Dataset = h.Config.Dataset
-}
+type DockerJSONLogUnwrapper struct{}
 
-func (h *DockerJSONLogHandler) Handle(rawLine string) {
-	// multiline parsing should be done with stateful parsers for now
+func (u *DockerJSONLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (map[string]interface{}, error) {
 	line := &dockerJSONLogLine{}
 	err := json.Unmarshal([]byte(rawLine), line)
 	if err != nil {
 		logrus.WithError(err).Info("Error parsing JSON line")
-		return
+		return nil, fmt.Errorf("Error parsing log line as Docker json-file log: %v", err)
 	}
 
-	parsed, err := h.Parser.Parse(line.Log)
-	if err != nil {
-		logrus.WithError(err).Debug("Failed to parse line")
-		return
-	}
-	for _, p := range h.Processors {
-		p.Process(parsed)
-	}
-	logrus.WithField("parsed", parsed).Debug("Sending line")
-	h.builder.SendNow(parsed)
+	return parser.Parse(line.Log)
+}
+
+type RawLogUnwrapper struct{}
+
+func (u *RawLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (map[string]interface{}, error) {
+	return parser.Parse(rawLine)
 }

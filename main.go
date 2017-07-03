@@ -84,11 +84,10 @@ func main() {
 		}
 
 		for _, path := range watcherConfig.FilePaths {
-			handlerFactory := &handlers.DockerJSONLogHandlerFactory{
-				Config:        watcherConfig,
-				ParserFactory: parserFactory,
-			}
-
+			handlerFactory := handlers.NewLineHandlerFactory(
+				watcherConfig,
+				parserFactory,
+				&handlers.RawLogUnwrapper{})
 			go tailer.NewPathWatcher(path, nil, handlerFactory).Run()
 		}
 
@@ -102,16 +101,15 @@ func main() {
 			containerName := watcherConfig.ContainerName
 
 			for pod := range podWatcher.Pods() {
-				handlerFactory := &handlers.DockerJSONLogHandlerFactory{
-					Config:        watcherConfig,
-					ParserFactory: parserFactory,
-				}
-
-				k := &processors.KubernetesMetadataProcessor{
+				k8sMetadataProcessor := &processors.KubernetesMetadataProcessor{
 					PodGetter:     podWatcher,
 					ContainerName: containerName,
 					UID:           pod.UID}
-				handlerFactory.AddProcessor(k)
+				handlerFactory := handlers.NewLineHandlerFactory(
+					watcherConfig,
+					parserFactory,
+					&handlers.DockerJSONLogUnwrapper{},
+					k8sMetadataProcessor)
 				pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
 				var filterFunc func(fileName string) bool
 
