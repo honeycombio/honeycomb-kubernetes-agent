@@ -25,9 +25,10 @@ The following steps will deploy the Honeycomb agent to each node in your cluster
     ```
     kubectl apply -f examples/quickstart.yaml
     ```
-    This will create a service account for the agent so that it can list pods
-    from the API, create a minimal configuration, and then create a DaemonSet
-    from the agent.
+    This will do three things:
+    - create a service account for the agent so that it can list pods from the API
+    - create a minimal `ConfigMap` containing configuration for the agent
+    - create a DaemonSet from the agent.
 
 ## Production-Ready Use
 
