@@ -64,14 +64,14 @@ watchers:
   parser: nginx
   processors:
   - request_shape:            # Unpack the field "request": "GET /path HTTP/1.x
-    field: request            # into its constituent components
+      field: request            # into its constituent components
 
   - drop_field:               # Remove the "user_email" field from all events
-    field: user_email
+      field: user_email
 
   - sample:                   # Sample events: only send one in 20
-    type: static
-    rate: 20
+      type: static
+      rate: 20
 ```
 
 See the [docs](/docs/example-configurations.md) for more examples.

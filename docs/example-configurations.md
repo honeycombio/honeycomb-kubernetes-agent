@@ -11,7 +11,7 @@ watchers:
 
     processors:
     - request_shape:
-      field: request
+        field: request
 ```
 
 Send logs from different services to different datasets:
@@ -40,8 +40,8 @@ watchers:
 
     processors:
       - sample:
-        type: static
-        rate: 20
+          type: static
+          rate: 20
       - drop_field:
         field: user_email
 
@@ -52,8 +52,8 @@ watchers:
 
     processors:
       - sample:
-        type: static
-        rate: 10
+          type: static
+          rate: 10
 ```
 
 Only process logs from the `sidecar` container in a multi-container pod:
