@@ -9,7 +9,7 @@ func (p *NoOpParser) Parse(line string) (map[string]interface{}, error) {
 
 type NoOpParserFactory struct{}
 
-func (pf *NoOpParserFactory) Init(options interface{}) error { return nil }
+func (pf *NoOpParserFactory) Init(options map[string]interface{}) error { return nil }
 
 func (n *NoOpParserFactory) New() Parser {
 	return &NoOpParser{}

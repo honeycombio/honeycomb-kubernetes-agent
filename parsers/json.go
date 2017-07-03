@@ -16,7 +16,7 @@ func (p *JSONParser) Parse(line string) (map[string]interface{}, error) {
 
 type JSONParserFactory struct{}
 
-func (pf *JSONParserFactory) Init(options interface{}) error { return nil }
+func (pf *JSONParserFactory) Init(options map[string]interface{}) error { return nil }
 
 func (pf *JSONParserFactory) New() Parser {
 	return &JSONParser{}

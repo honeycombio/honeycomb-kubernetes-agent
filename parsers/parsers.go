@@ -7,7 +7,7 @@ type Parser interface {
 }
 
 type ParserFactory interface {
-	Init(options interface{}) error
+	Init(options map[string]interface{}) error
 	New() Parser
 }
 
@@ -18,6 +18,8 @@ func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 		factory = &JSONParserFactory{}
 	case "nop":
 		factory = &NoOpParserFactory{}
+	case "nginx":
+		factory = &NginxParserFactory{}
 	default:
 		factory = &NoOpParserFactory{} // Make this permissive while testing
 		// TODO switch back to this:
