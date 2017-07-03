@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This was borrowed and modified from github.com/thockin/go-build-template
+
 # The binary to build (just the basename).
 BIN := honeycomb-kubernetes-agent
 
@@ -38,23 +40,10 @@ SRC_DIRS := . # directories which hold app source (not vendored)
 
 ALL_ARCH := amd64 arm arm64 ppc64le
 
-# Set default base image dynamically for each arch
-ifeq ($(ARCH),amd64)
-    BASEIMAGE?=alpine
-endif
-ifeq ($(ARCH),arm)
-    BASEIMAGE?=armel/busybox
-endif
-ifeq ($(ARCH),arm64)
-    BASEIMAGE?=aarch64/busybox
-endif
-ifeq ($(ARCH),ppc64le)
-    BASEIMAGE?=ppc64le/busybox
-endif
-
 IMAGE := $(REGISTRY)/$(BIN)
 
 BUILD_IMAGE ?= golang:1.8-alpine
+BASEIMAGE ?= golang:1.8-alpine
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
