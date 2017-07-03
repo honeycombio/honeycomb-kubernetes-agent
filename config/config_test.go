@@ -12,9 +12,9 @@ func TestParsing(t *testing.T) {
 		fileName string
 		valid    bool
 	}{
-		{"1.yaml", true},
-		{"2.yaml", true},
-		{"3.yaml", false},
+		{"basic.yaml", true},
+		{"parser_with_options.yaml", true},
+		{"unknown_parsers.yaml", false},
 	}
 	for _, tc := range testFiles {
 		path, _ := filepath.Abs(filepath.Join("testdata", tc.fileName))

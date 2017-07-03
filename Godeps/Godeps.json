@@ -168,6 +168,10 @@
 			"Rev": "0c0e8c402eeef843eafc2bad6dccb16baf565d2f"
 		},
 		{
+			"ImportPath": "github.com/honeycombio/urlshaper",
+			"Rev": "02612463a463bfcfbc1b5940689b8fb3c157dff4"
+		},
+		{
 			"ImportPath": "github.com/hpcloud/tail",
 			"Comment": "v1.0.0-9-gfaf842b",
 			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
@@ -221,6 +225,10 @@
 		{
 			"ImportPath": "github.com/mailru/easyjson/jwriter",
 			"Rev": "d5b7844b561a7bc640052f1b935f7b800330d7e0"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "d0303fe809921458f417bcf828397a65db30a7e4"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",

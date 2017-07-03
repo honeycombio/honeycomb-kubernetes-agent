@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
 	libhoney "github.com/honeycombio/libhoney-go"
 )
 
@@ -21,22 +21,36 @@ type LineHandlerFactory interface {
 
 type LineHandlerFactoryImpl struct {
 	config        *config.WatcherConfig
+	unwrapper     unwrappers.Unwrapper
 	parserFactory parsers.ParserFactory
 	processors    []processors.Processor
-	unwrapper     Unwrapper
 }
 
-func NewLineHandlerFactory(
+func NewLineHandlerFactoryFromConfig(
 	config *config.WatcherConfig,
-	parserFactory parsers.ParserFactory,
-	unwrapper Unwrapper,
-	processors ...processors.Processor) *LineHandlerFactoryImpl {
-	return &LineHandlerFactoryImpl{
-		config:        config,
-		parserFactory: parserFactory,
-		unwrapper:     unwrapper,
-		processors:    processors,
+	unwrapper unwrappers.Unwrapper,
+	extraProcessors ...processors.Processor,
+) (*LineHandlerFactoryImpl, error) {
+	ret := &LineHandlerFactoryImpl{
+		config:    config,
+		unwrapper: unwrapper,
 	}
+	parserFactory, err := parsers.NewParserFactory(config.Parser)
+	if err != nil {
+		return nil, fmt.Errorf("Error setting up parser: %v", err)
+	}
+	ret.parserFactory = parserFactory
+
+	for _, processorConfig := range config.Processors {
+		processor, err := processors.NewProcessorFromConfig(processorConfig)
+		if err != nil {
+			return nil, fmt.Errorf("Error setting up processor: %v", err)
+		}
+		ret.processors = append(ret.processors, processor)
+	}
+	ret.processors = append(ret.processors, extraProcessors...)
+
+	return ret, nil
 }
 
 func (hf *LineHandlerFactoryImpl) New(path string) LineHandler {
@@ -53,7 +67,7 @@ func (hf *LineHandlerFactoryImpl) New(path string) LineHandler {
 
 type LineHandlerImpl struct {
 	config     *config.WatcherConfig
-	unwrapper  Unwrapper
+	unwrapper  unwrappers.Unwrapper
 	parser     parsers.Parser
 	processors []processors.Processor
 	builder    *libhoney.Builder
@@ -70,33 +84,4 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 	}
 	logrus.WithField("parsed", parsed).Debug("Sending line")
 	h.builder.SendNow(parsed)
-}
-
-type Unwrapper interface {
-	Unwrap(string, parsers.Parser) (map[string]interface{}, error)
-}
-
-type dockerJSONLogLine struct {
-	Log    string
-	Stream string
-	Time   string
-}
-
-type DockerJSONLogUnwrapper struct{}
-
-func (u *DockerJSONLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (map[string]interface{}, error) {
-	line := &dockerJSONLogLine{}
-	err := json.Unmarshal([]byte(rawLine), line)
-	if err != nil {
-		logrus.WithError(err).Info("Error parsing JSON line")
-		return nil, fmt.Errorf("Error parsing log line as Docker json-file log: %v", err)
-	}
-
-	return parser.Parse(line.Log)
-}
-
-type RawLogUnwrapper struct{}
-
-func (u *RawLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (map[string]interface{}, error) {
-	return parser.Parse(rawLine)
 }

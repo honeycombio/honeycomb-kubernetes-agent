@@ -24,7 +24,7 @@ type WatcherConfig struct {
 	LabelSelector *string  `yaml:"labelSelector"`
 	FilePaths     []string `yaml:"paths"`
 	ContainerName string   `yaml:"containerName"`
-	Processors    []map[string]interface{}
+	Processors    []map[string]map[string]interface{}
 }
 
 type ParserConfig struct {

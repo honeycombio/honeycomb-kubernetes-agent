@@ -10,13 +10,14 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
-	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/tailer"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
 	flag "github.com/jessevdk/go-flags"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -36,7 +37,6 @@ func main() {
 	}
 
 	if config.Verbosity == "debug" {
-		fmt.Println("Setting log level")
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
@@ -77,21 +77,29 @@ func main() {
 	nodeSelector := fmt.Sprintf("spec.nodeName=%s", nodeName)
 
 	for _, watcherConfig := range config.Watchers {
-		parserFactory, err := parsers.NewParserFactory(watcherConfig.Parser)
-		if err != nil {
-			fmt.Printf("Error instantiating parser:\n\t%v\n", err)
-			os.Exit(1)
-		}
-
 		for _, path := range watcherConfig.FilePaths {
-			handlerFactory := handlers.NewLineHandlerFactory(
+			handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 				watcherConfig,
-				parserFactory,
-				&handlers.RawLogUnwrapper{})
+				&unwrappers.RawLogUnwrapper{})
+			if err != nil {
+				fmt.Printf("Error setting up watcher for path %s:\n\t%v\n",
+					path, err)
+				os.Exit(1)
+
+			}
 			go tailer.NewPathWatcher(path, nil, handlerFactory).Run()
 		}
 
 		if watcherConfig.LabelSelector != nil {
+			_, err := handlers.NewLineHandlerFactoryFromConfig(
+				watcherConfig,
+				&unwrappers.DockerJSONLogUnwrapper{})
+			if err != nil {
+				fmt.Printf("Error setting up watcher for LabelSelector %s:\n",
+					*watcherConfig.LabelSelector)
+				fmt.Printf("\t%v\n", err)
+				os.Exit(1)
+			}
 			podWatcher := k8sagent.NewPodWatcher(
 				watcherConfig.Namespace,
 				*watcherConfig.LabelSelector,
@@ -105,25 +113,11 @@ func main() {
 					PodGetter:     podWatcher,
 					ContainerName: containerName,
 					UID:           pod.UID}
-				handlerFactory := handlers.NewLineHandlerFactory(
+				handlerFactory, _ := handlers.NewLineHandlerFactoryFromConfig(
 					watcherConfig,
-					parserFactory,
-					&handlers.DockerJSONLogUnwrapper{},
+					&unwrappers.DockerJSONLogUnwrapper{},
 					k8sMetadataProcessor)
-				pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
-				var filterFunc func(fileName string) bool
-
-				if watcherConfig.ContainerName != "" {
-					// only watch logs for containers matching the given name, if
-					// one is specified
-					re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(containerName))
-					filterFunc = func(fileName string) bool {
-						ok, _ := regexp.Match(re, []byte(fileName))
-						return ok
-					}
-				}
-				pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory)
-				go pathWatcher.Run()
+				go watchFilesForPod(pod, watcherConfig.ContainerName, handlerFactory)
 			}
 		}
 
@@ -155,4 +149,21 @@ func parseFlags() (CmdLineOptions, error) {
 		}
 	}
 	return options, nil
+}
+
+func watchFilesForPod(pod *v1.Pod, containerName string, handlerFactory handlers.LineHandlerFactory) {
+	pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
+	var filterFunc func(fileName string) bool
+
+	if containerName != "" {
+		// only watch logs for containers matching the given name, if
+		// one is specified
+		re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(containerName))
+		filterFunc = func(fileName string) bool {
+			ok, _ := regexp.Match(re, []byte(fileName))
+			return ok
+		}
+	}
+	pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory)
+	pathWatcher.Run()
 }

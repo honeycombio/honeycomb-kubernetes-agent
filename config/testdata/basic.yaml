@@ -5,5 +5,3 @@ watchers:
 - labelSelector: app=nginx
   dataset: testdataset
   parser: json
-  processors:
-    - drop_field: email

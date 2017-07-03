@@ -13,6 +13,10 @@ type KubernetesMetadataProcessor struct {
 	lastPodData   *v1.Pod
 }
 
+func (k *KubernetesMetadataProcessor) Init(options map[string]interface{}) error {
+	return nil
+}
+
 func (k *KubernetesMetadataProcessor) Process(data map[string]interface{}) {
 	pod, ok := k.PodGetter.Get(k.UID)
 	if ok {
