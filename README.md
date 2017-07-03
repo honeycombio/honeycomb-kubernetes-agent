@@ -4,7 +4,7 @@
 
 [Honeycomb's](https://honeycomb.io) Kubernetes agent aggregates logs across a Kubernetes cluster. Stop managing log storage in all your clusters and start tracking down real problems.
 
-To learn more, check out the [Honeycomb general quickstart](https://honeycomb.io/get-started/), and [Kubernetes-specific docs](https://honeycomb.io/docs/connect/kubernetes/).
+To get started with Honeycomb, check out the [Honeycomb general quickstart](https://honeycomb.io/docs/get-started/).
 
 ## How it Works
 
