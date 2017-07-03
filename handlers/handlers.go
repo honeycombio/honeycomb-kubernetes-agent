@@ -1,3 +1,8 @@
+// Package handlers drives the actual processing of log lines. For each set of
+// files that you want treated in a specific way, you create a
+// `LineHandlerFactory`. `LineHandlerFactory.New()` then creates a new
+// `LineHandler` for each specific file. (This mechanism lets parsers be
+// stateful, because you end up with one parser instance per file.)
 package handlers
 
 import (

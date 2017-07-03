@@ -94,6 +94,8 @@ func main() {
 			_, err := handlers.NewLineHandlerFactoryFromConfig(
 				watcherConfig,
 				&unwrappers.DockerJSONLogUnwrapper{})
+			// Check for errors setting up the handler straightaway --
+			// we don't need to have actual pods to tail to do this.
 			if err != nil {
 				fmt.Printf("Error setting up watcher for LabelSelector %s:\n",
 					*watcherConfig.LabelSelector)
@@ -113,10 +115,15 @@ func main() {
 					PodGetter:     podWatcher,
 					ContainerName: containerName,
 					UID:           pod.UID}
-				handlerFactory, _ := handlers.NewLineHandlerFactoryFromConfig(
+				handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 					watcherConfig,
 					&unwrappers.DockerJSONLogUnwrapper{},
 					k8sMetadataProcessor)
+				if err != nil {
+					// This shouldn't happen, since we check for errors above
+					logrus.WithError(err).Error("Error setting up watcher")
+					continue
+				}
 				go watchFilesForPod(pod, watcherConfig.ContainerName, handlerFactory)
 			}
 		}

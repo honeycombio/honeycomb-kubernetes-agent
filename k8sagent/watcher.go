@@ -1,3 +1,5 @@
+// Package k8sagent contains machinery for getting pod data from the Kubernetes
+// API.
 package k8sagent
 
 import (
