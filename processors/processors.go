@@ -16,6 +16,10 @@ func NewProcessor(name string, options map[string]interface{}) (Processor, error
 		p := &RequestShaper{}
 		err := p.Init(options)
 		return p, err
+	case "drop_field":
+		p := &FieldDropper{}
+		err := p.Init(options)
+		return p, err
 	}
 	return nil, fmt.Errorf("Unknown processor type %s", name)
 }

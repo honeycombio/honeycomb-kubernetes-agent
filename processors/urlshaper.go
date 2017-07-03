@@ -11,11 +11,11 @@ import (
 )
 
 type RequestShaper struct {
-	config *config
+	config *requestShaperConfig
 	shaper *urlshaper.Parser
 }
 
-type config struct {
+type requestShaperConfig struct {
 	Field     string
 	Prefix    string
 	Patterns  []string
@@ -23,7 +23,7 @@ type config struct {
 }
 
 func (r *RequestShaper) Init(options map[string]interface{}) error {
-	config := &config{}
+	config := &requestShaperConfig{}
 	err := mapstructure.Decode(options, config)
 	if err != nil {
 		return err
