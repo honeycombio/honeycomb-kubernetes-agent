@@ -1,6 +1,10 @@
 package parsers
 
-import "github.com/honeycombio/honeycomb-kubernetes-agent/config"
+import (
+	"fmt"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
+)
 
 type Parser interface {
 	Parse(line string) (map[string]interface{}, error)
@@ -21,9 +25,7 @@ func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 	case "nginx":
 		factory = &NginxParserFactory{}
 	default:
-		factory = &NoOpParserFactory{} // Make this permissive while testing
-		// TODO switch back to this:
-		//return nil, fmt.Errorf("Unknown parser type %s", parserName)
+		return nil, fmt.Errorf("Unknown parser type %s", config.Name)
 	}
 	err := factory.Init(config.Options)
 	if err != nil {
