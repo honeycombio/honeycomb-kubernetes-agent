@@ -13,11 +13,10 @@ type Transmitter interface {
 type HoneycombTransmitter struct{}
 
 func (ht *HoneycombTransmitter) Send(ev *event.Event) {
-	libhoneyEvent := libhoney.Event{
-		Dataset:    ev.Dataset,
-		SampleRate: ev.SampleRate,
-		Timestamp:  ev.Timestamp,
-	}
+	libhoneyEvent := libhoney.NewEvent()
+	libhoneyEvent.Dataset = ev.Dataset
+	libhoneyEvent.SampleRate = ev.SampleRate
+	libhoneyEvent.Timestamp = ev.Timestamp
 	libhoneyEvent.Add(ev.Data)
 	libhoneyEvent.Send()
 }
