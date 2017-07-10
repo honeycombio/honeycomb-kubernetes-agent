@@ -1,6 +1,7 @@
 package processors
 
 import (
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/types"
@@ -17,19 +18,17 @@ func (k *KubernetesMetadataProcessor) Init(options map[string]interface{}) error
 	return nil
 }
 
-func (k *KubernetesMetadataProcessor) Process(data map[string]interface{}) {
+func (k *KubernetesMetadataProcessor) Process(ev *event.Event) {
 	pod, ok := k.PodGetter.Get(k.UID)
 	if ok {
 		k.lastPodData = pod
 	} else if k.lastPodData != nil {
 		pod = k.lastPodData
 	}
-	// TODO add container metadata too
-
 	if pod != nil {
 		metadata := extractMetadataFromPod(pod, k.ContainerName)
 		for k, v := range metadata {
-			data["kubernetes."+k] = v
+			ev.Data["kubernetes."+k] = v
 		}
 	}
 }

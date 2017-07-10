@@ -5,12 +5,14 @@ package processors
 import (
 	"errors"
 	"fmt"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 )
 
 // Processor is the interface that processors implement. The Init() method is
 // called to initialize the processor. Process() mutates event data in-place.
 type Processor interface {
-	Process(data map[string]interface{})
+	Process(*event.Event)
 	Init(options map[string]interface{}) error
 }
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/honeycombio/urlshaper"
 	"github.com/mitchellh/mapstructure"
 )
@@ -42,7 +43,9 @@ func (r *RequestShaper) Init(options map[string]interface{}) error {
 	return nil
 }
 
-func (r *RequestShaper) Process(data map[string]interface{}) {
+// This is mostly borrowed from github.com/honeycombio/honeytail
+func (r *RequestShaper) Process(ev *event.Event) {
+	data := ev.Data
 	val, ok := data[r.config.Field]
 	if !ok {
 		return

@@ -46,7 +46,9 @@ func main() {
 	}
 
 	// k8s secrets are liable to end up with a trailing newline, so trim that.
-	err = transmission.Start(strings.TrimSpace(config.WriteKey))
+	err = transmission.InitLibhoney(strings.TrimSpace(config.WriteKey))
+
+	transmitter := &transmission.HoneycombTransmitter{}
 
 	if err != nil {
 		fmt.Printf("Error initializing Honeycomb transmission:\n\t%v\n", err)
@@ -80,7 +82,8 @@ func main() {
 		for _, path := range watcherConfig.FilePaths {
 			handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 				watcherConfig,
-				&unwrappers.RawLogUnwrapper{})
+				&unwrappers.RawLogUnwrapper{},
+				transmitter)
 			if err != nil {
 				fmt.Printf("Error setting up watcher for path %s:\n\t%v\n",
 					path, err)
@@ -93,7 +96,8 @@ func main() {
 		if watcherConfig.LabelSelector != nil {
 			_, err := handlers.NewLineHandlerFactoryFromConfig(
 				watcherConfig,
-				&unwrappers.DockerJSONLogUnwrapper{})
+				&unwrappers.DockerJSONLogUnwrapper{},
+				transmitter)
 			// Check for errors setting up the handler straightaway --
 			// we don't need to have actual pods to tail to do this.
 			if err != nil {
@@ -118,6 +122,7 @@ func main() {
 				handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 					watcherConfig,
 					&unwrappers.DockerJSONLogUnwrapper{},
+					transmitter,
 					k8sMetadataProcessor)
 				if err != nil {
 					// This shouldn't happen, since we check for errors above

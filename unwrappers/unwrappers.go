@@ -4,8 +4,11 @@
 // json-file log driver, or by syslog.
 package unwrappers
 
-import "github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
+import (
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
+)
 
 type Unwrapper interface {
-	Unwrap(string, parsers.Parser) (map[string]interface{}, error)
+	Unwrap(string, parsers.Parser) (*event.Event, error)
 }

@@ -1,6 +1,9 @@
 package processors
 
-import "github.com/mitchellh/mapstructure"
+import (
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
+	"github.com/mitchellh/mapstructure"
+)
 
 type FieldDropper struct {
 	config *fieldDropperConfig
@@ -20,6 +23,6 @@ func (f *FieldDropper) Init(options map[string]interface{}) error {
 	return nil
 }
 
-func (f *FieldDropper) Process(data map[string]interface{}) {
-	delete(data, f.config.field)
+func (f *FieldDropper) Process(ev *event.Event) {
+	delete(ev.Data, f.config.field)
 }

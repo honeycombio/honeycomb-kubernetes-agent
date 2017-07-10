@@ -2,10 +2,27 @@ package transmission
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	libhoney "github.com/honeycombio/libhoney-go"
 )
 
-func Start(writeKey string) error {
+type Transmitter interface {
+	Send(*event.Event)
+}
+
+type HoneycombTransmitter struct{}
+
+func (ht *HoneycombTransmitter) Send(ev *event.Event) {
+	libhoneyEvent := libhoney.Event{
+		Dataset:    ev.Dataset,
+		SampleRate: ev.SampleRate,
+		Timestamp:  ev.Timestamp,
+	}
+	libhoneyEvent.Add(ev.Data)
+	libhoneyEvent.Send()
+}
+
+func InitLibhoney(writeKey string) error {
 	err := libhoney.Init(libhoney.Config{WriteKey: writeKey})
 	if err != nil {
 		return err

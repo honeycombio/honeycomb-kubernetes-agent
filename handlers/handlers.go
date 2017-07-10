@@ -12,8 +12,8 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
-	libhoney "github.com/honeycombio/libhoney-go"
 )
 
 type LineHandler interface {
@@ -29,16 +29,19 @@ type LineHandlerFactoryImpl struct {
 	unwrapper     unwrappers.Unwrapper
 	parserFactory parsers.ParserFactory
 	processors    []processors.Processor
+	transmitter   transmission.Transmitter
 }
 
 func NewLineHandlerFactoryFromConfig(
 	config *config.WatcherConfig,
 	unwrapper unwrappers.Unwrapper,
+	transmitter transmission.Transmitter,
 	extraProcessors ...processors.Processor,
 ) (*LineHandlerFactoryImpl, error) {
 	ret := &LineHandlerFactoryImpl{
-		config:    config,
-		unwrapper: unwrapper,
+		config:      config,
+		unwrapper:   unwrapper,
+		transmitter: transmitter,
 	}
 	parserFactory, err := parsers.NewParserFactory(config.Parser)
 	if err != nil {
@@ -65,17 +68,16 @@ func (hf *LineHandlerFactoryImpl) New(path string) LineHandler {
 		processors: hf.processors,
 		unwrapper:  hf.unwrapper,
 	}
-	handler.builder = libhoney.NewBuilder()
-	handler.builder.Dataset = handler.config.Dataset
+	handler.transmitter = hf.transmitter
 	return handler
 }
 
 type LineHandlerImpl struct {
-	config     *config.WatcherConfig
-	unwrapper  unwrappers.Unwrapper
-	parser     parsers.Parser
-	processors []processors.Processor
-	builder    *libhoney.Builder
+	config      *config.WatcherConfig
+	unwrapper   unwrappers.Unwrapper
+	parser      parsers.Parser
+	processors  []processors.Processor
+	transmitter transmission.Transmitter
 }
 
 func (h *LineHandlerImpl) Handle(rawLine string) {
@@ -84,9 +86,10 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 		logrus.WithError(err).Debug("Failed to parse line")
 		return
 	}
+	parsed.Dataset = h.config.Dataset
 	for _, p := range h.processors {
 		p.Process(parsed)
 	}
 	logrus.WithField("parsed", parsed).Debug("Sending line")
-	h.builder.SendNow(parsed)
+	h.transmitter.Send(parsed)
 }
