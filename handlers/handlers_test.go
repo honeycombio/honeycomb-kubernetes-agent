@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
@@ -16,6 +18,28 @@ type MockTransmitter struct {
 
 func (mt *MockTransmitter) Send(ev *event.Event) {
 	mt.events = append(mt.events, ev)
+}
+
+func TestInvalidConfigurations(t *testing.T) {
+	mt := &MockTransmitter{}
+
+	testcases := []struct {
+		config string
+		errMsg string
+	}{
+		{"parser: json", "Missing dataset in configuration"},
+		{"dataset: kubernetestest", "No parser specified"},
+		{"parser: watparser\ndataset: kubernetestest", "Error setting up parser: Unknown parser type watparser"},
+	}
+
+	for _, tc := range testcases {
+		cfg := &config.WatcherConfig{}
+		err := yaml.Unmarshal([]byte(tc.config), cfg)
+		assert.NoError(t, err)
+
+		_, err = NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+		assert.Equal(t, err.Error(), tc.errMsg)
+	}
 }
 
 func TestDefaultNginxHandling(t *testing.T) {

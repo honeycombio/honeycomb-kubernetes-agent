@@ -43,6 +43,13 @@ func NewLineHandlerFactoryFromConfig(
 		unwrapper:   unwrapper,
 		transmitter: transmitter,
 	}
+	if config.Dataset == "" {
+		return nil, fmt.Errorf("Missing dataset in configuration")
+	}
+	if config.Parser == nil {
+		return nil, fmt.Errorf("No parser specified")
+	}
+
 	parserFactory, err := parsers.NewParserFactory(config.Parser)
 	if err != nil {
 		return nil, fmt.Errorf("Error setting up parser: %v", err)
