@@ -15,14 +15,19 @@ type HoneycombTransmitter struct{}
 func (ht *HoneycombTransmitter) Send(ev *event.Event) {
 	libhoneyEvent := libhoney.NewEvent()
 	libhoneyEvent.Dataset = ev.Dataset
-	libhoneyEvent.SampleRate = ev.SampleRate
+	if ev.SampleRate != 0 {
+		libhoneyEvent.SampleRate = ev.SampleRate
+	}
 	libhoneyEvent.Timestamp = ev.Timestamp
 	libhoneyEvent.Add(ev.Data)
 	libhoneyEvent.Send()
 }
 
-func InitLibhoney(writeKey string) error {
-	err := libhoney.Init(libhoney.Config{WriteKey: writeKey})
+func InitLibhoney(writeKey string, apiHost string) error {
+	err := libhoney.Init(libhoney.Config{
+		WriteKey: writeKey,
+		APIHost:  apiHost,
+	})
 	if err != nil {
 		return err
 	}

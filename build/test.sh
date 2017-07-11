@@ -22,12 +22,12 @@ export CGO_ENABLED=0
 
 TARGETS=$(for d in "$@"; do go list ./$d/... | grep -v vendor ; done)
 
-echo "Running tests:"
+echo "Running unit tests:"
 go test -i -installsuffix "static" ${TARGETS}
 go test -installsuffix "static" ${TARGETS}
 echo
 
-echo -n "Checking go vet: "
+echo "Checking go vet:"
 ERRS=$(go vet ${TARGETS} 2>&1 || true)
 if [ -n "${ERRS}" ]; then
     echo "FAIL"

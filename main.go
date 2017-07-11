@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// k8s secrets are liable to end up with a trailing newline, so trim that.
-	err = transmission.InitLibhoney(strings.TrimSpace(config.WriteKey))
+	err = transmission.InitLibhoney(strings.TrimSpace(config.WriteKey), config.APIHost)
 
 	transmitter := &transmission.HoneycombTransmitter{}
 

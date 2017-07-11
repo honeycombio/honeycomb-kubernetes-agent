@@ -1,4 +1,6 @@
 language: go
+dist: trusty
+sudo: false
 
 services:
  - docker
@@ -6,6 +8,8 @@ services:
 script:
  - make container
  - make test
+ - e2e-tests/minikube-bootstrap.sh
+ - e2e-tests/test.sh
 
 after_success:
  - if [ "$TRAVIS_BRANCH" == "master" ]; then
