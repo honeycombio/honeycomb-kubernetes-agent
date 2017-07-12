@@ -94,45 +94,21 @@ func main() {
 		}
 
 		if watcherConfig.LabelSelector != nil {
+			// Check for errors setting up the handler straightaway --
+			// we don't need to have actual pods to tail to do this.
 			_, err := handlers.NewLineHandlerFactoryFromConfig(
 				watcherConfig,
 				&unwrappers.DockerJSONLogUnwrapper{},
 				transmitter)
-			// Check for errors setting up the handler straightaway --
-			// we don't need to have actual pods to tail to do this.
 			if err != nil {
 				fmt.Printf("Error setting up watcher for LabelSelector %s:\n",
 					*watcherConfig.LabelSelector)
 				fmt.Printf("\t%v\n", err)
 				os.Exit(1)
 			}
-			podWatcher := k8sagent.NewPodWatcher(
-				watcherConfig.Namespace,
-				*watcherConfig.LabelSelector,
-				nodeSelector,
-				kubeClient)
 
-			containerName := watcherConfig.ContainerName
-
-			for pod := range podWatcher.Pods() {
-				k8sMetadataProcessor := &processors.KubernetesMetadataProcessor{
-					PodGetter:     podWatcher,
-					ContainerName: containerName,
-					UID:           pod.UID}
-				handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
-					watcherConfig,
-					&unwrappers.DockerJSONLogUnwrapper{},
-					transmitter,
-					k8sMetadataProcessor)
-				if err != nil {
-					// This shouldn't happen, since we check for errors above
-					logrus.WithError(err).Error("Error setting up watcher")
-					continue
-				}
-				go watchFilesForPod(pod, watcherConfig.ContainerName, handlerFactory)
-			}
+			go watchPods(watcherConfig, nodeSelector, transmitter, kubeClient)
 		}
-
 	}
 
 	fmt.Println("running")
@@ -161,6 +137,39 @@ func parseFlags() (CmdLineOptions, error) {
 		}
 	}
 	return options, nil
+}
+
+func watchPods(
+	watcherConfig *config.WatcherConfig,
+	nodeSelector string,
+	transmitter transmission.Transmitter,
+	kubeClient *kubernetes.Clientset,
+) {
+
+	podWatcher := k8sagent.NewPodWatcher(
+		watcherConfig.Namespace,
+		*watcherConfig.LabelSelector,
+		nodeSelector,
+		kubeClient)
+
+	for pod := range podWatcher.Pods() {
+		k8sMetadataProcessor := &processors.KubernetesMetadataProcessor{
+			PodGetter:     podWatcher,
+			ContainerName: watcherConfig.ContainerName,
+			UID:           pod.UID}
+		handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
+			watcherConfig,
+			&unwrappers.DockerJSONLogUnwrapper{},
+			transmitter,
+			k8sMetadataProcessor)
+		if err != nil {
+			// This shouldn't happen, since we check for configuration errors
+			// before actually setting up the watcher
+			logrus.WithError(err).Error("Error setting up watcher")
+			continue
+		}
+		go watchFilesForPod(pod, watcherConfig.ContainerName, handlerFactory)
+	}
 }
 
 func watchFilesForPod(pod *v1.Pod, containerName string, handlerFactory handlers.LineHandlerFactory) {

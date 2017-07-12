@@ -8,6 +8,7 @@ writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
 watchers:
   - labelSelector: app=nginx
     parser: nginx
+    dataset: nginx-kubernetes
 
     processors:
     - request_shape:
