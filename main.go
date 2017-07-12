@@ -164,13 +164,14 @@ func parseFlags() (CmdLineOptions, error) {
 }
 
 func watchFilesForPod(pod *v1.Pod, containerName string, handlerFactory handlers.LineHandlerFactory) {
-	pattern := fmt.Sprintf("/var/log/pods/%s/*", pod.UID)
+	path := fmt.Sprintf("/var/log/pods/%s", pod.UID)
+	pattern := fmt.Sprintf("%s/*", path)
 	var filterFunc func(fileName string) bool
 
 	if containerName != "" {
 		// only watch logs for containers matching the given name, if
 		// one is specified
-		re := fmt.Sprintf("^%s_[0-9]*\\.log", regexp.QuoteMeta(containerName))
+		re := fmt.Sprintf("^%s/%s_[0-9]*\\.log", path, regexp.QuoteMeta(containerName))
 		filterFunc = func(fileName string) bool {
 			ok, _ := regexp.Match(re, []byte(fileName))
 			return ok
