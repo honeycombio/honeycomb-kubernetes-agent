@@ -78,6 +78,7 @@ func extractMetadataFromPod(pod *v1.Pod, containerName string) map[string]interf
 			ret["container.ports"] = container.Ports
 			ret["container.VolumeMounts"] = container.VolumeMounts
 			ret["container.workingDir"] = container.WorkingDir
+			ret["container.resources"] = container.Resources
 		}
 	}
 	return ret
