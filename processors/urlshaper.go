@@ -20,7 +20,7 @@ type requestShaperConfig struct {
 	Field     string
 	Prefix    string
 	Patterns  []string
-	QueryKeys []string
+	QueryKeys []string `yaml:"queryKeys"`
 }
 
 func (r *RequestShaper) Init(options map[string]interface{}) error {
