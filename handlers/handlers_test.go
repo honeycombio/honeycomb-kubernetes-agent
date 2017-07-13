@@ -111,7 +111,7 @@ func TestStaticSampling(t *testing.T) {
 	for i := 0; i < 10000; i++ {
 		handler.Handle(`{"field": "a"}`)
 	}
-	assert.InDelta(t, len(mt.events), 1000, 50)
+	assert.InDelta(t, len(mt.events), 1000, 500)
 	for _, ev := range mt.events {
 		assert.Equal(t, ev.SampleRate, uint(10))
 	}
