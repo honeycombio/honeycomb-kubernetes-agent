@@ -11,8 +11,11 @@ import (
 
 // Processor is the interface that processors implement. The Init() method is
 // called to initialize the processor. Process() mutates event data in-place.
+// Processors should return `true` if processing and sending should continue,
+// and `false` if not. This is primarily relevant for sampling, and other
+// processors should always return true.
 type Processor interface {
-	Process(*event.Event)
+	Process(*event.Event) bool
 	Init(options map[string]interface{}) error
 }
 
@@ -40,15 +43,17 @@ func NewProcessorFromConfig(config map[string]map[string]interface{}) (Processor
 }
 
 func NewProcessor(name string, options map[string]interface{}) (Processor, error) {
+	var p Processor
 	switch name {
 	case "request_shape":
-		p := &RequestShaper{}
-		err := p.Init(options)
-		return p, err
+		p = &RequestShaper{}
 	case "drop_field":
-		p := &FieldDropper{}
-		err := p.Init(options)
-		return p, err
+		p = &FieldDropper{}
+	case "sample":
+		p = &Sampler{}
+	default:
+		return nil, fmt.Errorf("Unknown processor type %s", name)
 	}
-	return nil, fmt.Errorf("Unknown processor type %s", name)
+	err := p.Init(options)
+	return p, err
 }

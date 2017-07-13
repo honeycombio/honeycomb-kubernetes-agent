@@ -95,7 +95,11 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 	}
 	parsed.Dataset = h.config.Dataset
 	for _, p := range h.processors {
-		p.Process(parsed)
+		ret := p.Process(parsed)
+		if !ret {
+			logrus.Debug("Dropping line after processing")
+			return
+		}
 	}
 	logrus.WithField("parsed", parsed).Debug("Sending line")
 	h.transmitter.Send(parsed)

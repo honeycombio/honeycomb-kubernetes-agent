@@ -20,7 +20,7 @@ func (ht *HoneycombTransmitter) Send(ev *event.Event) {
 	}
 	libhoneyEvent.Timestamp = ev.Timestamp
 	libhoneyEvent.Add(ev.Data)
-	libhoneyEvent.Send()
+	libhoneyEvent.SendPresampled()
 }
 
 func InitLibhoney(writeKey string, apiHost string) error {

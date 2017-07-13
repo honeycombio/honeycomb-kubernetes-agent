@@ -18,7 +18,7 @@ func (k *KubernetesMetadataProcessor) Init(options map[string]interface{}) error
 	return nil
 }
 
-func (k *KubernetesMetadataProcessor) Process(ev *event.Event) {
+func (k *KubernetesMetadataProcessor) Process(ev *event.Event) bool {
 	pod, ok := k.PodGetter.Get(k.UID)
 	if ok {
 		k.lastPodData = pod
@@ -31,6 +31,7 @@ func (k *KubernetesMetadataProcessor) Process(ev *event.Event) {
 			ev.Data["kubernetes."+k] = v
 		}
 	}
+	return true
 }
 
 type PodMetadata struct {

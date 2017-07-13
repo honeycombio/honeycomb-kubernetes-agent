@@ -44,11 +44,11 @@ func (r *RequestShaper) Init(options map[string]interface{}) error {
 }
 
 // This is mostly borrowed from github.com/honeycombio/honeytail
-func (r *RequestShaper) Process(ev *event.Event) {
+func (r *RequestShaper) Process(ev *event.Event) bool {
 	data := ev.Data
 	val, ok := data[r.config.Field]
 	if !ok {
-		return
+		return true
 	}
 	valString, ok := val.(string)
 	if !ok {
@@ -71,7 +71,7 @@ func (r *RequestShaper) Process(ev *event.Event) {
 
 	shapedPath, err := r.shaper.Parse(path)
 	if err != nil {
-		return
+		return true
 	}
 
 	result["uri"] = shapedPath.URI
@@ -96,4 +96,5 @@ func (r *RequestShaper) Process(ev *event.Event) {
 	for k, v := range result {
 		data[prefix+"_"+k] = v
 	}
+	return true
 }

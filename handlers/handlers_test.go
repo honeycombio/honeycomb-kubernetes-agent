@@ -68,3 +68,51 @@ func TestDefaultNginxHandling(t *testing.T) {
 	assert.Equal(t, mt.events[0], expected)
 
 }
+
+func TestDropField(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg := &config.WatcherConfig{
+		Dataset: "kubernetestest",
+		Parser:  &config.ParserConfig{Name: "json"},
+		Processors: []map[string]map[string]interface{}{
+			map[string]map[string]interface{}{
+				"drop_field": map[string]interface{}{"field": "todrop"},
+			},
+		},
+	}
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("test")
+	handler.Handle(`{"todrop": "a", "dontdrop": "b"}`)
+	assert.Equal(t, len(mt.events), 1)
+	expected := &event.Event{
+		Dataset: "kubernetestest",
+		Data:    map[string]interface{}{"dontdrop": "b"},
+	}
+	assert.Equal(t, mt.events[0], expected)
+}
+
+func TestStaticSampling(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg := &config.WatcherConfig{
+		Dataset: "kubernetestest",
+		Parser:  &config.ParserConfig{Name: "json"},
+		Processors: []map[string]map[string]interface{}{
+			map[string]map[string]interface{}{
+				"sample": map[string]interface{}{"rate": 10},
+			},
+		},
+	}
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("test")
+	for i := 0; i < 10000; i++ {
+		handler.Handle(`{"field": "a"}`)
+	}
+	assert.InDelta(t, len(mt.events), 1000, 50)
+	for _, ev := range mt.events {
+		assert.Equal(t, ev.SampleRate, uint(10))
+	}
+}

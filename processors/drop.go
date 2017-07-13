@@ -10,7 +10,7 @@ type FieldDropper struct {
 }
 
 type fieldDropperConfig struct {
-	field string
+	Field string
 }
 
 func (f *FieldDropper) Init(options map[string]interface{}) error {
@@ -23,6 +23,7 @@ func (f *FieldDropper) Init(options map[string]interface{}) error {
 	return nil
 }
 
-func (f *FieldDropper) Process(ev *event.Event) {
-	delete(ev.Data, f.config.field)
+func (f *FieldDropper) Process(ev *event.Event) bool {
+	delete(ev.Data, f.config.Field)
+	return true
 }
