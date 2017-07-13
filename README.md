@@ -51,6 +51,7 @@ you'd specify the following configuration:
 ```
 watchers:
 - labelSelector: "app=nginx"
+  dataset: kubernetes-nginx
   parser: nginx
 ```
 ### Post-Processing Events
@@ -63,9 +64,10 @@ which will be applied in order. For example:
 watchers:
 - labelSelector: "app=nginx"
   parser: nginx
+  dataset: kubernetes-nginx
   processors:
-  - request_shape:            # Unpack the field "request": "GET /path HTTP/1.x
-      field: request            # into its constituent components
+  - request_shape:            # Unpack the field "request": "GET /path HTTP/1.x"
+      field: request          # into its constituent components
 
   - drop_field:               # Remove the "user_email" field from all events
       field: user_email
