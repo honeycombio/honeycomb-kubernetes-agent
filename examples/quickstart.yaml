@@ -78,7 +78,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: honeycombio/honeycomb-kubernetes-agent:b8f4461
+        image: honeycombio/honeycomb-kubernetes-agent:head
         imagePullPolicy: IfNotPresent
         name: honeycomb-agent
         resources:
