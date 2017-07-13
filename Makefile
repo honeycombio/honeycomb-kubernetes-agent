@@ -103,15 +103,17 @@ container-name:
 
 push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-ifeq ($(findstring gcr.io,$(REGISTRY)),gcr.io)
-	@gcloud docker -- push $(IMAGE):$(VERSION)
-else
 	@docker push $(IMAGE):$(VERSION)
-endif
 	@docker images -q $(IMAGE):$(VERSION) > $@
 
 push-name:
 	@echo "pushed: $(IMAGE):$(VERSION)"
+
+# Push the image tagged with :head
+push-head:
+	@docker tag $(IMAGE):$(VERSION) $(IMAGE):head
+	@docker push $(IMAGE):head
+	@echo "pushed: $(IMAGE):head"
 
 version:
 	@echo $(VERSION)
