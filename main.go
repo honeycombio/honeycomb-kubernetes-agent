@@ -154,9 +154,8 @@ func watchPods(
 
 	for pod := range podWatcher.Pods() {
 		k8sMetadataProcessor := &processors.KubernetesMetadataProcessor{
-			PodGetter:     podWatcher,
-			ContainerName: watcherConfig.ContainerName,
-			UID:           pod.UID}
+			PodGetter: podWatcher,
+			UID:       pod.UID}
 		handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 			watcherConfig,
 			&unwrappers.DockerJSONLogUnwrapper{},

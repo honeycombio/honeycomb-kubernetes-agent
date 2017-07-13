@@ -70,6 +70,7 @@ func NewLineHandlerFactoryFromConfig(
 
 func (hf *LineHandlerFactoryImpl) New(path string) LineHandler {
 	handler := &LineHandlerImpl{
+		path:       path,
 		config:     hf.config,
 		parser:     hf.parserFactory.New(),
 		processors: hf.processors,
@@ -80,6 +81,7 @@ func (hf *LineHandlerFactoryImpl) New(path string) LineHandler {
 }
 
 type LineHandlerImpl struct {
+	path        string
 	config      *config.WatcherConfig
 	unwrapper   unwrappers.Unwrapper
 	parser      parsers.Parser
@@ -88,19 +90,20 @@ type LineHandlerImpl struct {
 }
 
 func (h *LineHandlerImpl) Handle(rawLine string) {
-	parsed, err := h.unwrapper.Unwrap(rawLine, h.parser)
+	event, err := h.unwrapper.Unwrap(rawLine, h.parser)
 	if err != nil {
 		logrus.WithError(err).Debug("Failed to parse line")
 		return
 	}
-	parsed.Dataset = h.config.Dataset
+	event.Dataset = h.config.Dataset
+	event.Path = h.path
 	for _, p := range h.processors {
-		ret := p.Process(parsed)
+		ret := p.Process(event)
 		if !ret {
 			logrus.Debug("Dropping line after processing")
 			return
 		}
 	}
-	logrus.WithField("parsed", parsed).Debug("Sending line")
-	h.transmitter.Send(parsed)
+	logrus.WithField("parsed", event).Debug("Sending line")
+	h.transmitter.Send(event)
 }

@@ -1,6 +1,9 @@
 package processors
 
 import (
+	"path"
+	"regexp"
+
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
 	"k8s.io/client-go/pkg/api/v1"
@@ -8,10 +11,9 @@ import (
 )
 
 type KubernetesMetadataProcessor struct {
-	PodGetter     k8sagent.PodGetter
-	UID           types.UID
-	ContainerName string
-	lastPodData   *v1.Pod
+	PodGetter   k8sagent.PodGetter
+	UID         types.UID
+	lastPodData *v1.Pod
 }
 
 func (k *KubernetesMetadataProcessor) Init(options map[string]interface{}) error {
@@ -26,36 +28,13 @@ func (k *KubernetesMetadataProcessor) Process(ev *event.Event) bool {
 		pod = k.lastPodData
 	}
 	if pod != nil {
-		metadata := extractMetadataFromPod(pod, k.ContainerName)
+		containerName := getContainerNameFromPath(ev.Path)
+		metadata := extractMetadataFromPod(pod, containerName)
 		for k, v := range metadata {
 			ev.Data["kubernetes."+k] = v
 		}
 	}
 	return true
-}
-
-type PodMetadata struct {
-	Labels             map[string]string
-	Name               string
-	Namespace          string
-	ResourceVersion    string
-	UID                string
-	NodeName           string
-	NodeSelector       map[string]string
-	ServiceAccountName string
-	Subdomain          string
-}
-
-type ContainerMetadata struct {
-	Args         string
-	Command      string
-	Env          string
-	Image        string
-	Name         string
-	Ports        string
-	Resources    string
-	VolumeMounts string
-	WorkingDir   string
 }
 
 func extractMetadataFromPod(pod *v1.Pod, containerName string) map[string]interface{} {
@@ -74,6 +53,7 @@ func extractMetadataFromPod(pod *v1.Pod, containerName string) map[string]interf
 		if container.Name == containerName {
 			ret["container.args"] = container.Args
 			ret["container.command"] = container.Command
+			ret["container.name"] = container.Name
 			ret["container.env"] = container.Env
 			ret["container.image"] = container.Image
 			ret["container.ports"] = container.Ports
@@ -83,4 +63,17 @@ func extractMetadataFromPod(pod *v1.Pod, containerName string) map[string]interf
 		}
 	}
 	return ret
+}
+
+func getContainerNameFromPath(filePath string) string {
+	r := regexp.MustCompile("(?P<name>.*)_[0-9]+.log")
+	filename := path.Base(filePath)
+	match := r.FindStringSubmatch(filename)
+	if match == nil {
+		return ""
+	}
+	if len(match) < 2 {
+		return ""
+	}
+	return match[1]
 }
