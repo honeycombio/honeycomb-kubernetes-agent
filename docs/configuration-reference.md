@@ -17,7 +17,7 @@ watchers:
 ```
 
 Each block in the `watchers` list describes a set of pods whose logs you want
-to handle in a specific way, and hase the following keys:
+to handle in a specific way, and has the following keys:
 
 key | required? | type | description
 :--|:--|:--|:--
