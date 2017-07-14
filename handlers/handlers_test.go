@@ -1,5 +1,10 @@
 package handlers
 
+// It makes sense for most unit tests to live here, even ones that specifically
+// exercise particular processors and such, since they use a common test setup:
+// instantiate a LineHandler from a given configuration, pass it some example
+// lines, and test that the resultant events match expectations.
+
 import (
 	"testing"
 	"time"
@@ -24,6 +29,12 @@ func (mt *MockTransmitter) Send(ev *event.Event) {
 	mt.events = append(mt.events, ev)
 }
 
+func watcherConfigFromYAML(configSnippet string) (*config.WatcherConfig, error) {
+	cfg := &config.WatcherConfig{}
+	err := yaml.Unmarshal([]byte(configSnippet), cfg)
+	return cfg, err
+}
+
 func TestInvalidConfigurations(t *testing.T) {
 	mt := &MockTransmitter{}
 
@@ -37,8 +48,7 @@ func TestInvalidConfigurations(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		cfg := &config.WatcherConfig{}
-		err := yaml.Unmarshal([]byte(tc.config), cfg)
+		cfg, err := watcherConfigFromYAML(tc.config)
 		assert.NoError(t, err)
 
 		_, err = NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
@@ -101,15 +111,13 @@ func TestDropField(t *testing.T) {
 
 func TestStaticSampling(t *testing.T) {
 	mt := &MockTransmitter{}
-	cfg := &config.WatcherConfig{
-		Dataset: "kubernetestest",
-		Parser:  &config.ParserConfig{Name: "json"},
-		Processors: []map[string]map[string]interface{}{
-			map[string]map[string]interface{}{
-				"sample": map[string]interface{}{"rate": 10},
-			},
-		},
-	}
+	cfg, err := watcherConfigFromYAML(`
+dataset: kubernetestest
+parser: json
+processors:
+- sample:
+    rate: 10`)
+	assert.NoError(t, err)
 
 	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
 	assert.NoError(t, err)
@@ -121,6 +129,47 @@ func TestStaticSampling(t *testing.T) {
 	for _, ev := range mt.events {
 		assert.Equal(t, ev.SampleRate, uint(10))
 	}
+}
+
+func TestRequestShaping(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg, err := watcherConfigFromYAML(`
+---
+dataset: kubernetestest
+parser: json
+processors:
+- request_shape:
+    field: request
+    patterns:
+    - /api/:version/:resource
+    queryKeys:
+    - id`)
+	assert.NoError(t, err)
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"request": "GET /api/v1/users?id=22 HTTP/1.1"}`)
+
+	expected := &event.Event{
+		Dataset: "kubernetestest",
+		Path:    "/tmp/testpath",
+		Data: map[string]interface{}{
+			"request":                  "GET /api/v1/users?id=22 HTTP/1.1",
+			"request_method":           "GET",
+			"request_protocol_version": "HTTP/1.1",
+			"request_uri":              "/api/v1/users?id=22",
+			"request_path":             "/api/v1/users",
+			"request_query":            "id=22",
+			"request_shape":            "/api/:version/:resource?id=?",
+			"request_path_version":     "v1",
+			"request_path_resource":    "users",
+			"request_pathshape":        "/api/:version/:resource",
+			"request_queryshape":       "id=?",
+			"request_query_id":         "22",
+		},
+	}
+	assert.Equal(t, len(mt.events), 1)
+	assert.Equal(t, mt.events[0], expected)
 }
 
 // An (incomplete) test for attaching pod metadata:

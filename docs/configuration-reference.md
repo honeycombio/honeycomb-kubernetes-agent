@@ -108,12 +108,12 @@ into
 
 ```
 {
-    "request": "GET /api/v1/users?id=1 HTTP/1.1",
+    "request": "GET /api/v1/users?id=22 HTTP/1.1",
     "request_method": "GET",
     "request_protocol_version": "HTTP/1.1",
     "request_uri": "/api/v1/users?id=22",
     "request_path": "/api/v1/users",
-    "request_query": "?id=1",
+    "request_query": "id=22",
     "request_shape": "/api/:version/:resource?id=?",
     "request_path_version": "v1",
     "request_path_resource": "users",
