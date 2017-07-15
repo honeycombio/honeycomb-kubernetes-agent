@@ -23,35 +23,17 @@ import (
 
 type CmdLineOptions struct {
 	ConfigPath string `long:"config" description:"Path to configuration file" default:"/etc/honeycomb/config.yaml"`
+	Validate   bool   `long:"validate" description:"Validate configuration and exit"`
 }
 
 func main() {
 	flags, err := parseFlags()
 	if err != nil {
-		fmt.Printf("Error parsing options:\n\t%v\n", err)
+		fmt.Printf("Error parsing options:\n%v\n", err)
 	}
 	config, err := config.ReadFromFile(flags.ConfigPath)
 	if err != nil {
-		fmt.Printf("Error reading configuration:\n\t%v\n", err)
-		os.Exit(1)
-	}
-
-	if config.Verbosity == "debug" {
-		logrus.SetLevel(logrus.DebugLevel)
-	}
-
-	// Read write key from environment if not specified in config file
-	if config.WriteKey == "" {
-		config.WriteKey = os.Getenv("HONEYCOMB_WRITEKEY")
-	}
-
-	// k8s secrets are liable to end up with a trailing newline, so trim that.
-	err = transmission.InitLibhoney(strings.TrimSpace(config.WriteKey), config.APIHost)
-
-	transmitter := &transmission.HoneycombTransmitter{}
-
-	if err != nil {
-		fmt.Printf("Error initializing Honeycomb transmission:\n\t%v\n", err)
+		fmt.Printf("Error reading configuration:\n%v\n", err)
 		os.Exit(1)
 	}
 
@@ -60,14 +42,42 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = validateWatchers(config.Watchers)
 	if err != nil {
-		fmt.Printf("Error fetching pod list:\n\t%v\n", err)
+		// TODO: it'd be really nice to reference the specific configuration
+		// block that's problematic when returning an error to the user.
+		fmt.Printf("Error in watcher configuration:\n%v\n", err)
 		os.Exit(1)
 	}
 
+	if config.Verbosity == "debug" {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+
+	if flags.Validate {
+		fmt.Println("Configuration looks good!")
+		os.Exit(0)
+	}
+
+	// Read write key from environment if not specified in config file.
+	// k8s secrets injected into the environment are liable to end up with a
+	// trailing newline, so trim that.
+	// (That's because 'echo "KEY" | base64' encodes KEY plus a trailing
+	// newline.)
+	if config.WriteKey == "" {
+		config.WriteKey = strings.TrimSpace(os.Getenv("HONEYCOMB_WRITEKEY"))
+	}
+
+	err = transmission.InitLibhoney(config.WriteKey, config.APIHost)
+	if err != nil {
+		fmt.Printf("Error initializing Honeycomb transmission:\n%v\n", err)
+		os.Exit(1)
+	}
+	transmitter := &transmission.HoneycombTransmitter{}
+
 	kubeClient, err := newKubeClient()
 	if err != nil {
-		fmt.Printf("Error instantiating kube client:\n\t%v\n", err)
+		fmt.Printf("Error instantiating kube client:\n%v\n", err)
 		os.Exit(1)
 	}
 
@@ -85,28 +95,14 @@ func main() {
 				&unwrappers.RawLogUnwrapper{},
 				transmitter)
 			if err != nil {
-				fmt.Printf("Error setting up watcher for path %s:\n\t%v\n",
-					path, err)
-				os.Exit(1)
-
+				// This shouldn't happen, since we check for configuration errors
+				// before actually setting up the watcher
+				logrus.WithError(err).Error("Error setting up watcher")
 			}
 			go tailer.NewPathWatcher(path, nil, handlerFactory).Run()
 		}
 
 		if watcherConfig.LabelSelector != nil {
-			// Check for errors setting up the handler straightaway --
-			// we don't need to have actual pods to tail to do this.
-			_, err := handlers.NewLineHandlerFactoryFromConfig(
-				watcherConfig,
-				&unwrappers.DockerJSONLogUnwrapper{},
-				transmitter)
-			if err != nil {
-				fmt.Printf("Error setting up watcher for LabelSelector %s:\n",
-					*watcherConfig.LabelSelector)
-				fmt.Printf("\t%v\n", err)
-				os.Exit(1)
-			}
-
 			go watchPods(watcherConfig, nodeSelector, transmitter, kubeClient)
 		}
 	}
@@ -133,7 +129,7 @@ func parseFlags() (CmdLineOptions, error) {
 		if err != nil {
 			return options, err
 		} else {
-			return options, fmt.Errorf("\tUnexpected extra arguments: %s\n", strings.Join(extraArgs, " "))
+			return options, fmt.Errorf("Unexpected extra arguments: %s\n", strings.Join(extraArgs, " "))
 		}
 	}
 	return options, nil
@@ -187,4 +183,18 @@ func watchFilesForPod(pod *v1.Pod, containerName string, handlerFactory handlers
 	}
 	pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory)
 	pathWatcher.Run()
+}
+
+func validateWatchers(configs []*config.WatcherConfig) error {
+	for _, watcherConfig := range configs {
+		_, err := handlers.NewLineHandlerFactoryFromConfig(
+			watcherConfig,
+			&unwrappers.RawLogUnwrapper{},
+			&transmission.NullTransmitter{},
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

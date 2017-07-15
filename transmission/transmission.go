@@ -47,3 +47,8 @@ func readResponses() {
 		}
 	}
 }
+
+// NullTransmitter does nothing
+type NullTransmitter struct{}
+
+func (nt *NullTransmitter) Send(ev *event.Event) {}

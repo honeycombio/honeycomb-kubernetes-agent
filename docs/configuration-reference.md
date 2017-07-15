@@ -27,6 +27,13 @@ dataset | yes | string | The dataset that this watcher should send events to.
 containerName | no | string | If you only want to consume logs from one container in a multi-container pod, the name of the container to watch.
 processors | no | list | A list of [processors](#processors) to apply to events after they're parsed
 
+### Validating a configuration file
+To check a configuration file without needing to deploy it into the cluster,
+you can run the agent container locally with the `--validate` flag:
+```
+docker run -v /FULL/PATH/TO/YOUR/config.yaml:/etc/honeycomb/config.yaml honeycombio/honeycomb-kubernetes-agent:head --validate
+```
+
 ## Parsers
 Currently, the following parsers are supported:
 
