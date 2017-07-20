@@ -142,6 +142,13 @@ func watchPods(
 	kubeClient *kubernetes.Clientset,
 ) {
 
+	labelSelector := *watcherConfig.LabelSelector
+	if labelSelector == "" {
+		labelSelector = "ks-app!=honeycomb-agent"
+	} else {
+		labelSelector = labelSelector + ",k8s-app!=honeycomb-agent"
+	}
+
 	podWatcher := k8sagent.NewPodWatcher(
 		watcherConfig.Namespace,
 		*watcherConfig.LabelSelector,
