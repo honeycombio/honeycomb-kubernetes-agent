@@ -45,7 +45,7 @@ data:
     watchers:
       - dataset: kubernetestest
         labelSelector: ""
-        parser: json
+        parser: glog
     verbosity: debug
 
 # Daemonset
