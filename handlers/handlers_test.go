@@ -81,6 +81,33 @@ func TestDefaultNginxHandling(t *testing.T) {
 		Timestamp: time.Date(2017, 7, 10, 22, 10, 25, 569584932, time.UTC),
 	}
 	assert.Equal(t, mt.events[0], expected)
+}
+
+func TestGlogParsing(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg := &config.WatcherConfig{
+		Dataset: "kubernetestest",
+		Parser:  &config.ParserConfig{Name: "glog"},
+	}
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.DockerJSONLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"log": "W0720 00:15:01.592300       5 controller.go:386] Resetting endpoints for master service", "stream":"stdout","time":"2017-07-10T22:10:25.569584932Z"}`)
+	assert.Equal(t, len(mt.events), 1)
+	expected := &event.Event{
+		Data: map[string]interface{}{
+			"level":          "W",
+			"filename":       "controller.go",
+			"lineno":         "386",
+			"message":        "Resetting endpoints for master service",
+			"threadid":       "5",
+			"glog_timestamp": time.Date(time.Now().Year(), 07, 20, 0, 15, 01, 592300000, time.UTC),
+		},
+		Dataset:   "kubernetestest",
+		Path:      "/tmp/testpath",
+		Timestamp: time.Date(2017, 7, 10, 22, 10, 25, 569584932, time.UTC),
+	}
+	assert.Equal(t, mt.events[0], expected)
 
 }
 

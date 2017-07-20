@@ -51,6 +51,14 @@ parser:
     log_format: '"$remote_addr - $remote_user [$time_local] "$request" $status ...'
 ```
 
+### glog
+Parses logs produced by [glog](https://github.com/golang/glog), which look like this:
+```
+I0719 23:09:54.422170       1 kube.go:118] Node controller sync successful
+```
+
+This format is commonly used by Kubernetes system components such as the API server.
+
 ### nop
 Does no parsing on logs, and returns an event with the entire contents of the log line in a `"log"` field.
 

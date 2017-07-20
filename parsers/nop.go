@@ -11,6 +11,6 @@ type NoOpParserFactory struct{}
 
 func (pf *NoOpParserFactory) Init(options map[string]interface{}) error { return nil }
 
-func (n *NoOpParserFactory) New() Parser {
+func (pf *NoOpParserFactory) New() Parser {
 	return &NoOpParser{}
 }
