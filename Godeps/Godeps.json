@@ -36,6 +36,11 @@
 			"Rev": "31b736133b98f26d5e078ec9eb591666edfd091f"
 		},
 		{
+			"ImportPath": "github.com/boltdb/bolt",
+			"Comment": "v1.2.1-13-g5cc10bb",
+			"Rev": "5cc10bbbc5c141029940133bb33c9e969512a698"
+		},
+		{
 			"ImportPath": "github.com/coreos/go-oidc/http",
 			"Rev": "5644a2f50e2d2d5ba0b474bc5bc55fea1925936d"
 		},
@@ -173,28 +178,28 @@
 		},
 		{
 			"ImportPath": "github.com/hpcloud/tail",
-			"Comment": "v1.0.0-9-gfaf842b",
-			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
+			"Comment": "v1.0.0-19-ga927b68",
+			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
 		},
 		{
 			"ImportPath": "github.com/hpcloud/tail/ratelimiter",
-			"Comment": "v1.0.0-9-gfaf842b",
-			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
+			"Comment": "v1.0.0-19-ga927b68",
+			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
 		},
 		{
 			"ImportPath": "github.com/hpcloud/tail/util",
-			"Comment": "v1.0.0-9-gfaf842b",
-			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
+			"Comment": "v1.0.0-19-ga927b68",
+			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
 		},
 		{
 			"ImportPath": "github.com/hpcloud/tail/watch",
-			"Comment": "v1.0.0-9-gfaf842b",
-			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
+			"Comment": "v1.0.0-19-ga927b68",
+			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
 		},
 		{
 			"ImportPath": "github.com/hpcloud/tail/winfile",
-			"Comment": "v1.0.0-9-gfaf842b",
-			"Rev": "faf842bde7ed83bbc3c65a2c454fae39bc29a95f"
+			"Comment": "v1.0.0-19-ga927b68",
+			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
 		},
 		{
 			"ImportPath": "github.com/jessevdk/go-flags",
@@ -958,6 +963,16 @@
 			"ImportPath": "k8s.io/client-go/transport",
 			"Comment": "v2.0.0",
 			"Rev": "e121606b0d09b2e1c467183ee46217fa85a6b672"
+		},
+		{
+			"ImportPath": "github.com/hpcloud/tail/vendor/gopkg.in/tomb.v1",
+			"Comment": "v1.0.0-19-ga927b68",
+			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
+		},
+		{
+			"ImportPath": "github.com/hpcloud/tail/vendor/gopkg.in/fsnotify.v1",
+			"Comment": "v1.0.0-19-ga927b68",
+			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
 		}
 	]
 }

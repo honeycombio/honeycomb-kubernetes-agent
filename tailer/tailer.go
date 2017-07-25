@@ -10,25 +10,36 @@ import (
 )
 
 type Tailer struct {
-	path    string
-	done    chan bool
-	handler handlers.LineHandler
+	path          string
+	done          chan bool
+	handler       handlers.LineHandler
+	stateRecorder StateRecorder
 }
 
-func NewTailer(path string, handler handlers.LineHandler) *Tailer {
+func NewTailer(path string, handler handlers.LineHandler, stateRecorder StateRecorder) *Tailer {
 	t := &Tailer{
-		path:    path,
-		handler: handler,
-		done:    make(chan bool),
+		path:          path,
+		handler:       handler,
+		stateRecorder: stateRecorder,
+		done:          make(chan bool),
 	}
 	return t
 }
 
 func (t *Tailer) Run() error {
+	seekInfo := &tail.SeekInfo{}
+	if t.stateRecorder != nil {
+		if offset, err := t.stateRecorder.Get(t.path); err == nil {
+			seekInfo.Offset = offset
+		}
+	}
 	tailConf := tail.Config{
-		ReOpen: true,
+		ReOpen: false,
 		Follow: true,
-		Logger: tail.DiscardingLogger,
+		// TODO: inotify doesn't detect file deletions, fix this
+		Poll:     true,
+		Logger:   tail.DiscardingLogger,
+		Location: seekInfo,
 	}
 	tailer, err := tail.TailFile(t.path, tailConf)
 	if err != nil {
@@ -36,14 +47,16 @@ func (t *Tailer) Run() error {
 		return err
 	}
 	logrus.WithField("filePath", t.path).Info("Tailing file")
-	out := make(chan string)
+	ticker := time.NewTicker(time.Second)
 	go func() {
 	loop:
 		for {
 			select {
 			case line, ok := <-tailer.Lines:
 				if !ok {
-					close(out)
+					if t.stateRecorder != nil {
+						t.stateRecorder.Delete(t.path)
+					}
 					break loop
 				}
 				if line.Err != nil {
@@ -51,13 +64,26 @@ func (t *Tailer) Run() error {
 				}
 				t.handler.Handle(line.Text)
 			case <-t.done:
-				close(out)
+				t.updateState(tailer.Tell)
+				ticker.Stop()
 				break loop
+			case <-ticker.C:
+				t.updateState(tailer.Tell)
 			}
 		}
 		logrus.WithField("filePath", t.path).Info("Done tailing file")
 	}()
 	return nil
+}
+
+func (t *Tailer) updateState(teller func() (int64, error)) {
+	offset, err := teller()
+	if err == nil && t.stateRecorder != nil {
+		t.stateRecorder.Record(t.path, offset)
+	} else {
+		// TODO
+	}
+
 }
 
 func (t *Tailer) Stop() {
@@ -71,16 +97,23 @@ type PathWatcher struct {
 	filter         filterFunc
 	watched        map[string]struct{}
 	handlerFactory handlers.LineHandlerFactory
+	stateRecorder  StateRecorder
 	checkInterval  time.Duration
 	done           chan bool
 }
 
-func NewPathWatcher(pattern string, filter filterFunc, handlerFactory handlers.LineHandlerFactory) *PathWatcher {
+func NewPathWatcher(
+	pattern string,
+	filter filterFunc,
+	handlerFactory handlers.LineHandlerFactory,
+	stateRecorder StateRecorder,
+) *PathWatcher {
 	p := &PathWatcher{
 		pattern:        pattern,
 		filter:         filter,
 		watched:        make(map[string]struct{}),
 		handlerFactory: handlerFactory,
+		stateRecorder:  stateRecorder,
 		checkInterval:  time.Second, // TODO make configurable
 		done:           make(chan bool),
 	}
@@ -118,7 +151,7 @@ func (p *PathWatcher) check() {
 			}
 			p.watched[file] = struct{}{}
 			handler := p.handlerFactory.New(file)
-			tailer := NewTailer(file, handler)
+			tailer := NewTailer(file, handler, p.stateRecorder)
 			go tailer.Run()
 		}
 		current[file] = struct{}{}

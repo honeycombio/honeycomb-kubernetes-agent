@@ -88,6 +88,11 @@ func main() {
 	}
 	nodeSelector := fmt.Sprintf("spec.nodeName=%s", nodeName)
 
+	stateRecorder, err := tailer.NewStateRecorder("/var/log/honeycomb-agent.state")
+	if err != nil {
+		logrus.WithError(err).Error("Error initializing state recorder")
+	}
+
 	for _, watcherConfig := range config.Watchers {
 		for _, path := range watcherConfig.FilePaths {
 			handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
@@ -99,11 +104,11 @@ func main() {
 				// before actually setting up the watcher
 				logrus.WithError(err).Error("Error setting up watcher")
 			}
-			go tailer.NewPathWatcher(path, nil, handlerFactory).Run()
+			go tailer.NewPathWatcher(path, nil, handlerFactory, stateRecorder).Run()
 		}
 
 		if watcherConfig.LabelSelector != nil {
-			go watchPods(watcherConfig, nodeSelector, transmitter, kubeClient)
+			go watchPods(watcherConfig, nodeSelector, transmitter, stateRecorder, kubeClient)
 		}
 	}
 
@@ -139,6 +144,7 @@ func watchPods(
 	watcherConfig *config.WatcherConfig,
 	nodeSelector string,
 	transmitter transmission.Transmitter,
+	stateRecorder tailer.StateRecorder,
 	kubeClient *kubernetes.Clientset,
 ) {
 
@@ -170,11 +176,16 @@ func watchPods(
 			logrus.WithError(err).Error("Error setting up watcher")
 			continue
 		}
-		go watchFilesForPod(pod, watcherConfig.ContainerName, handlerFactory)
+		go watchFilesForPod(pod, watcherConfig.ContainerName, handlerFactory, stateRecorder)
 	}
 }
 
-func watchFilesForPod(pod *v1.Pod, containerName string, handlerFactory handlers.LineHandlerFactory) {
+func watchFilesForPod(
+	pod *v1.Pod,
+	containerName string,
+	handlerFactory handlers.LineHandlerFactory,
+	stateRecorder tailer.StateRecorder,
+) {
 	path := fmt.Sprintf("/var/log/pods/%s", pod.UID)
 	pattern := fmt.Sprintf("%s/*", path)
 	var filterFunc func(fileName string) bool
@@ -188,7 +199,7 @@ func watchFilesForPod(pod *v1.Pod, containerName string, handlerFactory handlers
 			return ok
 		}
 	}
-	pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory)
+	pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory, stateRecorder)
 	pathWatcher.Run()
 }
 
