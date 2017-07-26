@@ -149,15 +149,16 @@ func watchPods(
 ) {
 
 	labelSelector := *watcherConfig.LabelSelector
+	// Exclude the agent's own logs from being watched
 	if labelSelector == "" {
-		labelSelector = "ks-app!=honeycomb-agent"
+		labelSelector = "k8s-app!=honeycomb-agent"
 	} else {
 		labelSelector = labelSelector + ",k8s-app!=honeycomb-agent"
 	}
 
 	podWatcher := k8sagent.NewPodWatcher(
 		watcherConfig.Namespace,
-		*watcherConfig.LabelSelector,
+		labelSelector,
 		nodeSelector,
 		kubeClient)
 
