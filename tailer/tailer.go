@@ -46,7 +46,8 @@ func (t *Tailer) Run() error {
 		logrus.WithField("filePath", t.path).Info("Error starting file tail")
 		return err
 	}
-	logrus.WithField("filePath", t.path).Info("Tailing file")
+	logrus.WithField("path", t.path).WithField("offset", tailConf.Location.Offset).
+		Info("Tailing file")
 	ticker := time.NewTicker(time.Second)
 	go func() {
 	loop:

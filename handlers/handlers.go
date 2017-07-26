@@ -69,6 +69,10 @@ func NewLineHandlerFactoryFromConfig(
 }
 
 func (hf *LineHandlerFactoryImpl) New(path string) LineHandler {
+	logrus.WithFields(logrus.Fields{
+		"path":   path,
+		"parser": hf.config.Parser.Name,
+	}).Info("Initializing file handler")
 	handler := &LineHandlerImpl{
 		path:       path,
 		config:     hf.config,
