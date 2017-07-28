@@ -14,6 +14,13 @@ import (
 // https://github.com/google/glog/blob/master/src/logging.cc#L1077
 const lineformat = `(?P<level>[IWEF])(?P<month>[0-9]{2})(?P<day>[0-9]{2}) (?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})\.(?P<microsecond>[0-9]*)\s+(?P<threadid>[0-9]*) (?P<filename>[^:]*):(?P<lineno>[0-9]*)\] (?P<message>.*)`
 
+var levels = map[string]string{
+	"I": "info",
+	"W": "warning",
+	"E": "error",
+	"F": "fatal",
+}
+
 type GlogParser struct {
 	re       *extRegexp
 	inFlight map[string]interface{}
@@ -34,7 +41,11 @@ func (p *GlogParser) Parse(line string) (map[string]interface{}, error) {
 	}
 
 	ret := make(map[string]interface{}, 0)
-	ret["level"] = captures["level"]
+	if level, ok := levels[captures["level"]]; ok {
+		ret["level"] = level
+	} else {
+		ret["level"] = captures["level"]
+	}
 	ret["threadid"] = captures["threadid"]
 	ret["filename"] = captures["filename"]
 	ret["lineno"] = captures["lineno"]

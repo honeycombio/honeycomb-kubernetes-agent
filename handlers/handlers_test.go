@@ -96,7 +96,7 @@ func TestGlogParsing(t *testing.T) {
 	assert.Equal(t, len(mt.events), 1)
 	expected := &event.Event{
 		Data: map[string]interface{}{
-			"level":          "W",
+			"level":          "warning",
 			"filename":       "controller.go",
 			"lineno":         "386",
 			"message":        "Resetting endpoints for master service",
