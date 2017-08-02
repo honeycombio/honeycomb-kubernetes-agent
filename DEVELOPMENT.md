@@ -5,8 +5,8 @@ You'll need Go and Docker installed (obviously). For local testing, you can use
 notes below on tweaks needed for Minikube.
 
 If you need a fuller-sized throwaway cluster, I recommend the [Heptio AWS
-quickstart](https://s3.amazonaws.com/quickstart-reference/heptio/latest/doc/heptio-kubernetes-on-the-aws-cloud.pdf)
-Just mmake sure to use a testing AWS account, or at least make sure that you don't
+quickstart](https://s3.amazonaws.com/quickstart-reference/heptio/latest/doc/heptio-kubernetes-on-the-aws-cloud.pdf).
+Just make sure to use a testing AWS account, or at least make sure that you don't
 interfere with an existing VPC setup.
 
 To build the agent image, run `make container`; to run unit tests and `go vet`,
