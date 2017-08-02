@@ -6,6 +6,7 @@ package handlers
 // lines, and test that the resultant events match expectations.
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -143,6 +144,7 @@ dataset: kubernetestest
 parser: json
 processors:
 - sample:
+    type: static
     rate: 10`)
 	assert.NoError(t, err)
 
@@ -155,6 +157,42 @@ processors:
 	assert.InDelta(t, len(mt.events), 1000, 500)
 	for _, ev := range mt.events {
 		assert.Equal(t, ev.SampleRate, uint(10))
+	}
+}
+
+func TestDynamicSampling(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg, err := watcherConfigFromYAML(`
+dataset: kubernetestest
+parser: json
+processors:
+- sample:
+    type: dynamic
+    windowSize: 1
+    keys:
+    - sampleKey
+    rate: 10`)
+	assert.NoError(t, err)
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	start := time.Now()
+	count := 0
+	for time.Since(start) < time.Duration(2)*time.Second {
+		handler.Handle(`{"sampleKey": "a"}`)
+		count++
+	}
+	for i := 0; i < 100; i++ {
+		handler.Handle(fmt.Sprintf(`{"sampleKey": "%d"}`, i))
+	}
+	countsByKey := make(map[string]int)
+	for _, ev := range mt.events {
+		countsByKey[ev.Data["sampleKey"].(string)]++
+	}
+	assert.InDelta(t, countsByKey["a"], count/10, 500)
+	for i := 0; i < 100; i++ {
+		assert.Equal(t, countsByKey[fmt.Sprintf("%d", i)], 1)
 	}
 }
 

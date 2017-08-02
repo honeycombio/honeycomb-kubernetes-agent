@@ -163,6 +163,10 @@
 			"Rev": "9659c814f1d54d63f9c623449a7111d3864c1361"
 		},
 		{
+			"ImportPath": "github.com/honeycombio/dynsampler-go",
+			"Rev": "e2e8a486b1ed111e01453d39afaa20db0685744b"
+		},
+		{
 			"ImportPath": "github.com/honeycombio/gonx",
 			"Comment": "v1.3.0-5-g45c9e83",
 			"Rev": "45c9e836929976702894f73f10fb9ec43e0279d2"
@@ -963,16 +967,6 @@
 			"ImportPath": "k8s.io/client-go/transport",
 			"Comment": "v2.0.0",
 			"Rev": "e121606b0d09b2e1c467183ee46217fa85a6b672"
-		},
-		{
-			"ImportPath": "github.com/hpcloud/tail/vendor/gopkg.in/tomb.v1",
-			"Comment": "v1.0.0-19-ga927b68",
-			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
-		},
-		{
-			"ImportPath": "github.com/hpcloud/tail/vendor/gopkg.in/fsnotify.v1",
-			"Comment": "v1.0.0-19-ga927b68",
-			"Rev": "a927b6857fc77f4823ab37102e948be667b92bd8"
 		}
 	]
 }
