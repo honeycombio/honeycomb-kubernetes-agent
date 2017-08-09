@@ -175,28 +175,58 @@ processors:
 	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
 	assert.NoError(t, err)
 	handler := hf.New("/tmp/testpath")
-	handler.Handle(`{"request": "GET /api/v1/users?id=22 HTTP/1.1"}`)
 
-	expected := &event.Event{
-		Dataset: "kubernetestest",
-		Path:    "/tmp/testpath",
-		Data: map[string]interface{}{
-			"request":                  "GET /api/v1/users?id=22 HTTP/1.1",
-			"request_method":           "GET",
-			"request_protocol_version": "HTTP/1.1",
-			"request_uri":              "/api/v1/users?id=22",
-			"request_path":             "/api/v1/users",
-			"request_query":            "id=22",
-			"request_shape":            "/api/:version/:resource?id=?",
-			"request_path_version":     "v1",
-			"request_path_resource":    "users",
-			"request_pathshape":        "/api/:version/:resource",
-			"request_queryshape":       "id=?",
-			"request_query_id":         "22",
+	testcases := []struct {
+		line     string
+		expected *event.Event
+	}{
+		{
+			`{"request": "GET /api/v1/users?id=22 HTTP/1.1"}`,
+			&event.Event{
+				Dataset: "kubernetestest",
+				Path:    "/tmp/testpath",
+				Data: map[string]interface{}{
+					"request":                  "GET /api/v1/users?id=22 HTTP/1.1",
+					"request_method":           "GET",
+					"request_protocol_version": "HTTP/1.1",
+					"request_uri":              "/api/v1/users?id=22",
+					"request_path":             "/api/v1/users",
+					"request_query":            "id=22",
+					"request_shape":            "/api/:version/:resource?id=?",
+					"request_path_version":     "v1",
+					"request_path_resource":    "users",
+					"request_pathshape":        "/api/:version/:resource",
+					"request_queryshape":       "id=?",
+					"request_query_id":         "22",
+				},
+			},
+		},
+		{
+			`{"request": "/api/v1/users?id=22"}`,
+			&event.Event{
+				Dataset: "kubernetestest",
+				Path:    "/tmp/testpath",
+				Data: map[string]interface{}{
+					"request":               "/api/v1/users?id=22",
+					"request_uri":           "/api/v1/users?id=22",
+					"request_path":          "/api/v1/users",
+					"request_query":         "id=22",
+					"request_shape":         "/api/:version/:resource?id=?",
+					"request_path_version":  "v1",
+					"request_path_resource": "users",
+					"request_pathshape":     "/api/:version/:resource",
+					"request_queryshape":    "id=?",
+					"request_query_id":      "22",
+				},
+			},
 		},
 	}
-	assert.Equal(t, len(mt.events), 1)
-	assert.Equal(t, mt.events[0], expected)
+
+	for idx, tc := range testcases {
+		handler.Handle(tc.line)
+		assert.Equal(t, len(mt.events), idx+1)
+		assert.Equal(t, mt.events[idx], tc.expected)
+	}
 }
 
 // An (incomplete) test for attaching pod metadata:
