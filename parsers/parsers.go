@@ -26,6 +26,8 @@ func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 		factory = &NginxParserFactory{}
 	case "glog":
 		factory = &GlogParserFactory{}
+	case "redis":
+		factory = &RedisParserFactory{}
 	default:
 		return nil, fmt.Errorf("Unknown parser type %s", config.Name)
 	}
