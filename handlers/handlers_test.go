@@ -111,6 +111,33 @@ func TestGlogParsing(t *testing.T) {
 
 }
 
+func TestRedisParsing(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg := &config.WatcherConfig{
+		Dataset: "kubernetestest",
+		Parser:  &config.ParserConfig{Name: "redis"},
+	}
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.DockerJSONLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"log": "44:C 09 Aug 23:12:19.127 * RDB: 0 MB of memory used by copy-on-write", "stream":"stdout","time":"2017-07-02T22:10:25.569534932Z"}`)
+	assert.Equal(t, len(mt.events), 1)
+	expected := &event.Event{
+		Data: map[string]interface{}{
+			"level":          "notice",
+			"role": 	          "child",
+			"pid":         "44",
+			"message":        "RDB: 0 MB of memory used by copy-on-write",
+			"redis_timestamp": time.Date(time.Now().Year(), 8, 9, 23, 12, 19, 127000000, time.UTC),
+		},
+		Dataset:   "kubernetestest",
+		Path:      "/tmp/testpath",
+		Timestamp: time.Date(2017, 7, 2, 22, 10, 25, 569534932, time.UTC),
+	}
+	assert.Equal(t, mt.events[0], expected)
+
+}
+
 func TestDropField(t *testing.T) {
 	mt := &MockTransmitter{}
 	cfg := &config.WatcherConfig{
