@@ -59,6 +59,12 @@ I0719 23:09:54.422170       1 kube.go:118] Node controller sync successful
 
 This format is commonly used by Kubernetes system components such as the API server.
 
+### redis
+Parses logs produced by [redis](https://redis.io) 3.0+, which look like this:
+```
+1:M 08 Aug 22:59:58.739 * Background saving started by pid 43
+```
+
 ### nop
 Does no parsing on logs, and returns an event with the entire contents of the log line in a `"log"` field.
 
