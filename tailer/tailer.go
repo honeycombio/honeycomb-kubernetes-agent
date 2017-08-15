@@ -12,6 +12,7 @@ import (
 type Tailer struct {
 	path          string
 	done          chan bool
+	offset        int64
 	handler       handlers.LineHandler
 	stateRecorder StateRecorder
 }
@@ -31,6 +32,7 @@ func (t *Tailer) Run() error {
 	if t.stateRecorder != nil {
 		if offset, err := t.stateRecorder.Get(t.path); err == nil {
 			seekInfo.Offset = offset
+			t.offset = offset
 		}
 	}
 	tailConf := tail.Config{
@@ -64,12 +66,15 @@ func (t *Tailer) Run() error {
 					continue
 				}
 				t.handler.Handle(line.Text)
+				// account for newline character (which is not in line.Text)
+				// when bumping offset
+				t.offset += int64(len(line.Text) + 1)
 			case <-t.done:
-				t.updateState(tailer.Tell)
+				t.updateState(t.offset)
 				ticker.Stop()
 				break loop
 			case <-ticker.C:
-				t.updateState(tailer.Tell)
+				t.updateState(t.offset)
 			}
 		}
 		logrus.WithField("filePath", t.path).Info("Done tailing file")
@@ -77,14 +82,10 @@ func (t *Tailer) Run() error {
 	return nil
 }
 
-func (t *Tailer) updateState(teller func() (int64, error)) {
-	offset, err := teller()
-	if err == nil && t.stateRecorder != nil {
+func (t *Tailer) updateState(offset int64) {
+	if t.stateRecorder != nil {
 		t.stateRecorder.Record(t.path, offset)
-	} else {
-		// TODO
 	}
-
 }
 
 func (t *Tailer) Stop() {
