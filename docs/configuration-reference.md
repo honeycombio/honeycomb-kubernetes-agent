@@ -65,6 +65,19 @@ Parses logs produced by [redis](https://redis.io) 3.0+, which look like this:
 1:M 08 Aug 22:59:58.739 * Background saving started by pid 43
 ```
 
+### keyval
+Parses logs in `key=value` format.
+
+Key-value formatted logs often have a special prefix, such as a timestamp. You
+can specify a regular expression to parse that prefix using the following
+configuration:
+```
+parser:
+  name: keyval
+  options:
+    prefixRegex: "(?P<timestamp>[0-9:\\-\\.TZ]+) AUDIT: "
+```
+
 ### nop
 Does no parsing on logs, and returns an event with the entire contents of the log line in a `"log"` field.
 
@@ -94,6 +107,22 @@ The `drop_field` processor will remove the specified field from all events befor
 key | value | description
 :--|:--|:--
 field | string | The name of the field to drop.
+
+### timefield
+The `timefield` processor will replace the default timestamp in an event with
+one extracted from a specific field in the event.
+
+**Options:
+
+key | value | description
+:--|:--|:--
+field | string | The name of the field containing the timestamp
+format | string | The format of the timestamp found in timefield, in strftime or [Golang](https://golang.org/pkg/time/#pkg-constants) format
+
+_Note_: This processor isn't generally necessary when collecting pod logs. The
+agent will automatically use the timestamp recorded by the Docker json-log
+driver. It's useful when parsing logs that live at a particular path on the
+node filesystem, such as Kubernetes audit logs.
 
 ### request_shape
 

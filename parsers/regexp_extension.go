@@ -10,6 +10,14 @@ type extRegexp struct {
 	*regexp.Regexp
 }
 
+func newExtRegexp(expr string) (*extRegexp, error) {
+	re, err := regexp.Compile(expr)
+	if err != nil {
+		return nil, err
+	}
+	return &extRegexp{re}, nil
+}
+
 // FindStringSubmatchMap behaves the same as FindStringSubmatch except instead
 // of a list of matches with the names separate, it returns the full match and a
 // map of named submatches

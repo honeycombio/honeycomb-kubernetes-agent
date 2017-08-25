@@ -125,10 +125,10 @@ func TestRedisParsing(t *testing.T) {
 	assert.Equal(t, len(mt.events), 1)
 	expected := &event.Event{
 		Data: map[string]interface{}{
-			"level":          "notice",
-			"role": 	          "child",
-			"pid":         "44",
-			"message":        "RDB: 0 MB of memory used by copy-on-write",
+			"level":           "notice",
+			"role":            "child",
+			"pid":             "44",
+			"message":         "RDB: 0 MB of memory used by copy-on-write",
 			"redis_timestamp": time.Date(time.Now().Year(), 8, 9, 23, 12, 19, 127000000, time.UTC),
 		},
 		Dataset:   "kubernetestest",
@@ -136,7 +136,44 @@ func TestRedisParsing(t *testing.T) {
 		Timestamp: time.Date(2017, 7, 2, 22, 10, 25, 569534932, time.UTC),
 	}
 	assert.Equal(t, mt.events[0], expected)
+}
 
+func TestKeyvalParsing(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg, err := watcherConfigFromYAML(`
+---
+dataset: kubernetestest
+parser:
+  name: keyval
+  options:
+    prefixRegex: "(?P<timestamp>[0-9\\.:TZ\\-]+) AUDIT: "
+processors:
+  - timefield:
+      field: timestamp
+`)
+	assert.NoError(t, err)
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`2017-08-25T04:40:49.965969122Z AUDIT: id="8e2ad929-8da1-4ce5-8776-751421157483" ip="172.20.67.135" method="GET" user="system:serviceaccount:tectonic-system:prometheus-operator" groups="\"system:serviceaccounts\",\"system:serviceaccounts:tectonic-system\",\"system:authenticated\"" as="<self>" asgroups="<lookup>" namespace="tectonic-system" uri="/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s"`)
+	assert.Equal(t, len(mt.events), 1)
+	expected := &event.Event{
+		Data: map[string]interface{}{
+			"id":        "8e2ad929-8da1-4ce5-8776-751421157483",
+			"ip":        "172.20.67.135",
+			"method":    "GET",
+			"user":      "system:serviceaccount:tectonic-system:prometheus-operator",
+			"groups":    "\"system:serviceaccounts\",\"system:serviceaccounts:tectonic-system\",\"system:authenticated\"",
+			"as":        "<self>",
+			"asgroups":  "<lookup>",
+			"namespace": "tectonic-system",
+			"uri":       "/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s",
+		},
+		Dataset:   "kubernetestest",
+		Path:      "/tmp/testpath",
+		Timestamp: time.Date(2017, 8, 25, 4, 40, 49, 965969122, time.UTC),
+	}
+	assert.Equal(t, mt.events[0], expected)
 }
 
 func TestDropField(t *testing.T) {

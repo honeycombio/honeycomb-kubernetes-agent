@@ -51,6 +51,8 @@ func NewProcessor(name string, options map[string]interface{}) (Processor, error
 		p = &FieldDropper{}
 	case "sample":
 		p = &Sampler{}
+	case "timefield":
+		p = &TimeFieldExtractor{}
 	default:
 		return nil, fmt.Errorf("Unknown processor type %s", name)
 	}

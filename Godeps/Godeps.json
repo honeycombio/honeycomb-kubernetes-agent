@@ -172,6 +172,10 @@
 			"Rev": "45c9e836929976702894f73f10fb9ec43e0279d2"
 		},
 		{
+			"ImportPath": "github.com/honeycombio/honeytail/httime",
+			"Rev": "caa5d01bbba5b4f6bf100a20079424ab60374b73"
+		},
+		{
 			"ImportPath": "github.com/honeycombio/libhoney-go",
 			"Comment": "v1.3.2-3-g0c0e8c4",
 			"Rev": "0c0e8c402eeef843eafc2bad6dccb16baf565d2f"
@@ -222,6 +226,10 @@
 		{
 			"ImportPath": "github.com/juju/ratelimit",
 			"Rev": "77ed1c8a01217656d2080ad51981f6e99adaa177"
+		},
+		{
+			"ImportPath": "github.com/kr/logfmt",
+			"Rev": "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 		},
 		{
 			"ImportPath": "github.com/mailru/easyjson/buffer",

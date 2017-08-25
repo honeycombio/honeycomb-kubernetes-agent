@@ -28,6 +28,8 @@ func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 		factory = &GlogParserFactory{}
 	case "redis":
 		factory = &RedisParserFactory{}
+	case "keyval":
+		factory = &KeyvalParserFactory{}
 	default:
 		return nil, fmt.Errorf("Unknown parser type %s", config.Name)
 	}
