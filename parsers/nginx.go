@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -9,21 +10,31 @@ import (
 )
 
 const defaultLogFormat = `$remote_addr - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"`
+const envoyLogFormat = `[$timestamp] "$request" $status_code $response_flags $bytes_received $bytes_sent $duration $x_envoy_upstream_service_time "$x_forwarded_for" "$user_agent" "$x_request_id" "$authority" "$upstream_host"`
 
 type NginxParserFactory struct {
 	logFormat string
 }
 
 func (pf *NginxParserFactory) Init(options map[string]interface{}) error {
-	logFormat, ok := options["log_format"]
-	if !ok {
-		logFormat = defaultLogFormat
+	logFormat := defaultLogFormat
+	if logFormatOption, ok := options["log_format"]; ok {
+		typedLogFormatOption, ok := logFormatOption.(string)
+		if !ok {
+			return fmt.Errorf("Unexpected type for log_format option (expected string, got %v", reflect.TypeOf(logFormatOption))
+		}
+
+		switch typedLogFormatOption {
+		case "default":
+			logFormat = defaultLogFormat
+		case "envoy":
+			logFormat = envoyLogFormat
+		default:
+			logFormat = typedLogFormatOption
+		}
 	}
-	typedLogFormat, ok := logFormat.(string)
-	if !ok {
-		return fmt.Errorf("Unexpected type for log_format option")
-	}
-	pf.logFormat = typedLogFormat
+
+	pf.logFormat = logFormat
 	return nil
 }
 

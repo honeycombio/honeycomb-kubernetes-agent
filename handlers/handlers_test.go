@@ -36,6 +36,44 @@ func watcherConfigFromYAML(configSnippet string) (*config.WatcherConfig, error) 
 	return cfg, err
 }
 
+type unwrapperType int
+
+const (
+	raw unwrapperType = iota
+	docker_json
+)
+
+type testCase struct {
+	config        string
+	unwrapperType unwrapperType
+	lines         []string
+	output        []event.Event
+}
+
+func (tc *testCase) check(t *testing.T) {
+	cfg, err := watcherConfigFromYAML(tc.config)
+	assert.NoError(t, err)
+	mt := &MockTransmitter{}
+
+	var unwrapper unwrappers.Unwrapper
+	if tc.unwrapperType == raw {
+		unwrapper = &unwrappers.RawLogUnwrapper{}
+	} else if tc.unwrapperType == docker_json {
+		unwrapper = &unwrappers.DockerJSONLogUnwrapper{}
+	}
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, unwrapper, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	for _, line := range tc.lines {
+		handler.Handle(line)
+	}
+	assert.Equal(t, len(mt.events), len(tc.output))
+	for i, out := range tc.output {
+		assert.Equal(t, *mt.events[i], out)
+	}
+}
+
 func TestInvalidConfigurations(t *testing.T) {
 	mt := &MockTransmitter{}
 
@@ -57,31 +95,91 @@ func TestInvalidConfigurations(t *testing.T) {
 	}
 }
 
-func TestDefaultNginxHandling(t *testing.T) {
-	mt := &MockTransmitter{}
-	cfg := &config.WatcherConfig{
-		Dataset: "kubernetestest",
-		Parser:  &config.ParserConfig{Name: "nginx"},
-	}
-	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.DockerJSONLogUnwrapper{}, mt)
-	assert.NoError(t, err)
-	handler := hf.New("/tmp/testpath")
-	handler.Handle(`{"log":"192.168.143.128 - - [10/Jul/2017:22:10:25 +0000] \"GET / HTTP/1.1\" 200 612 \"-\" \"curl/7.38.0\" \"-\"\n","stream":"stdout","time":"2017-07-10T22:10:25.569584932Z"}`)
-	assert.Equal(t, len(mt.events), 1)
-	expected := &event.Event{
-		Data: map[string]interface{}{
-			"bytes_sent":      int64(612),
-			"http_user_agent": "curl/7.38.0",
-			"remote_addr":     "192.168.143.128",
-			"request":         "GET / HTTP/1.1",
-			"status":          int64(200),
-			"time_local":      "10/Jul/2017:22:10:25 +0000",
+func TestNginxParsing(t *testing.T) {
+	testCases := []*testCase{
+		{
+			config:        `{"dataset": "kubernetestest", "parser": "nginx"}`,
+			unwrapperType: docker_json,
+			lines: []string{
+				`{"log":"192.168.143.128 - - [10/Jul/2017:22:10:25 +0000] \"GET / HTTP/1.1\" 200 612 \"-\" \"curl/7.38.0\" \"-\"\n","stream":"stdout","time":"2017-07-10T22:10:25.569584932Z"}`,
+			},
+			output: []event.Event{
+				{
+					Data: map[string]interface{}{
+						"bytes_sent":      int64(612),
+						"http_user_agent": "curl/7.38.0",
+						"remote_addr":     "192.168.143.128",
+						"request":         "GET / HTTP/1.1",
+						"status":          int64(200),
+						"time_local":      "10/Jul/2017:22:10:25 +0000",
+					},
+					Dataset:   "kubernetestest",
+					Path:      "/tmp/testpath",
+					Timestamp: time.Date(2017, 07, 10, 22, 10, 25, 569584932, time.UTC),
+				},
+			},
 		},
-		Dataset:   "kubernetestest",
-		Path:      "/tmp/testpath",
-		Timestamp: time.Date(2017, 7, 10, 22, 10, 25, 569584932, time.UTC),
+		{
+			config: `{
+				"dataset": "kubernetestest",
+				"parser": { "name": "nginx", "options": { "log_format": "envoy" } },
+				"processors": ["timefield": { "field": "timestamp" }]
+			}`,
+			unwrapperType: docker_json,
+			lines: []string{
+				`{"log":"[2016-04-15T20:17:00.310Z] \"POST /api/v1/locations HTTP/2\" 204 - 154 0 226 100 \"10.0.35.28\" \"nsq2http\" \"cc21d9b0-cf5c-432b-8c7e-98aeb7988cd2\" \"locations\" \"tcp://10.0.2.1:80\"\n","stream":"stdout","time":"2017-07-10T22:10:25.569584932Z"}`,
+			},
+			output: []event.Event{
+				{
+					Data: map[string]interface{}{
+						"request":                       "POST /api/v1/locations HTTP/2",
+						"status_code":                   int64(204),
+						"bytes_received":                int64(154),
+						"bytes_sent":                    int64(0),
+						"duration":                      int64(226),
+						"x_envoy_upstream_service_time": int64(100),
+						"x_forwarded_for":               "10.0.35.28",
+						"user_agent":                    "nsq2http",
+						"x_request_id":                  "cc21d9b0-cf5c-432b-8c7e-98aeb7988cd2",
+						"authority":                     "locations",
+						"upstream_host":                 "tcp://10.0.2.1:80",
+					},
+					Dataset:   "kubernetestest",
+					Path:      "/tmp/testpath",
+					Timestamp: time.Date(2016, 4, 15, 20, 17, 0, 310000000, time.UTC),
+				},
+			},
+		},
+		{
+			config: `{
+				"dataset": "kubernetestest",
+				"parser": {
+					"name": "nginx",
+					"options": { "log_format": "[$time_local] \"$request\" $status" }
+				}
+			}`,
+			unwrapperType: docker_json,
+			lines: []string{
+				`{"log":"[10/Jul/2017:22:10:25 +0000] \"GET / HTTP/1.1\" 200","stream":"stdout","time":"2017-07-10T22:10:25.569584932Z"}`,
+			},
+			output: []event.Event{
+				{
+					Data: map[string]interface{}{
+						"request":    "GET / HTTP/1.1",
+						"status":     int64(200),
+						"time_local": "10/Jul/2017:22:10:25 +0000",
+					},
+					Dataset:   "kubernetestest",
+					Path:      "/tmp/testpath",
+					Timestamp: time.Date(2017, 07, 10, 22, 10, 25, 569584932, time.UTC),
+				},
+			},
+		},
 	}
-	assert.Equal(t, mt.events[0], expected)
+
+	for i, tc := range testCases {
+		t.Run(fmt.Sprintf("case %d", i), tc.check)
+	}
 }
 
 func TestGlogParsing(t *testing.T) {
