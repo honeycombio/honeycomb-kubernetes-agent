@@ -78,6 +78,9 @@ parser:
     prefixRegex: "(?P<timestamp>[0-9:\\-\\.TZ]+) AUDIT: "
 ```
 
+### audit
+Parses [Kubernetes audit logs](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-logs).
+
 ### nop
 Does no parsing on logs, and returns an event with the entire contents of the log line in a `"log"` field.
 

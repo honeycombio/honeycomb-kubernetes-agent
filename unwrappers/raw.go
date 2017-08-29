@@ -13,5 +13,8 @@ func (u *RawLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (*event.
 	if err != nil {
 		return nil, err
 	}
+	if data == nil {
+		return nil, nil
+	}
 	return &event.Event{Data: data}, nil
 }

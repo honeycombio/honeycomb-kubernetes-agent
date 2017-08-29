@@ -99,6 +99,12 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 		logrus.WithError(err).Debug("Failed to parse line")
 		return
 	}
+	if event == nil {
+		// No error, but no event produced (e.g., the line produced
+		// something the parser thinks is incomplete).
+		// TODO: is there a better way to handle this?
+		return
+	}
 	event.Dataset = h.config.Dataset
 	event.Path = h.path
 	for _, p := range h.processors {

@@ -70,7 +70,7 @@ func (tc *testCase) check(t *testing.T) {
 	}
 	assert.Equal(t, len(mt.events), len(tc.output))
 	for i, out := range tc.output {
-		assert.Equal(t, *mt.events[i], out)
+		assert.Equal(t, out, *mt.events[i])
 	}
 }
 
@@ -237,8 +237,8 @@ func TestRedisParsing(t *testing.T) {
 }
 
 func TestKeyvalParsing(t *testing.T) {
-	mt := &MockTransmitter{}
-	cfg, err := watcherConfigFromYAML(`
+	tc := testCase{
+		config: `
 ---
 dataset: kubernetestest
 parser:
@@ -248,30 +248,67 @@ parser:
 processors:
   - timefield:
       field: timestamp
-`)
-	assert.NoError(t, err)
-	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
-	assert.NoError(t, err)
-	handler := hf.New("/tmp/testpath")
-	handler.Handle(`2017-08-25T04:40:49.965969122Z AUDIT: id="8e2ad929-8da1-4ce5-8776-751421157483" ip="172.20.67.135" method="GET" user="system:serviceaccount:tectonic-system:prometheus-operator" groups="\"system:serviceaccounts\",\"system:serviceaccounts:tectonic-system\",\"system:authenticated\"" as="<self>" asgroups="<lookup>" namespace="tectonic-system" uri="/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s"`)
-	assert.Equal(t, len(mt.events), 1)
-	expected := &event.Event{
-		Data: map[string]interface{}{
-			"id":        "8e2ad929-8da1-4ce5-8776-751421157483",
-			"ip":        "172.20.67.135",
-			"method":    "GET",
-			"user":      "system:serviceaccount:tectonic-system:prometheus-operator",
-			"groups":    "\"system:serviceaccounts\",\"system:serviceaccounts:tectonic-system\",\"system:authenticated\"",
-			"as":        "<self>",
-			"asgroups":  "<lookup>",
-			"namespace": "tectonic-system",
-			"uri":       "/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s",
+`,
+		lines: []string{
+			`2017-08-25T04:40:49.965969122Z AUDIT: id="8e2ad929-8da1-4ce5-8776-751421157483" ip="172.20.67.135" method="GET" user="system:serviceaccount:tectonic-system:prometheus-operator" groups="\"system:serviceaccounts\",\"system:serviceaccounts:tectonic-system\",\"system:authenticated\"" as="<self>" asgroups="<lookup>" namespace="tectonic-system" uri="/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s"`,
 		},
-		Dataset:   "kubernetestest",
-		Path:      "/tmp/testpath",
-		Timestamp: time.Date(2017, 8, 25, 4, 40, 49, 965969122, time.UTC),
+		output: []event.Event{
+			event.Event{
+				Data: map[string]interface{}{
+					"id":        "8e2ad929-8da1-4ce5-8776-751421157483",
+					"ip":        "172.20.67.135",
+					"method":    "GET",
+					"user":      "system:serviceaccount:tectonic-system:prometheus-operator",
+					"groups":    "\"system:serviceaccounts\",\"system:serviceaccounts:tectonic-system\",\"system:authenticated\"",
+					"as":        "<self>",
+					"asgroups":  "<lookup>",
+					"namespace": "tectonic-system",
+					"uri":       "/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s",
+				},
+				Dataset:   "kubernetestest",
+				Path:      "/tmp/testpath",
+				Timestamp: time.Date(2017, 8, 25, 4, 40, 49, 965969122, time.UTC),
+			},
+		},
 	}
-	assert.Equal(t, mt.events[0], expected)
+
+	tc.check(t)
+}
+
+func TestKubernetesAuditLogHandling(t *testing.T) {
+	tc := &testCase{
+		config: `{
+			"dataset": "kubernetestest",
+			"parser": "audit",
+			"processors": ["timefield": {"field": "timestamp"}]
+		}`,
+		unwrapperType: raw,
+		lines: []string{
+			`2017-03-21T03:57:09.106841886+04:00 AUDIT: id="c939d2a7-1c37-4ef1-b2f7-4ba9b1e43b53" ip="127.0.0.1" method="GET" user="admin" groups="\"system:masters\",\"system:authenticated\"" as="<self>" asgroups="<lookup>" namespace="default" uri="/api/v1/namespaces/default/pods"`,
+			`2017-03-21T03:57:09.108403639+04:00 AUDIT: id="c939d2a7-1c37-4ef1-b2f7-4ba9b1e43b53" response="200"`,
+		},
+		output: []event.Event{
+			event.Event{
+				Data: map[string]interface{}{
+					"id":        "c939d2a7-1c37-4ef1-b2f7-4ba9b1e43b53",
+					"ip":        "127.0.0.1",
+					"method":    "GET",
+					"user":      "admin",
+					"groups":    "\"system:masters\",\"system:authenticated\"",
+					"as":        "<self>",
+					"asgroups":  "<lookup>",
+					"namespace": "default",
+					"uri":       "/api/v1/namespaces/default/pods",
+					"response":  200,
+				},
+				Dataset:   "kubernetestest",
+				Path:      "/tmp/testpath",
+				Timestamp: time.Date(2017, 3, 21, 3, 57, 9, 106841886, time.FixedZone("", 4*3600)),
+			},
+		},
+	}
+
+	tc.check(t)
 }
 
 func TestDropField(t *testing.T) {

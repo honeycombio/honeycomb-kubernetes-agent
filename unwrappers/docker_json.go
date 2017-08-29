@@ -33,6 +33,10 @@ func (u *DockerJSONLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (
 		return nil, err
 	}
 
+	if data == nil {
+		return nil, nil
+	}
+
 	ts, err := time.Parse(time.RFC3339Nano, line.Time)
 	if err != nil {
 		logrus.WithError(err).Info("Error parsing docker JSON timestamp")
