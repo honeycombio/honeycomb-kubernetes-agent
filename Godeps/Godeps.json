@@ -163,6 +163,14 @@
 			"Rev": "9659c814f1d54d63f9c623449a7111d3864c1361"
 		},
 		{
+			"ImportPath": "github.com/hashicorp/golang-lru",
+			"Rev": "0a025b7e63adc15a622f29b0b2c4c3848243bbf6"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/golang-lru/simplelru",
+			"Rev": "0a025b7e63adc15a622f29b0b2c4c3848243bbf6"
+		},
+		{
 			"ImportPath": "github.com/honeycombio/dynsampler-go",
 			"Rev": "e2e8a486b1ed111e01453d39afaa20db0685744b"
 		},
