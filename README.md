@@ -7,8 +7,9 @@
 To get started with Honeycomb, check out the [Honeycomb general quickstart](https://honeycomb.io/docs/get-started/).
 
 This README includes some basic information about getting started with the
-Kubernetes agent. For comprehensive documentation, please refer to [Kubernetes
-Visibilty with Honeycomb](https://honeycomb.io/docs/connect/kubernetes/).
+Kubernetes agent. Please see Honeycomb's
+[Kubernetes documentation](https://honeycomb.io/docs/connect/kubernetes/) for
+more comprehensive documentation.
 
 ## How it Works
 

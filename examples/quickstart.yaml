@@ -43,7 +43,7 @@ metadata:
 data:
   config.yaml: |-
     watchers:
-      - dataset: kubernetestest
+      - dataset: kubernetes-logs
         labelSelector: ""
         parser: glog
     verbosity: debug
