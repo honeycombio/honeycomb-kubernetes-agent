@@ -6,6 +6,10 @@
 
 To get started with Honeycomb, check out the [Honeycomb general quickstart](https://honeycomb.io/docs/get-started/).
 
+This README includes some basic information about getting started with the
+Kubernetes agent. For comprehensive documentation, please refer to [Kubernetes
+Visibilty with Honeycomb](https://honeycomb.io/docs/connect/kubernetes/).
+
 ## How it Works
 
 `honeycomb-agent` runs as a [DaemonSet](https://kubernetes.io/docs/admin/daemons/) on each node in a cluster. It reads container log files from the node's filesystem, augments them with metadata from the Kubernetes API, and ships them to Honeycomb so that you can see what's going on.
