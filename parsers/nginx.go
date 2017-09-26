@@ -9,15 +9,23 @@ import (
 	"github.com/honeycombio/gonx"
 )
 
+// nginx's default log format
 const defaultLogFormat = `$remote_addr - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"`
+
+// envoy's default log format
+// https://envoyproxy.github.io/envoy/configuration/http_conn_man/access_log.html#config-http-con-manager-access-log-default-format
 const envoyLogFormat = `[$timestamp] "$request" $status_code $response_flags $bytes_received $bytes_sent $duration $x_envoy_upstream_service_time "$x_forwarded_for" "$user_agent" "$x_request_id" "$authority" "$upstream_host"`
 
 type NginxParserFactory struct {
-	logFormat string
+	parserName string
+	logFormat  string
 }
 
 func (pf *NginxParserFactory) Init(options map[string]interface{}) error {
 	logFormat := defaultLogFormat
+	if pf.parserName == "envoy" {
+		logFormat = envoyLogFormat
+	}
 	if logFormatOption, ok := options["log_format"]; ok {
 		typedLogFormatOption, ok := logFormatOption.(string)
 		if !ok {

@@ -22,8 +22,12 @@ func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 		factory = &JSONParserFactory{}
 	case "nop":
 		factory = &NoOpParserFactory{}
-	case "nginx":
-		factory = &NginxParserFactory{}
+	case "nginx", "envoy":
+		factory = &NginxParserFactory{
+			// Default log format depends on the parser name specified in
+			// configuration
+			parserName: config.Name,
+		}
 	case "glog":
 		factory = &GlogParserFactory{}
 	case "redis":
