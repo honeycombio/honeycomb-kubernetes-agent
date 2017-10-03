@@ -12,7 +12,6 @@ import (
 type Tailer struct {
 	path          string
 	done          chan bool
-	offset        int64
 	handler       handlers.LineHandler
 	stateRecorder StateRecorder
 }
@@ -32,11 +31,10 @@ func (t *Tailer) Run() error {
 	if t.stateRecorder != nil {
 		if offset, err := t.stateRecorder.Get(t.path); err == nil {
 			seekInfo.Offset = offset
-			t.offset = offset
 		}
 	}
 	tailConf := tail.Config{
-		ReOpen: false,
+		ReOpen: true,
 		Follow: true,
 		// TODO: inotify doesn't detect file deletions, fix this
 		Poll:     true,
@@ -57,25 +55,24 @@ func (t *Tailer) Run() error {
 			select {
 			case line, ok := <-tailer.Lines:
 				if !ok {
-					if t.stateRecorder != nil {
-						t.stateRecorder.Delete(t.path)
-					}
+					t.Clear()
 					break loop
 				}
 				if line.Err != nil {
 					continue
 				}
 				t.handler.Handle(line.Text)
-				// account for newline character (which is not in line.Text)
-				// when bumping offset
-				t.offset += int64(len(line.Text) + 1)
 			case <-t.done:
-				t.updateState(t.offset)
 				ticker.Stop()
 				break loop
 			case <-ticker.C:
-				t.updateState(t.offset)
+				if offset, err := tailer.Tell(); err == nil {
+					t.updateState(offset)
+				}
 			}
+		}
+		if offset, err := tailer.Tell(); err == nil {
+			t.updateState(offset)
 		}
 		logrus.WithField("filePath", t.path).Info("Done tailing file")
 	}()
@@ -92,12 +89,18 @@ func (t *Tailer) Stop() {
 	t.done <- true
 }
 
+func (t *Tailer) Clear() {
+	if t.stateRecorder != nil {
+		t.stateRecorder.Delete(t.path)
+	}
+}
+
 type filterFunc func(string) bool
 
 type PathWatcher struct {
 	pattern        string
 	filter         filterFunc
-	watched        map[string]struct{}
+	tailers        map[string]*Tailer
 	handlerFactory handlers.LineHandlerFactory
 	stateRecorder  StateRecorder
 	checkInterval  time.Duration
@@ -113,7 +116,7 @@ func NewPathWatcher(
 	p := &PathWatcher{
 		pattern:        pattern,
 		filter:         filter,
-		watched:        make(map[string]struct{}),
+		tailers:        make(map[string]*Tailer),
 		handlerFactory: handlerFactory,
 		stateRecorder:  stateRecorder,
 		checkInterval:  time.Second, // TODO make configurable
@@ -137,6 +140,9 @@ func (p *PathWatcher) Run() {
 
 func (p *PathWatcher) Stop() {
 	p.done <- true
+	for _, tailer := range p.tailers {
+		tailer.Stop()
+	}
 }
 
 func (p *PathWatcher) check() {
@@ -144,24 +150,27 @@ func (p *PathWatcher) check() {
 	if err != nil {
 		logrus.WithError(err).Error("Error globbing files")
 	}
-	current := make(map[string]struct{}, len(p.watched))
+	current := make(map[string]struct{}, len(p.tailers))
 	for _, file := range files {
-		_, ok := p.watched[file]
+		_, ok := p.tailers[file]
 		if !ok {
 			if p.filter != nil && !p.filter(file) {
 				continue
 			}
-			p.watched[file] = struct{}{}
 			handler := p.handlerFactory.New(file)
 			tailer := NewTailer(file, handler, p.stateRecorder)
+			p.tailers[file] = tailer
 			go tailer.Run()
 		}
 		current[file] = struct{}{}
 	}
-	for file := range p.watched {
+	for file, tailer := range p.tailers {
 		_, ok := current[file]
 		if !ok {
-			delete(p.watched, file)
+			// If the file is gone, clean up its tailer.
+			tailer.Stop()
+			tailer.Clear()
+			delete(p.tailers, file)
 		}
 	}
 }
