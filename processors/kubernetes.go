@@ -11,7 +11,7 @@ import (
 )
 
 type KubernetesMetadataProcessor struct {
-	PodGetter   k8sagent.PodGetter
+	PodGetter   k8sagent.PodWatcher
 	UID         types.UID
 	lastPodData *v1.Pod
 }

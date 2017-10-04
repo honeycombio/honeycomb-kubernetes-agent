@@ -18,11 +18,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type PodGetter interface {
-	Get(types.UID) (*v1.Pod, bool)
-}
-
 type PodWatcher interface {
+	Get(types.UID) (*v1.Pod, bool)
 	Pods() chan *v1.Pod
 }
 

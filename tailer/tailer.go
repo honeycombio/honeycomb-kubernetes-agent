@@ -1,7 +1,10 @@
+// Package tailer contains machinery for tailing a specific file, or a set of
+// files matching a pattern.
 package tailer
 
 import (
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -9,11 +12,14 @@ import (
 	"github.com/hpcloud/tail"
 )
 
+// Tailer tails a single file, passing each line off to the handler.
 type Tailer struct {
 	path          string
-	done          chan bool
 	handler       handlers.LineHandler
 	stateRecorder StateRecorder
+
+	stop chan bool
+	wg   sync.WaitGroup
 }
 
 func NewTailer(path string, handler handlers.LineHandler, stateRecorder StateRecorder) *Tailer {
@@ -21,7 +27,7 @@ func NewTailer(path string, handler handlers.LineHandler, stateRecorder StateRec
 		path:          path,
 		handler:       handler,
 		stateRecorder: stateRecorder,
-		done:          make(chan bool),
+		stop:          make(chan bool),
 	}
 	return t
 }
@@ -49,6 +55,7 @@ func (t *Tailer) Run() error {
 	logrus.WithField("path", t.path).WithField("offset", tailConf.Location.Offset).
 		Info("Tailing file")
 	ticker := time.NewTicker(time.Second)
+	t.wg.Add(1)
 	go func() {
 	loop:
 		for {
@@ -62,7 +69,7 @@ func (t *Tailer) Run() error {
 					continue
 				}
 				t.handler.Handle(line.Text)
-			case <-t.done:
+			case <-t.stop:
 				ticker.Stop()
 				break loop
 			case <-ticker.C:
@@ -75,6 +82,7 @@ func (t *Tailer) Run() error {
 			t.updateState(offset)
 		}
 		logrus.WithField("filePath", t.path).Info("Done tailing file")
+		t.wg.Done()
 	}()
 	return nil
 }
@@ -86,7 +94,8 @@ func (t *Tailer) updateState(offset int64) {
 }
 
 func (t *Tailer) Stop() {
-	t.done <- true
+	t.stop <- true
+	t.wg.Wait()
 }
 
 func (t *Tailer) Clear() {
@@ -104,7 +113,8 @@ type PathWatcher struct {
 	handlerFactory handlers.LineHandlerFactory
 	stateRecorder  StateRecorder
 	checkInterval  time.Duration
-	done           chan bool
+
+	stop chan bool
 }
 
 func NewPathWatcher(
@@ -120,17 +130,21 @@ func NewPathWatcher(
 		handlerFactory: handlerFactory,
 		stateRecorder:  stateRecorder,
 		checkInterval:  time.Second, // TODO make configurable
-		done:           make(chan bool),
+		stop:           make(chan bool),
 	}
 
 	return p
 }
 
-func (p *PathWatcher) Run() {
+func (p *PathWatcher) Start() {
+	go p.run()
+}
+
+func (p *PathWatcher) run() {
 	ticker := time.NewTicker(p.checkInterval)
 	for {
 		select {
-		case <-p.done:
+		case <-p.stop:
 			return
 		case <-ticker.C:
 			p.check()
@@ -139,7 +153,7 @@ func (p *PathWatcher) Run() {
 }
 
 func (p *PathWatcher) Stop() {
-	p.done <- true
+	p.stop <- true
 	for _, tailer := range p.tailers {
 		tailer.Stop()
 	}

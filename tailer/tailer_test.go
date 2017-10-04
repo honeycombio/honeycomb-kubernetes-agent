@@ -120,7 +120,7 @@ func TestPathWatching(t *testing.T) {
 	)
 
 	watcher.checkInterval = time.Millisecond
-	go watcher.Run()
+	watcher.Start()
 
 	err = os.MkdirAll(dir, os.FileMode(0755))
 	assert.NoError(t, err)
@@ -145,6 +145,7 @@ func TestPathWatching(t *testing.T) {
 		l.Rotate()
 	}
 	time.Sleep(time.Second)
+	watcher.Stop()
 
 	assert.Equal(t, len(handlerFactory.handlers), 2)
 	for _, h := range handlerFactory.handlers {

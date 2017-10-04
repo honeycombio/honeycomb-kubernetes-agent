@@ -3,21 +3,20 @@ package main
 import (
 	"fmt"
 	"os"
-	"regexp"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
-	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
-	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/podtailer"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/tailer"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
 	flag "github.com/jessevdk/go-flags"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -104,17 +103,26 @@ func main() {
 				// before actually setting up the watcher
 				logrus.WithError(err).Error("Error setting up watcher")
 			}
-			go tailer.NewPathWatcher(path, nil, handlerFactory, stateRecorder).Run()
+			t := tailer.NewPathWatcher(path, nil, handlerFactory, stateRecorder)
+			t.Start()
+			defer t.Stop()
 		}
 
 		if watcherConfig.LabelSelector != nil {
-			go watchPods(watcherConfig, nodeSelector, transmitter, stateRecorder, kubeClient)
+			pt := podtailer.NewPodSetTailer(
+				watcherConfig,
+				nodeSelector,
+				transmitter,
+				stateRecorder,
+				kubeClient,
+			)
+			pt.Start()
+			defer pt.Stop()
 		}
 	}
 
 	fmt.Println("running")
-	// Hang out forever
-	select {}
+	waitForSignal()
 }
 
 func newKubeClient() (*kubernetes.Clientset, error) {
@@ -123,7 +131,6 @@ func newKubeClient() (*kubernetes.Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return kubernetes.NewForConfig(kubeClientConfig)
 }
 
@@ -140,70 +147,6 @@ func parseFlags() (CmdLineOptions, error) {
 	return options, nil
 }
 
-func watchPods(
-	watcherConfig *config.WatcherConfig,
-	nodeSelector string,
-	transmitter transmission.Transmitter,
-	stateRecorder tailer.StateRecorder,
-	kubeClient *kubernetes.Clientset,
-) {
-
-	labelSelector := *watcherConfig.LabelSelector
-	// Exclude the agent's own logs from being watched
-	if labelSelector == "" {
-		labelSelector = "k8s-app!=honeycomb-agent"
-	} else {
-		labelSelector = labelSelector + ",k8s-app!=honeycomb-agent"
-	}
-
-	podWatcher := k8sagent.NewPodWatcher(
-		watcherConfig.Namespace,
-		labelSelector,
-		nodeSelector,
-		kubeClient)
-
-	for pod := range podWatcher.Pods() {
-		k8sMetadataProcessor := &processors.KubernetesMetadataProcessor{
-			PodGetter: podWatcher,
-			UID:       pod.UID}
-		handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
-			watcherConfig,
-			&unwrappers.DockerJSONLogUnwrapper{},
-			transmitter,
-			k8sMetadataProcessor)
-		if err != nil {
-			// This shouldn't happen, since we check for configuration errors
-			// before actually setting up the watcher
-			logrus.WithError(err).Error("Error setting up watcher")
-			continue
-		}
-		go watchFilesForPod(pod, watcherConfig.ContainerName, handlerFactory, stateRecorder)
-	}
-}
-
-func watchFilesForPod(
-	pod *v1.Pod,
-	containerName string,
-	handlerFactory handlers.LineHandlerFactory,
-	stateRecorder tailer.StateRecorder,
-) {
-	path := fmt.Sprintf("/var/log/pods/%s", pod.UID)
-	pattern := fmt.Sprintf("%s/*", path)
-	var filterFunc func(fileName string) bool
-
-	if containerName != "" {
-		// only watch logs for containers matching the given name, if
-		// one is specified
-		re := fmt.Sprintf("^%s/%s_[0-9]*\\.log", path, regexp.QuoteMeta(containerName))
-		filterFunc = func(fileName string) bool {
-			ok, _ := regexp.Match(re, []byte(fileName))
-			return ok
-		}
-	}
-	pathWatcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory, stateRecorder)
-	pathWatcher.Run()
-}
-
 func validateWatchers(configs []*config.WatcherConfig) error {
 	for _, watcherConfig := range configs {
 		_, err := handlers.NewLineHandlerFactoryFromConfig(
@@ -216,4 +159,12 @@ func validateWatchers(configs []*config.WatcherConfig) error {
 		}
 	}
 	return nil
+}
+
+func waitForSignal() {
+	ch := make(chan os.Signal, 1)
+	defer close(ch)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(ch)
+	<-ch
 }
