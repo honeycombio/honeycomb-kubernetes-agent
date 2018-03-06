@@ -94,8 +94,22 @@ func (pt *PodSetTailer) Stop() {
 	pt.wg.Wait()
 }
 
+func determineLogPath(pod *v1.Pod) string {
+	// critical pods seem to all use this config hash for their log directory
+	// instead of the pod UID. Use the hash if it exists
+	if hash, ok := pod.Annotations["kubernetes.io/config.hash"]; ok {
+		logrus.WithFields(logrus.Fields{
+			"PodName": pod.Name,
+			"UID":     pod.UID,
+			"Hash":    hash,
+		}).Info("Critical pod detected, using config.hash for log dir")
+		return fmt.Sprintf("/var/log/pods/%s", hash)
+	}
+	return fmt.Sprintf("/var/log/pods/%s", pod.UID)
+}
+
 func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatcher k8sagent.PodWatcher) (*tailer.PathWatcher, error) {
-	path := fmt.Sprintf("/var/log/pods/%s", pod.UID)
+	path := determineLogPath(pod)
 	pattern := fmt.Sprintf("%s/*", path)
 	var filterFunc func(fileName string) bool
 
@@ -123,6 +137,12 @@ func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatc
 		logrus.WithError(err).Error("Error setting up watcher")
 		return nil, err
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"Name": pod.Name,
+		"UID":  pod.UID,
+		"Path": path,
+	}).Info("Setting up watcher for pod")
 
 	watcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory, pt.stateRecorder)
 	return watcher, nil

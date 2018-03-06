@@ -37,6 +37,10 @@ func (t *Tailer) Run() error {
 	if t.stateRecorder != nil {
 		if offset, err := t.stateRecorder.Get(t.path); err == nil {
 			seekInfo.Offset = offset
+		} else {
+			logrus.WithFields(logrus.Fields{
+				"Path": t.path,
+			}).WithError(err).Error("error getting state")
 		}
 	}
 	tailConf := tail.Config{
@@ -163,6 +167,11 @@ func (p *PathWatcher) check() {
 	files, err := filepath.Glob(p.pattern)
 	if err != nil {
 		logrus.WithError(err).Error("Error globbing files")
+	}
+	if len(files) == 0 {
+		logrus.WithFields(logrus.Fields{
+			"Pattern": p.pattern,
+		}).Warn("No files found for pattern")
 	}
 	current := make(map[string]struct{}, len(p.tailers))
 	for _, file := range files {
