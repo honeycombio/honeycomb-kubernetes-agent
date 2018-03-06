@@ -63,6 +63,12 @@ func (w *PodWatcherImpl) onAdd(obj interface{}) {
 		return
 	}
 
+	logrus.WithFields(logrus.Fields{
+		"UID":    pod.UID,
+		"Name":   pod.Name,
+		"Action": "Add",
+	}).Debug("Watcher got new pod")
+
 	w.Lock()
 	defer w.Unlock()
 	_, ok = w.watchMap[pod.UID]
@@ -79,6 +85,13 @@ func (w *PodWatcherImpl) onUpdate(oldObj interface{}, newObj interface{}) {
 		logrus.Error("Watcher got new object of unexpected type")
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"UID":    pod.UID,
+		"Name":   pod.Name,
+		"Action": "Update",
+	}).Debug("Watcher got updated pod")
+
 	w.Lock()
 	defer w.Unlock()
 	_, ok = w.watchMap[pod.UID]
@@ -96,6 +109,13 @@ func (w *PodWatcherImpl) onDelete(obj interface{}) {
 		logrus.Error("Watcher got new object of unexpected type")
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"UID":    pod.UID,
+		"Name":   pod.Name,
+		"Action": "Delete",
+	}).Debug("Watcher got pod")
+
 	w.Lock()
 	defer w.Unlock()
 	delete(w.watchMap, pod.UID)
