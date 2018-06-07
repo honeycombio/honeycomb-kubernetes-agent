@@ -153,3 +153,18 @@ func TestPathWatching(t *testing.T) {
 	}
 	assert.Equal(t, len(watcher.tailers), 0)
 }
+
+func TestTailingWithoutStateRecorder(t *testing.T) {
+	// Make sure that the tailer doesn't panic even when given a nil state recorder
+	stateRecorder, err := NewStateRecorder("/nope/wtf")
+	assert.Error(t, err)
+
+	handler := &mockLineHandler{}
+
+	logFile, err := ioutil.TempFile("/tmp", "honeycomb-log-test")
+	logFile.Write([]byte("line1\n"))
+	logFile.Sync()
+	tailer := NewTailer(logFile.Name(), handler, stateRecorder)
+	tailer.Run()
+	tailer.Stop()
+}

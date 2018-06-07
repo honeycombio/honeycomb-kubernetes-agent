@@ -20,7 +20,7 @@ type StateRecorderImpl struct {
 	db *bolt.DB
 }
 
-func NewStateRecorder(stateFilePath string) (*StateRecorderImpl, error) {
+func NewStateRecorder(stateFilePath string) (StateRecorder, error) {
 	db, err := bolt.Open(stateFilePath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return nil, err
