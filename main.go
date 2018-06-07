@@ -89,7 +89,7 @@ func main() {
 
 	stateRecorder, err := tailer.NewStateRecorder("/var/log/honeycomb-agent.state")
 	if err != nil {
-		logrus.WithError(err).Error("Error initializing state recorder")
+		logrus.WithError(err).Error("Error initializing state recorder. Agent progress won't be persisted across restarts.")
 	}
 
 	for _, watcherConfig := range config.Watchers {
