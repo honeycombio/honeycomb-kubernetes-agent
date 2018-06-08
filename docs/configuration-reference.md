@@ -48,7 +48,7 @@ If you're using a custom NGINX log format, you can specify the format using the 
 parser:
   name: nginx
   options:
-    log_format: '"$remote_addr - $remote_user [$time_local] "$request" $status ...'
+    log_format: '$remote_addr - $remote_user [$time_local] "$request" $status ...'
 ```
 
 ### glog
