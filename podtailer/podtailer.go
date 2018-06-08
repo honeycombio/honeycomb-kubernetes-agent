@@ -4,6 +4,7 @@ package podtailer
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"sync"
 
@@ -94,22 +95,35 @@ func (pt *PodSetTailer) Stop() {
 	pt.wg.Wait()
 }
 
-func determineLogPath(pod *v1.Pod) string {
+func determineLogPath(pod *v1.Pod) (string, error) {
 	// critical pods seem to all use this config hash for their log directory
 	// instead of the pod UID. Use the hash if it exists
 	if hash, ok := pod.Annotations["kubernetes.io/config.hash"]; ok {
-		logrus.WithFields(logrus.Fields{
-			"PodName": pod.Name,
-			"UID":     pod.UID,
-			"Hash":    hash,
-		}).Info("Critical pod detected, using config.hash for log dir")
-		return fmt.Sprintf("/var/log/pods/%s", hash)
+		hpath := fmt.Sprintf("/var/log/pods/%s", hash)
+		if _, err := os.Stat(hpath); err == nil {
+
+			logrus.WithFields(logrus.Fields{
+				"PodName": pod.Name,
+				"UID":     pod.UID,
+				"Hash":    hash,
+			}).Info("Critical pod detected, using config.hash for log dir")
+			return fmt.Sprintf(hpath), nil
+		}
 	}
-	return fmt.Sprintf("/var/log/pods/%s", pod.UID)
+	upath := fmt.Sprintf("/var/log/pods/%s", pod.UID)
+	if _, err := os.Stat(upath); err == nil {
+		return fmt.Sprintf(upath), nil
+	}
+	return upath, fmt.Errorf("Could not find specified log path for pod %s", pod.UID)
 }
 
 func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatcher k8sagent.PodWatcher) (*tailer.PathWatcher, error) {
-	path := determineLogPath(pod)
+	path, err := determineLogPath(pod)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"Pod": pod.UID,
+		}).Warn("Error finding log path")
+	}
 	pattern := fmt.Sprintf("%s/*", path)
 	var filterFunc func(fileName string) bool
 
