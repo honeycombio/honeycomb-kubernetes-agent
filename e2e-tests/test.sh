@@ -13,9 +13,16 @@ docker build -t apihost $(dirname $0)/apihost
 docker tag honeycombio/honeycomb-kubernetes-agent:$VERSION honeycombio/honeycomb-kubernetes-agent:test
 
 # Make them available inside minikube
+MK_SSH=$(minikube ssh-key)
 set +e
-docker save honeycombio/honeycomb-kubernetes-agent:test | minikube ssh docker load
-docker save apihost | minikube ssh docker load
+docker save honeycombio/honeycomb-kubernetes-agent:test | ssh -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no -o LogLevel=quiet \
+    -i ${MK_SSH} docker load
+
+
+docker save apihost | ssh -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no -o LogLevel=quiet \
+    -i ${MK_SSH} docker load
 set -e
 
 kubectl config set-context minikube

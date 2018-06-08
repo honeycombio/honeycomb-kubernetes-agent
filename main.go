@@ -14,6 +14,8 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/tailer"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/version"
+	libhoney "github.com/honeycombio/libhoney-go"
 	flag "github.com/jessevdk/go-flags"
 
 	"k8s.io/client-go/kubernetes"
@@ -23,6 +25,21 @@ import (
 type CmdLineOptions struct {
 	ConfigPath string `long:"config" description:"Path to configuration file" default:"/etc/honeycomb/config.yaml"`
 	Validate   bool   `long:"validate" description:"Validate configuration and exit"`
+}
+
+var (
+	VERSION string
+)
+
+func init() {
+	// set the version string to our desired format
+	// version.VERSION is the importPath.name ld flag specified by build.sh
+	if version.VERSION == "" {
+		version.VERSION = "dev"
+
+	}
+	// init libhoney user agent properly
+	libhoney.UserAgentAddition = fmt.Sprintf("kubernetes/" + version.VERSION)
 }
 
 func main() {
