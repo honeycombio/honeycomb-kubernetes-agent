@@ -22,7 +22,7 @@ func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 		factory = &JSONParserFactory{}
 	case "nop":
 		factory = &NoOpParserFactory{}
-	case "nginx", "envoy":
+	case "nginx", "envoy", "nginx-ingress":
 		factory = &NginxParserFactory{
 			// Default log format depends on the parser name specified in
 			// configuration

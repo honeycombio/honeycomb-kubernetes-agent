@@ -184,6 +184,40 @@ func TestNginxParsing(t *testing.T) {
 		{
 			config: `{
 				"dataset": "kubernetestest",
+				"parser": { "name": "nginx-ingress" },
+				"processors":
+			}`,
+			unwrapperType: docker_json,
+			lines: []string{
+				`{"log":"10.0.0.1 - [10.0.0.1] - - [14/Jun/2018:18:20:48 +0000] \"GET /api/v1/users?id=22 HTTP/1.1\" 200 1198 \"-\" \"curl\" 536 0.165 [api-22] 10.0.0.2:10001 1202 0.165 200 abcd\n","stream":"stdout","time":"2017-07-10T22:10:25Z"}`,
+			},
+			output: []event.Event{
+				{
+					Data: map[string]interface{}{
+						"the_real_ip":              "10.0.0.1",
+						"time_local":               "14/Jun/2018:18:20:48 +0000",
+						"request":                  "GET /api/v1/users?id=22 HTTP/1.1",
+						"status":                   int64(200),
+						"body_bytes_sent":          int64(1198),
+						"http_user_agent":          "curl",
+						"request_length":           int64(536),
+						"request_time":             0.165,
+						"proxy_upstream_name":      "api-22",
+						"upstream_addr":            "10.0.0.2:10001",
+						"upstream_response_length": int64(1202),
+						"upstream_response_time":   0.165,
+						"upstream_status":          int64(200),
+						"req_id":                   "abcd",
+					},
+					Dataset:   "kubernetestest",
+					Path:      "/tmp/testpath",
+					Timestamp: time.Date(2017, 7, 10, 22, 10, 25, 0, time.UTC),
+				},
+			},
+		},
+		{
+			config: `{
+				"dataset": "kubernetestest",
 				"parser": {
 					"name": "nginx",
 					"options": { "log_format": "[$time_local] \"$request\" $status" }
