@@ -21,20 +21,23 @@ import (
 type PodWatcher interface {
 	Get(types.UID) (*v1.Pod, bool)
 	Pods() chan *v1.Pod
+	DeletedPods() chan types.UID
 }
 
 type PodWatcherImpl struct {
-	watchMap  map[types.UID]*v1.Pod
-	watchChan chan *v1.Pod
-	client    corev1.PodsGetter
+	watchMap    map[types.UID]*v1.Pod
+	watchChan   chan *v1.Pod
+	unwatchChan chan types.UID
+	client      corev1.PodsGetter
 	sync.RWMutex
 }
 
 func NewPodWatcher(namespace string, labelSelector string, fieldSelector string, client corev1.PodsGetter) *PodWatcherImpl {
 	w := &PodWatcherImpl{
-		client:    client,
-		watchMap:  make(map[types.UID]*v1.Pod),
-		watchChan: make(chan *v1.Pod, 100),
+		client:      client,
+		watchMap:    make(map[types.UID]*v1.Pod),
+		watchChan:   make(chan *v1.Pod, 100),
+		unwatchChan: make(chan types.UID, 100),
 	}
 
 	handlers := cache.ResourceEventHandlerFuncs{
@@ -54,6 +57,10 @@ func NewPodWatcher(namespace string, labelSelector string, fieldSelector string,
 
 func (w *PodWatcherImpl) Pods() chan *v1.Pod {
 	return w.watchChan
+}
+
+func (w *PodWatcherImpl) DeletedPods() chan types.UID {
+	return w.unwatchChan
 }
 
 func (w *PodWatcherImpl) onAdd(obj interface{}) {
@@ -119,6 +126,7 @@ func (w *PodWatcherImpl) onDelete(obj interface{}) {
 	w.Lock()
 	defer w.Unlock()
 	delete(w.watchMap, pod.UID)
+	w.unwatchChan <- pod.UID
 }
 
 func (w *PodWatcherImpl) Get(uid types.UID) (*v1.Pod, bool) {

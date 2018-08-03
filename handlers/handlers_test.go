@@ -537,6 +537,8 @@ type mockPodGetter struct{}
 
 func (mp *mockPodGetter) Pods() chan *v1.Pod { return nil }
 
+func (mp *mockPodGetter) DeletedPods() chan types.UID { return nil }
+
 func (mp *mockPodGetter) Get(uid types.UID) (*v1.Pod, bool) {
 	return &v1.Pod{
 		ObjectMeta: v1.ObjectMeta{

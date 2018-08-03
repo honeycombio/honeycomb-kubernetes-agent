@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/types"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
@@ -66,6 +67,8 @@ func (pt *PodSetTailer) run() {
 		pt.nodeSelector,
 		pt.kubeClient)
 
+	watcherMap := make(map[types.UID]*tailer.PathWatcher)
+
 loop:
 	for {
 		select {
@@ -77,11 +80,28 @@ loop:
 				logrus.WithError(err).Error("Error setting up watcher")
 				continue loop
 			}
+			logrus.WithFields(logrus.Fields{
+				"name":      pod.Name,
+				"uid":       pod.UID,
+				"namespace": pod.Namespace,
+			}).Info("starting watcher for pod")
 			watcher.Start()
-			defer watcher.Stop()
+			watcherMap[pod.UID] = watcher
+		case deletedPodUID := <-podWatcher.DeletedPods():
+			if watcher, ok := watcherMap[deletedPodUID]; ok {
+				logrus.WithFields(logrus.Fields{
+					"uid": deletedPodUID,
+				}).Info("pod deleted, stopping watcher")
+				watcher.Stop()
+				delete(watcherMap, deletedPodUID)
+			}
 		case <-pt.stop:
 			break loop
 		}
+	}
+
+	for key := range watcherMap {
+		watcherMap[key].Stop()
 	}
 }
 
