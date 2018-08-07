@@ -47,6 +47,9 @@ data:
         labelSelector: ""
         parser: glog
     verbosity: debug
+    # support older container log paths, see:
+    # https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/kubelet-cri-logging.md
+    legacyLogPaths: true
 
 # Daemonset
 ---

@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	APIHost   string `yaml:"apiHost"`
-	WriteKey  string `yaml:"writekey"`
-	Watchers  []*WatcherConfig
-	Verbosity string
+	APIHost        string `yaml:"apiHost"`
+	WriteKey       string `yaml:"writekey"`
+	Watchers       []*WatcherConfig
+	Verbosity      string
+	LegacyLogPaths bool `yaml:"legacyLogPaths"`
 }
 
 type WatcherConfig struct {
