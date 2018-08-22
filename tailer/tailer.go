@@ -39,8 +39,9 @@ func (t *Tailer) Run() error {
 			seekInfo.Offset = offset
 		} else {
 			logrus.WithFields(logrus.Fields{
-				"Path": t.path,
-			}).WithError(err).Error("error getting state")
+				"path":   t.path,
+				"detail": err,
+			}).Info("no prior tail state found")
 		}
 	}
 	tailConf := tail.Config{
