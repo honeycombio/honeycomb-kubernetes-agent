@@ -25,13 +25,14 @@ import (
 // PodSetTailer is responsible for watching for all pods that match the
 // criteria defined by config, and managing tailers for each pod.
 type PodSetTailer struct {
-	config        *config.WatcherConfig
-	nodeSelector  string
-	transmitter   transmission.Transmitter
-	stateRecorder tailer.StateRecorder
-	kubeClient    corev1.PodsGetter
-	stop          chan bool
-	wg            sync.WaitGroup
+	config         *config.WatcherConfig
+	nodeSelector   string
+	transmitter    transmission.Transmitter
+	stateRecorder  tailer.StateRecorder
+	kubeClient     corev1.PodsGetter
+	stop           chan bool
+	wg             sync.WaitGroup
+	legacyLogPaths bool
 }
 
 func NewPodSetTailer(
@@ -40,14 +41,16 @@ func NewPodSetTailer(
 	transmitter transmission.Transmitter,
 	stateRecorder tailer.StateRecorder,
 	kubeClient corev1.PodsGetter,
+	legacyLogPaths bool,
 ) *PodSetTailer {
 	return &PodSetTailer{
-		config:        config,
-		nodeSelector:  nodeSelector,
-		transmitter:   transmitter,
-		stateRecorder: stateRecorder,
-		kubeClient:    kubeClient,
-		stop:          make(chan bool),
+		config:         config,
+		nodeSelector:   nodeSelector,
+		transmitter:    transmitter,
+		stateRecorder:  stateRecorder,
+		kubeClient:     kubeClient,
+		stop:           make(chan bool),
+		legacyLogPaths: legacyLogPaths,
 	}
 }
 
@@ -115,47 +118,76 @@ func (pt *PodSetTailer) Stop() {
 	pt.wg.Wait()
 }
 
-func determineLogPath(pod *v1.Pod) (string, error) {
-	// critical pods seem to all use this config hash for their log directory
+func determineLogPattern(pod *v1.Pod, legacyLogPaths bool) (string, error) {
+	// Old pattern was:
+	// /var/log/containers/<pod_name>_<pod_namespace>_<container_name>-<container_id>.log`
+	// For now, this is still supported on newer k8s clusters with a symlink
+	if legacyLogPaths {
+		return fmt.Sprintf("/var/log/containers/%s_%s_*.log", pod.Name, pod.Namespace), nil
+	}
+	// New pattern is: /var/log/pods/<podUID>/<containerName>_<instance#>.log
+	// Critical pods seem to all use this config hash for their log directory
 	// instead of the pod UID. Use the hash if it exists
 	if hash, ok := pod.Annotations["kubernetes.io/config.hash"]; ok {
 		hpath := fmt.Sprintf("/var/log/pods/%s", hash)
 		if _, err := os.Stat(hpath); err == nil {
-
 			logrus.WithFields(logrus.Fields{
 				"PodName": pod.Name,
 				"UID":     pod.UID,
 				"Hash":    hash,
 			}).Info("Critical pod detected, using config.hash for log dir")
-			return fmt.Sprintf(hpath), nil
+			return fmt.Sprintf("%s/*", hpath), nil
 		}
 	}
 	upath := fmt.Sprintf("/var/log/pods/%s", pod.UID)
 	if _, err := os.Stat(upath); err == nil {
-		return fmt.Sprintf(upath), nil
+		return fmt.Sprintf("%s/*", upath), nil
 	}
-	return upath, fmt.Errorf("Could not find specified log path for pod %s", pod.UID)
+	return "", fmt.Errorf("Could not find specified log path for pod %s", pod.UID)
 }
 
-func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatcher k8sagent.PodWatcher) (*tailer.PathWatcher, error) {
-	path, err := determineLogPath(pod)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"Pod": pod.UID,
-		}).Warn("Error finding log path")
+func determineFilterFunc(pod *v1.Pod, containerName string, legacyLogPaths bool) func(fileName string) bool {
+	if containerName == "" {
+		return nil
 	}
-	pattern := fmt.Sprintf("%s/*", path)
-	var filterFunc func(fileName string) bool
-
-	if containerName != "" {
-		// only watch logs for containers matching the given name, if
-		// one is specified
-		re := fmt.Sprintf("^%s/%s_[0-9]*\\.log", path, regexp.QuoteMeta(containerName))
-		filterFunc = func(fileName string) bool {
+	if legacyLogPaths {
+		re := fmt.Sprintf(
+			"^/var/log/containers/%s_%s_%s-.+\\.log",
+			pod.Name,
+			pod.Namespace,
+			containerName,
+		)
+		return func(fileName string) bool {
 			ok, _ := regexp.Match(re, []byte(fileName))
 			return ok
 		}
 	}
+
+	uid := string(pod.UID)
+	if hash, ok := pod.Annotations["kubernetes.io/config.hash"]; ok {
+		uid = hash
+	}
+
+	re := fmt.Sprintf("^/var/log/pods/%s/%s_[0-9]*\\.log", uid, regexp.QuoteMeta(containerName))
+	return func(fileName string) bool {
+		ok, _ := regexp.Match(re, []byte(fileName))
+		return ok
+	}
+}
+
+func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatcher k8sagent.PodWatcher) (*tailer.PathWatcher, error) {
+	pattern, err := determineLogPattern(pod, pt.legacyLogPaths)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"Pod": pod.UID,
+		}).Warn("Error finding log path")
+
+		// it's odd that we don't return here, should we?
+	}
+
+	// only watch logs for containers matching the given name, if
+	// one is specified
+	filterFunc := determineFilterFunc(pod, containerName, pt.legacyLogPaths)
 
 	k8sMetadataProcessor := &processors.KubernetesMetadataProcessor{
 		PodGetter: podWatcher,
@@ -173,9 +205,9 @@ func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatc
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"Name": pod.Name,
-		"UID":  pod.UID,
-		"Path": path,
+		"Name":    pod.Name,
+		"UID":     pod.UID,
+		"Pattern": pattern,
 	}).Info("Setting up watcher for pod")
 
 	watcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory, pt.stateRecorder)

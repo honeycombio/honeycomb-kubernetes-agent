@@ -132,6 +132,7 @@ func main() {
 				transmitter,
 				stateRecorder,
 				kubeClient,
+				config.LegacyLogPaths,
 			)
 			pt.Start()
 			defer pt.Stop()
