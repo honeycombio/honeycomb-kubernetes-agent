@@ -9,8 +9,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/url"
+	"path"
 	"reflect"
 	"sort"
 	"strings"
@@ -27,7 +30,7 @@ func init() {
 const (
 	defaultSampleRate = 1
 	defaultAPIHost    = "https://api.honeycomb.io/"
-	version           = "1.3.3"
+	version           = "1.7.0"
 
 	// DefaultMaxBatchSize how many events to collect in a batch
 	DefaultMaxBatchSize = 50
@@ -45,7 +48,7 @@ var (
 
 // globals to support default/singleton-like behavior
 var (
-	tx     txClient
+	tx     Output
 	txOnce sync.Once
 
 	blockOnResponses = false
@@ -106,6 +109,13 @@ type Config struct {
 	// channel it will be ok.
 	BlockOnResponse bool
 
+	// Output allows you to override what happens to events after you call
+	// Send() on them. By default, events are asynchronously sent to the
+	// Honeycomb API. You can use the MockOutput included in this package in
+	// unit tests, or use the WriterOutput to write events to STDOUT or to a
+	// file when developing locally.
+	Output Output
+
 	// Configuration for the underlying sender. It is safe (and recommended) to
 	// leave these values at their defaults. You cannot change these values
 	// after calling Init()
@@ -118,6 +128,49 @@ type Config struct {
 	// Honeycomb servers. Intended for use in tests in order to assert on
 	// expected behavior.
 	Transport http.RoundTripper
+}
+
+// VerifyWriteKey calls out to the Honeycomb API to validate the write key, so
+// we can exit immediately if desired instead of happily sending events that
+// are all rejected.
+func VerifyWriteKey(config Config) (string, error) {
+	if config.WriteKey == "" {
+		return "", errors.New("Write key is empty")
+	}
+	if config.APIHost == "" {
+		config.APIHost = defaultAPIHost
+	}
+	u, err := url.Parse(config.APIHost)
+	if err != nil {
+		return "", fmt.Errorf("Error parsing API URL: %s", err)
+	}
+	u.Path = path.Join(u.Path, "1", "team_slug")
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", UserAgentAddition)
+	req.Header.Add("X-Honeycomb-Team", config.WriteKey)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusUnauthorized {
+		return "", errors.New("Write key provided is invalid")
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf(`Abnormal non-200 response verifying Honeycomb write key: %d
+Response body: %s`, resp.StatusCode, string(body))
+	}
+	ret := map[string]string{}
+	if err := json.Unmarshal(body, &ret); err != nil {
+		return "", err
+	}
+
+	return ret["team_slug"], nil
 }
 
 // Event is used to hold data that can be sent to Honeycomb. It can also
@@ -284,17 +337,20 @@ func Init(config Config) error {
 
 	blockOnResponses = config.BlockOnResponse
 
-	// reset the global transmission
-	tx = &txDefaultClient{
-		maxBatchSize:         config.MaxBatchSize,
-		batchTimeout:         config.SendFrequency,
-		maxConcurrentBatches: config.MaxConcurrentBatches,
-		pendingWorkCapacity:  config.PendingWorkCapacity,
-		blockOnSend:          config.BlockOnSend,
-		blockOnResponses:     config.BlockOnResponse,
-		transport:            config.Transport,
+	if config.Output == nil {
+		// reset the global transmission
+		tx = &txDefaultClient{
+			maxBatchSize:         config.MaxBatchSize,
+			batchTimeout:         config.SendFrequency,
+			maxConcurrentBatches: config.MaxConcurrentBatches,
+			pendingWorkCapacity:  config.PendingWorkCapacity,
+			blockOnSend:          config.BlockOnSend,
+			blockOnResponses:     config.BlockOnResponse,
+			transport:            config.Transport,
+		}
+	} else {
+		tx = config.Output
 	}
-
 	if err := tx.Start(); err != nil {
 		return err
 	}
@@ -319,8 +375,24 @@ func Init(config Config) error {
 // Close waits for all in-flight messages to be sent. You should
 // call Close() before app termination.
 func Close() {
-	tx.Stop()
+	if tx != nil {
+		tx.Stop()
+	}
 	close(responses)
+}
+
+// Flush closes and reopens the Output interface, ensuring events
+// are sent without waiting on the batch to be sent asyncronously.
+// Generally, it is more efficient to rely on asyncronous batches than to
+// call Flush, but certain scenarios may require Flush if asynchronous sends
+// are not guaranteed to run (i.e. running in AWS Lambda)
+// Flush is not thread safe - use it only when you are sure that no other
+// parts of your program are calling Send
+func Flush() {
+	if tx != nil {
+		tx.Stop()
+		tx.Start()
+	}
 }
 
 // SendNow is a shortcut to create an event, add data, and send the event.
@@ -419,7 +491,12 @@ func (f *fieldHolder) addStruct(s interface{}) error {
 			}
 			// slice off options
 			if idx := strings.Index(fTag, ","); idx != -1 {
+				options := fTag[idx:]
 				fTag = fTag[:idx]
+				if strings.Contains(options, "omitempty") && isEmptyValue(sVal.Field(i)) {
+					// skip empty values if omitempty option is set
+					continue
+				}
 			}
 			fName = fTag
 		} else {
@@ -469,6 +546,13 @@ func (f *fieldHolder) AddFunc(fn func() (string, interface{}, error)) error {
 		f.AddField(key, rawVal)
 	}
 	return nil
+}
+
+// Fields returns a reference to the map of fields that have been added to an
+// event. Caution: it is not safe to manipulate the returned map concurrently
+// with calls to AddField, Add or AddFunc.
+func (f *fieldHolder) Fields() map[string]interface{} {
+	return f.data
 }
 
 // Send dispatches the event to be sent to Honeycomb, sampling if necessary.
@@ -556,11 +640,6 @@ func shouldDrop(rate uint) bool {
 	return rand.Intn(int(rate)) != 0
 }
 
-// returns true if the first character of the string is lowercase
-func isFirstLower(s string) bool {
-	return false
-}
-
 // NewBuilder creates a new event builder. The builder inherits any
 // Dynamic or Static Fields present in the global scope.
 func NewBuilder() *Builder {
@@ -642,4 +721,23 @@ func (b *Builder) Clone() *Builder {
 		newB.dynFields = append(newB.dynFields, dynFd)
 	}
 	return newB
+}
+
+// Helper lifted from Go stdlib encoding/json
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	}
+	return false
 }

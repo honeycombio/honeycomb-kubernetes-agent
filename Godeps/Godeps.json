@@ -185,8 +185,8 @@
 		},
 		{
 			"ImportPath": "github.com/honeycombio/libhoney-go",
-			"Comment": "v1.3.2-3-g0c0e8c4",
-			"Rev": "0c0e8c402eeef843eafc2bad6dccb16baf565d2f"
+			"Comment": "v1.7.0",
+			"Rev": "741c87cf6e228e5c509705847b67a3245bc79b8b"
 		},
 		{
 			"ImportPath": "github.com/honeycombio/urlshaper",
