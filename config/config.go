@@ -12,6 +12,7 @@ type Config struct {
 	Watchers       []*WatcherConfig
 	Verbosity      string
 	LegacyLogPaths bool `yaml:"legacyLogPaths"`
+	SplitLogging   bool `yaml:"splitLogging"`
 }
 
 type WatcherConfig struct {

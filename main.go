@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/signal"
@@ -21,6 +22,18 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
+
+type OutputSplitter struct{}
+
+// Some systems that process logs expect warn, info, debug, and trace to be on stdout
+// and all error output to go to stderr.
+func (splitter *OutputSplitter) Write(p []byte) (n int, err error) {
+	if bytes.Contains(p, []byte("level=debug")) || bytes.Contains(p, []byte("level=info")) ||
+		bytes.Contains(p, []byte("level=trace")) || bytes.Contains(p, []byte("level=warn")) {
+		return os.Stdout.Write(p)
+	}
+	return os.Stderr.Write(p)
+}
 
 type CmdLineOptions struct {
 	ConfigPath string `long:"config" description:"Path to configuration file" default:"/etc/honeycomb/config.yaml"`
@@ -64,6 +77,11 @@ func main() {
 		// block that's problematic when returning an error to the user.
 		fmt.Printf("Error in watcher configuration:\n%v\n", err)
 		os.Exit(1)
+	}
+
+	if config.SplitLogging {
+		logrus.SetOutput(&OutputSplitter{})
+		logrus.Info("Configured split logging. trace, debug, info, and warn levels will now go to stdout")
 	}
 
 	if config.Verbosity == "debug" {
