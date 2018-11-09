@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sync"
+	"time"
 
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/types"
@@ -24,6 +25,7 @@ import (
 )
 
 const logsBasePath = "/var/log"
+const maxPodWatcherRetries = 3
 
 // PodSetTailer is responsible for watching for all pods that match the
 // criteria defined by config, and managing tailers for each pod.
@@ -81,18 +83,47 @@ loop:
 		case pod := <-podWatcher.Pods():
 			watcher, err := pt.watcherForPod(pod, pt.config.ContainerName, podWatcher)
 			if err != nil {
-				// This shouldn't happen, since we check for configuration errors
-				// before actually setting up the watcher
-				logrus.WithError(err).Error("Error setting up watcher")
-				continue loop
+
+				// sometimes the pod isn't ready - for example, its log directory might not be
+				// on disk yet - back off and retry on incremental intervals before giving up
+				for retries := 1; retries <= maxPodWatcherRetries; retries++ {
+					watcher, err = pt.watcherForPod(pod, pt.config.ContainerName, podWatcher)
+					if err == nil {
+						break
+					}
+					if retries == maxPodWatcherRetries {
+						logrus.WithError(err).WithFields(logrus.Fields{
+							"name":      pod.Name,
+							"uid":       pod.UID,
+							"namespace": pod.Namespace,
+						}).Error("Error setting up watcher, giving up on this pod")
+						continue loop
+					}
+					logrus.WithError(err).WithFields(logrus.Fields{
+						"name":           pod.Name,
+						"uid":            pod.UID,
+						"namespace":      pod.Namespace,
+						"retry_attempts": retries,
+					}).Warn("got error setting up watcher, retrying")
+					time.Sleep(time.Second * time.Duration(retries) * time.Duration(retries))
+				}
 			}
-			logrus.WithFields(logrus.Fields{
-				"name":      pod.Name,
-				"uid":       pod.UID,
-				"namespace": pod.Namespace,
-			}).Info("starting watcher for pod")
-			watcher.Start()
-			watcherMap[pod.UID] = watcher
+			if watcher != nil {
+				logrus.WithFields(logrus.Fields{
+					"name":      pod.Name,
+					"uid":       pod.UID,
+					"namespace": pod.Namespace,
+				}).Info("starting watcher for pod")
+				watcher.Start()
+				watcherMap[pod.UID] = watcher
+			} else {
+				// should never get here, but just in case...
+				logrus.WithFields(logrus.Fields{
+					"name":      pod.Name,
+					"uid":       pod.UID,
+					"namespace": pod.Namespace,
+				}).Warn("got nil watcher for pod")
+			}
 		case deletedPodUID := <-podWatcher.DeletedPods():
 			if watcher, ok := watcherMap[deletedPodUID]; ok {
 				logrus.WithFields(logrus.Fields{
@@ -224,11 +255,11 @@ func determineFilterFunc(pod *v1.Pod, containerName string, legacyLogPaths bool)
 func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatcher k8sagent.PodWatcher) (*tailer.PathWatcher, error) {
 	pattern, err := determineLogPattern(pod, logsBasePath, pt.legacyLogPaths)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
+		logrus.WithError(err).WithFields(logrus.Fields{
 			"Pod": pod.UID,
 		}).Warn("Error finding log path")
 
-		// it's odd that we don't return here, should we?
+		return nil, err
 	}
 
 	// only watch logs for containers matching the given name, if
