@@ -7,9 +7,11 @@ package handlers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
@@ -97,6 +99,7 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 	event, err := h.unwrapper.Unwrap(rawLine, h.parser)
 	if err != nil {
 		logrus.WithError(err).Debug("Failed to parse line")
+		h.handleParseError(rawLine, err)
 		return
 	}
 	if event == nil {
@@ -116,4 +119,25 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 	}
 	logrus.WithField("parsed", event).Debug("Sending line")
 	h.transmitter.Send(event)
+}
+
+func (h *LineHandlerImpl) handleParseError(rawLine string, err error) {
+	if h.config.ErrorDataset != "" {
+		var selector string
+		if h.config.LabelSelector != nil {
+			selector = *h.config.LabelSelector
+		}
+		h.transmitter.Send(&event.Event{
+			Timestamp: time.Now(),
+			Dataset:   h.config.ErrorDataset,
+			Path:      h.path,
+			Data: map[string]interface{}{
+				"meta.parser_error":   err.Error(),
+				"meta.raw_message":    rawLine,
+				"meta.dataset":        h.config.Dataset,
+				"meta.namespace":      h.config.Namespace,
+				"meta.container_name": h.config.ContainerName,
+				"meta.label_selector": selector,
+			}})
+	}
 }

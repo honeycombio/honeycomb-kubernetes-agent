@@ -11,8 +11,9 @@ type Config struct {
 	WriteKey       string `yaml:"writekey"`
 	Watchers       []*WatcherConfig
 	Verbosity      string
-	LegacyLogPaths bool `yaml:"legacyLogPaths"`
-	SplitLogging   bool `yaml:"splitLogging"`
+	LegacyLogPaths bool   `yaml:"legacyLogPaths"`
+	SplitLogging   bool   `yaml:"splitLogging"`
+	ErrorDataset   string `yaml:"errorDataset"`
 }
 
 type WatcherConfig struct {
@@ -27,6 +28,7 @@ type WatcherConfig struct {
 	FilePaths     []string `yaml:"paths"`
 	ContainerName string   `yaml:"containerName"`
 	Processors    []map[string]map[string]interface{}
+	ErrorDataset  string `yaml:"errorDataset"`
 }
 
 type ParserConfig struct {

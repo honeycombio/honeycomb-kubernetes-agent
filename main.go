@@ -128,6 +128,11 @@ func main() {
 	}
 
 	for _, watcherConfig := range config.Watchers {
+		// propagate the error dataset if set globally, but not explicitly set
+		// for an individual watcher
+		if config.ErrorDataset != "" && watcherConfig.ErrorDataset == "" {
+			watcherConfig.ErrorDataset = config.ErrorDataset
+		}
 		for _, path := range watcherConfig.FilePaths {
 			handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 				watcherConfig,

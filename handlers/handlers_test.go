@@ -581,3 +581,39 @@ func TestKubernetesMetadata(t *testing.T) {
 	assert.Equal(t, mt.events[0].Data["kubernetes.container.image"], "containerImage")
 	assert.Equal(t, mt.events[0].Data["kubernetes.pod.UID"], "examplePodUID")
 }
+
+func TestParseErrorSendsEventToErrorDataset(t *testing.T) {
+	mt := &MockTransmitter{}
+	selector := "foo=bar"
+	cfg := &config.WatcherConfig{
+		Dataset:       "kubernetestest",
+		ErrorDataset:  "kubernetes-error-dataset",
+		Parser:        &config.ParserConfig{Name: "glog"},
+		LabelSelector: &selector,
+		Namespace:     "example",
+		ContainerName: "my container",
+	}
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.DockerJSONLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"log": "thiswillnotparse", "stream":"stdout","time":"2017-07-10T22:10:25.569584932Z"}`)
+	assert.Equal(t, len(mt.events), 1)
+	expected := &event.Event{
+		Data: map[string]interface{}{
+			"meta.container_name": "my container",
+			"meta.dataset":        "kubernetestest",
+			"meta.label_selector": selector,
+			"meta.namespace":      "example",
+			"meta.parser_error":   "Couldn't parse line as glog line: thiswillnotparse",
+			"meta.raw_message":    "{\"log\": \"thiswillnotparse\", \"stream\":\"stdout\",\"time\":\"2017-07-10T22:10:25.569584932Z\"}",
+		},
+		Dataset: "kubernetes-error-dataset",
+		Path:    "/tmp/testpath",
+	}
+	assert.Equal(t, expected.Data, mt.events[0].Data)
+	assert.Equal(t, expected.Dataset, mt.events[0].Dataset)
+	assert.Equal(t, expected.Path, mt.events[0].Path)
+	// verify a recent timestamp vs something bogus like Zero time or Epoch time
+	assert.Equal(t, time.Since(mt.events[0].Timestamp) < time.Minute, true)
+
+}

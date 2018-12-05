@@ -6,3 +6,4 @@ minikube-ds.yaml
 /.push-*
 /.container-*
 /.dockerfile-*
+.DS_Store
