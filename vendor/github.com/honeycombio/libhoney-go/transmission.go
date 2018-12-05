@@ -29,6 +29,12 @@ import (
 	"github.com/facebookgo/muster"
 )
 
+const (
+	apiMaxBatchSize    int = 5000000 // 5MB
+	apiEventSizeMax    int = 100000  // 100KB
+	maxOverflowBatches int = 10
+)
+
 // Output is responsible for handling events after Send() is called.
 // Implementations of Add() must be safe for concurrent calls.
 type Output interface {
@@ -51,14 +57,18 @@ type txDefaultClient struct {
 }
 
 func (t *txDefaultClient) Start() error {
+	logger.Printf("default transmission starting")
 	t.muster.MaxBatchSize = t.maxBatchSize
 	t.muster.BatchTimeout = t.batchTimeout
 	t.muster.MaxConcurrentBatches = t.maxConcurrentBatches
 	t.muster.PendingWorkCapacity = t.pendingWorkCapacity
 	t.muster.BatchMaker = func() muster.Batch {
 		return &batchAgg{
-			batches:          map[string][]*Event{},
-			httpClient:       &http.Client{Transport: t.transport},
+			batches: map[string][]*Event{},
+			httpClient: &http.Client{
+				Transport: t.transport,
+				Timeout:   10 * time.Second,
+			},
 			blockOnResponses: t.blockOnResponses,
 		}
 	}
@@ -66,10 +76,12 @@ func (t *txDefaultClient) Start() error {
 }
 
 func (t *txDefaultClient) Stop() error {
+	logger.Printf("default transmission stopping")
 	return t.muster.Stop()
 }
 
 func (t *txDefaultClient) Add(ev *Event) {
+	logger.Printf("adding event to transmission; queue length %d", len(t.muster.Work))
 	sd.Gauge("queue_length", len(t.muster.Work))
 	if t.blockOnSend {
 		t.muster.Work <- ev
@@ -84,14 +96,7 @@ func (t *txDefaultClient) Add(ev *Event) {
 				Err:      errors.New("queue overflow"),
 				Metadata: ev.Metadata,
 			}
-			if t.blockOnResponses {
-				responses <- r
-			} else {
-				select {
-				case responses <- r:
-				default:
-				}
-			}
+			writeToResponse(r, t.blockOnResponses)
 		}
 	}
 }
@@ -100,7 +105,9 @@ func (t *txDefaultClient) Add(ev *Event) {
 // eventually be one or more batches sent to the /1/batch/dataset endpoint.
 type batchAgg struct {
 	// map of batch key to a list of events destined for that batch
-	batches          map[string][]*Event
+	batches map[string][]*Event
+	// Used to reenque events when an initial batch is too large
+	overflowBatches  map[string][]*Event
 	httpClient       *http.Client
 	blockOnResponses bool
 	// numEncoded       int
@@ -127,16 +134,20 @@ func (b *batchAgg) Add(ev interface{}) {
 }
 
 func (b *batchAgg) enqueueResponse(resp Response) {
-	if b.blockOnResponses {
-		responses <- resp
-	} else {
-		select {
-		case responses <- resp:
-		default: // drop on the floor (and maybe notify tests)
-			if b.testBlocker != nil {
-				b.testBlocker.Done()
-			}
+	if writeToResponse(resp, b.blockOnResponses) {
+		if b.testBlocker != nil {
+			b.testBlocker.Done()
 		}
+	}
+}
+
+func (b *batchAgg) reenqueueEvents(events []*Event) {
+	if b.overflowBatches == nil {
+		b.overflowBatches = make(map[string][]*Event)
+	}
+	for _, e := range events {
+		key := fmt.Sprintf("%s_%s_%s", e.APIHost, e.WriteKey, e.Dataset)
+		b.overflowBatches[key] = append(b.overflowBatches[key], e)
 	}
 }
 
@@ -147,6 +158,38 @@ func (b *batchAgg) Fire(notifier muster.Notifier) {
 	// we don't need the batch key anymore; it's done its sorting job
 	for _, events := range b.batches {
 		b.fireBatch(events)
+	}
+	// The initial batches could have had payloads that were greater than 5MB.
+	// The remaining events will have overflowed into overflowBatches
+	// Process these until complete. Overflow batches can also overflow, so we
+	// have to prepare to process it multiple times
+	overflowCount := 0
+	if b.overflowBatches != nil {
+		for len(b.overflowBatches) > 0 {
+			// We really shouldn't get here but defensively avoid an endless
+			// loop of re-enqueued events
+			if overflowCount > maxOverflowBatches {
+				break
+			}
+			overflowCount++
+			// fetch the keys in this map - we can't range over the map
+			// because it's possible that fireBatch will reenqueue more overflow
+			// events
+			keys := make([]string, len(b.overflowBatches))
+			i := 0
+			for k := range b.overflowBatches {
+				keys[i] = k
+				i++
+			}
+
+			for _, k := range keys {
+				events := b.overflowBatches[k]
+				// fireBatch may append more overflow events
+				// so we want to clear this key before firing the batch
+				delete(b.overflowBatches, k)
+				b.fireBatch(events)
+			}
+		}
 	}
 }
 
@@ -288,10 +331,12 @@ func (b *batchAgg) encodeBatch(events []*Event) ([]byte, int) {
 	var numEncoded int
 	buf := bytes.Buffer{}
 	buf.WriteByte('[')
+	bytesTotal := 1
 	// ok, we've got our array, let's populate it with JSON events
 	for i, ev := range events {
 		if !first {
 			buf.WriteByte(',')
+			bytesTotal++
 		}
 		first = false
 		evByt, err := json.Marshal(ev)
@@ -304,6 +349,22 @@ func (b *batchAgg) encodeBatch(events []*Event) ([]byte, int) {
 			// responses if needed. don't delete to preserve slice length.
 			events[i] = nil
 			continue
+		}
+		// if the event is too large to ever send, add an error to the queue
+		if len(evByt) > apiEventSizeMax {
+			b.enqueueResponse(Response{
+				Err:      fmt.Errorf("event exceeds max event size of %d bytes, API will not accept this event", apiEventSizeMax),
+				Metadata: ev.Metadata,
+			})
+			events[i] = nil
+			continue
+		}
+		bytesTotal += len(evByt)
+
+		// count for the trailing ]
+		if bytesTotal+1 > apiMaxBatchSize {
+			b.reenqueueEvents(events[i:])
+			break
 		}
 		buf.Write(evByt)
 		numEncoded++
