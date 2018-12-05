@@ -16,5 +16,5 @@ func (u *RawLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (*event.
 	if data == nil {
 		return nil, nil
 	}
-	return &event.Event{Data: data}, nil
+	return &event.Event{Data: data, RawMessage: rawLine}, nil
 }

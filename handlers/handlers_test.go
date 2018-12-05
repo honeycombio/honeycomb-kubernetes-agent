@@ -113,9 +113,10 @@ func TestNginxParsing(t *testing.T) {
 						"status":          int64(200),
 						"time_local":      "10/Jul/2017:22:10:25 +0000",
 					},
-					Dataset:   "kubernetestest",
-					Path:      "/tmp/testpath",
-					Timestamp: time.Date(2017, 07, 10, 22, 10, 25, 569584932, time.UTC),
+					Dataset:    "kubernetestest",
+					Path:       "/tmp/testpath",
+					Timestamp:  time.Date(2017, 07, 10, 22, 10, 25, 569584932, time.UTC),
+					RawMessage: "192.168.143.128 - - [10/Jul/2017:22:10:25 +0000] \"GET / HTTP/1.1\" 200 612 \"-\" \"curl/7.38.0\" \"-\"",
 				},
 			},
 		},
@@ -144,9 +145,10 @@ func TestNginxParsing(t *testing.T) {
 						"authority":                     "locations",
 						"upstream_host":                 "tcp://10.0.2.1:80",
 					},
-					Dataset:   "kubernetestest",
-					Path:      "/tmp/testpath",
-					Timestamp: time.Date(2016, 4, 15, 20, 17, 0, 310000000, time.UTC),
+					Dataset:    "kubernetestest",
+					Path:       "/tmp/testpath",
+					Timestamp:  time.Date(2016, 4, 15, 20, 17, 0, 310000000, time.UTC),
+					RawMessage: "[2016-04-15T20:17:00.310Z] \"POST /api/v1/locations HTTP/2\" 204 - 154 0 226 100 \"10.0.35.28\" \"nsq2http\" \"cc21d9b0-cf5c-432b-8c7e-98aeb7988cd2\" \"locations\" \"tcp://10.0.2.1:80\"",
 				},
 			},
 		},
@@ -175,9 +177,10 @@ func TestNginxParsing(t *testing.T) {
 						"authority":                     "locations",
 						"upstream_host":                 "tcp://10.0.2.1:80",
 					},
-					Dataset:   "kubernetestest",
-					Path:      "/tmp/testpath",
-					Timestamp: time.Date(2016, 4, 15, 20, 17, 0, 310000000, time.UTC),
+					Dataset:    "kubernetestest",
+					Path:       "/tmp/testpath",
+					Timestamp:  time.Date(2016, 4, 15, 20, 17, 0, 310000000, time.UTC),
+					RawMessage: "[2016-04-15T20:17:00.310Z] \"POST /api/v1/locations HTTP/2\" 204 - 154 0 226 100 \"10.0.35.28\" \"nsq2http\" \"cc21d9b0-cf5c-432b-8c7e-98aeb7988cd2\" \"locations\" \"tcp://10.0.2.1:80\"",
 				},
 			},
 		},
@@ -209,9 +212,10 @@ func TestNginxParsing(t *testing.T) {
 						"upstream_status":          int64(200),
 						"req_id":                   "abcd",
 					},
-					Dataset:   "kubernetestest",
-					Path:      "/tmp/testpath",
-					Timestamp: time.Date(2017, 7, 10, 22, 10, 25, 0, time.UTC),
+					Dataset:    "kubernetestest",
+					Path:       "/tmp/testpath",
+					Timestamp:  time.Date(2017, 7, 10, 22, 10, 25, 0, time.UTC),
+					RawMessage: "10.0.0.1 - [10.0.0.1] - - [14/Jun/2018:18:20:48 +0000] \"GET /api/v1/users?id=22 HTTP/1.1\" 200 1198 \"-\" \"curl\" 536 0.165 [api-22] 10.0.0.2:10001 1202 0.165 200 abcd",
 				},
 			},
 		},
@@ -234,9 +238,10 @@ func TestNginxParsing(t *testing.T) {
 						"status":     int64(200),
 						"time_local": "10/Jul/2017:22:10:25 +0000",
 					},
-					Dataset:   "kubernetestest",
-					Path:      "/tmp/testpath",
-					Timestamp: time.Date(2017, 07, 10, 22, 10, 25, 569584932, time.UTC),
+					Dataset:    "kubernetestest",
+					Path:       "/tmp/testpath",
+					Timestamp:  time.Date(2017, 07, 10, 22, 10, 25, 569584932, time.UTC),
+					RawMessage: "[10/Jul/2017:22:10:25 +0000] \"GET / HTTP/1.1\" 200",
 				},
 			},
 		},
@@ -267,9 +272,10 @@ func TestGlogParsing(t *testing.T) {
 			"threadid":       "5",
 			"glog_timestamp": time.Date(time.Now().Year(), 07, 20, 0, 15, 01, 592300000, time.UTC),
 		},
-		Dataset:   "kubernetestest",
-		Path:      "/tmp/testpath",
-		Timestamp: time.Date(2017, 7, 10, 22, 10, 25, 569584932, time.UTC),
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		Timestamp:  time.Date(2017, 7, 10, 22, 10, 25, 569584932, time.UTC),
+		RawMessage: `W0720 00:15:01.592300       5 controller.go:386] Resetting endpoints for master service`,
 	}
 	assert.Equal(t, mt.events[0], expected)
 
@@ -294,9 +300,10 @@ func TestRedisParsing(t *testing.T) {
 			"message":         "RDB: 0 MB of memory used by copy-on-write",
 			"redis_timestamp": time.Date(time.Now().Year(), 8, 9, 23, 12, 19, 127000000, time.UTC),
 		},
-		Dataset:   "kubernetestest",
-		Path:      "/tmp/testpath",
-		Timestamp: time.Date(2017, 7, 2, 22, 10, 25, 569534932, time.UTC),
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		Timestamp:  time.Date(2017, 7, 2, 22, 10, 25, 569534932, time.UTC),
+		RawMessage: `44:C 09 Aug 23:12:19.127 * RDB: 0 MB of memory used by copy-on-write`,
 	}
 	assert.Equal(t, mt.events[0], expected)
 }
@@ -330,9 +337,10 @@ processors:
 					"namespace": "tectonic-system",
 					"uri":       "/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s",
 				},
-				Dataset:   "kubernetestest",
-				Path:      "/tmp/testpath",
-				Timestamp: time.Date(2017, 8, 25, 4, 40, 49, 965969122, time.UTC),
+				Dataset:    "kubernetestest",
+				Path:       "/tmp/testpath",
+				Timestamp:  time.Date(2017, 8, 25, 4, 40, 49, 965969122, time.UTC),
+				RawMessage: `2017-08-25T04:40:49.965969122Z AUDIT: id="8e2ad929-8da1-4ce5-8776-751421157483" ip="172.20.67.135" method="GET" user="system:serviceaccount:tectonic-system:prometheus-operator" groups="\"system:serviceaccounts\",\"system:serviceaccounts:tectonic-system\",\"system:authenticated\"" as="<self>" asgroups="<lookup>" namespace="tectonic-system" uri="/api/v1/namespaces/tectonic-system/secrets/prometheus-k8s"`,
 			},
 		},
 	}
@@ -369,6 +377,9 @@ func TestKubernetesAuditLogHandling(t *testing.T) {
 				Dataset:   "kubernetestest",
 				Path:      "/tmp/testpath",
 				Timestamp: time.Date(2017, 3, 21, 3, 57, 9, 106841886, time.FixedZone("", 4*3600)),
+				// Passing the "raw message" for a multi-line parser isn't perfect, but it's the best
+				// we're willing to do for now.
+				RawMessage: `2017-03-21T03:57:09.108403639+04:00 AUDIT: id="c939d2a7-1c37-4ef1-b2f7-4ba9b1e43b53" response="200"`,
 			},
 		},
 	}
@@ -394,9 +405,10 @@ func TestDropField(t *testing.T) {
 	handler.Handle(`{"todrop": "a", "dontdrop": "b"}`)
 	assert.Equal(t, len(mt.events), 1)
 	expected := &event.Event{
-		Data:    map[string]interface{}{"dontdrop": "b"},
-		Dataset: "kubernetestest",
-		Path:    "/tmp/testpath",
+		Data:       map[string]interface{}{"dontdrop": "b"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"todrop": "a", "dontdrop": "b"}`,
 	}
 	assert.Equal(t, mt.events[0], expected)
 }
@@ -501,6 +513,7 @@ processors:
 					"request_queryshape":       "id=?",
 					"request_query_id":         "22",
 				},
+				RawMessage: `{"request": "GET /api/v1/users?id=22 HTTP/1.1"}`,
 			},
 		},
 		{
@@ -520,6 +533,7 @@ processors:
 					"request_queryshape":    "id=?",
 					"request_query_id":      "22",
 				},
+				RawMessage: `{"request": "/api/v1/users?id=22"}`,
 			},
 		},
 	}

@@ -8,4 +8,5 @@ type Event struct {
 	SampleRate uint
 	Timestamp  time.Time
 	Data       map[string]interface{}
+	RawMessage string
 }
