@@ -43,7 +43,8 @@ func (u *DockerJSONLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (
 	}
 
 	return &event.Event{
-		Data:      data,
-		Timestamp: ts,
+		Data:       data,
+		Timestamp:  ts,
+		RawMessage: line.Log,
 	}, nil
 }
