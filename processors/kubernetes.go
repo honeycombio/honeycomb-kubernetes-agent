@@ -48,6 +48,7 @@ func extractMetadataFromPod(pod *v1.Pod, containerName string) map[string]interf
 	ret["pod.nodeSelector"] = pod.Spec.NodeSelector
 	ret["pod.serviceAccountName"] = pod.Spec.ServiceAccountName
 	ret["pod.subdomain"] = pod.Spec.Subdomain
+	ret["pod.annotations"] = pod.Annotations
 
 	for _, container := range pod.Spec.Containers {
 		if container.Name == containerName {
