@@ -200,6 +200,16 @@ func determineLogPattern(pod *v1.Pod, basePath string, legacyLogPaths bool) (str
 			}).WithError(err).Warn("failed to read pod log directory")
 			return "", fmt.Errorf("Could not determine log path for pod %s", pod.UID)
 		}
+		// it's possible that the pod log directory exists, but no files or directories
+		// exist so we can't know what the pattern should be yet
+		if len(files) == 0 {
+			logrus.WithFields(logrus.Fields{
+				"PodName": pod.Name,
+				"UID":     pod.UID,
+				"Path":    upath,
+			}).Info("insufficient information in pod log directory")
+			return "", fmt.Errorf("Could not determine log path for pod %s", pod.UID)
+		}
 		for _, f := range files {
 			if s, err := os.Stat(filepath.Join(upath, f)); err == nil {
 				// if we find at least one directory in the path, assume k8s
