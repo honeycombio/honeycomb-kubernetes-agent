@@ -113,7 +113,7 @@ func TestPathWatching(t *testing.T) {
 	handlerFactory := newMockLineHandlerFactory()
 
 	watcher := NewPathWatcher(
-		fmt.Sprintf("%s/*", dir),
+		func() (string, error) { return fmt.Sprintf("%s/*", dir), nil },
 		nil,
 		handlerFactory,
 		stateRecorder,
@@ -149,7 +149,7 @@ func TestPathWatching(t *testing.T) {
 
 	assert.Equal(t, len(handlerFactory.handlers), 2)
 	for _, h := range handlerFactory.handlers {
-		assert.Equal(t, len(h.lines), 2)
+		assert.Equal(t, 2, len(h.lines))
 	}
 	assert.Equal(t, len(watcher.tailers), 0)
 }

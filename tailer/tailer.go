@@ -10,6 +10,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/hpcloud/tail"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 // Tailer tails a single file, passing each line off to the handler.
@@ -111,19 +112,23 @@ func (t *Tailer) Clear() {
 
 type filterFunc func(string) bool
 
+type patternFunc func() (string, error)
+
 type PathWatcher struct {
-	pattern        string
+	pattern        patternFunc
 	filter         filterFunc
 	tailers        map[string]*Tailer
 	handlerFactory handlers.LineHandlerFactory
 	stateRecorder  StateRecorder
 	checkInterval  time.Duration
+	pod            *v1.Pod
 
-	stop chan bool
+	stop         chan bool
+	savedPattern string
 }
 
 func NewPathWatcher(
-	pattern string,
+	pattern patternFunc,
 	filter filterFunc,
 	handlerFactory handlers.LineHandlerFactory,
 	stateRecorder StateRecorder,
@@ -165,13 +170,24 @@ func (p *PathWatcher) Stop() {
 }
 
 func (p *PathWatcher) check() {
-	files, err := filepath.Glob(p.pattern)
+	// Have we figured out the pattern yet? If not, run our pattern function
+	if p.savedPattern == "" {
+		pt, err := p.pattern()
+		// If we can't figure it out yet, that's OK, we'll try on the next check
+		if err != nil {
+			return
+		}
+
+		// save the pattern so we don't have to keep running our pattern function
+		p.savedPattern = pt
+	}
+	files, err := filepath.Glob(p.savedPattern)
 	if err != nil {
 		logrus.WithError(err).Error("Error globbing files")
 	}
 	if len(files) == 0 {
 		logrus.WithFields(logrus.Fields{
-			"Pattern": p.pattern,
+			"Pattern": p.savedPattern,
 		}).Warn("No files found for pattern")
 	}
 	current := make(map[string]struct{}, len(p.tailers))

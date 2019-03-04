@@ -207,7 +207,7 @@ func determineLogPattern(pod *v1.Pod, basePath string, legacyLogPaths bool) (str
 				"PodName": pod.Name,
 				"UID":     pod.UID,
 				"Path":    upath,
-			}).Info("insufficient information in pod log directory")
+			}).Info("no files in log path yet, could not determine log pattern")
 			return "", fmt.Errorf("Could not determine log path for pod %s", pod.UID)
 		}
 		for _, f := range files {
@@ -263,13 +263,10 @@ func determineFilterFunc(pod *v1.Pod, containerName string, legacyLogPaths bool)
 }
 
 func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatcher k8sagent.PodWatcher) (*tailer.PathWatcher, error) {
-	pattern, err := determineLogPattern(pod, logsBasePath, pt.legacyLogPaths)
-	if err != nil {
-		logrus.WithError(err).WithFields(logrus.Fields{
-			"Pod": pod.UID,
-		}).Warn("Error finding log path")
-
-		return nil, err
+	// at the time we try and start the watcher, the log directory contents may be insufficient
+	// to determine the right log pattern. Rather than fail, we just defer this until the watcher is running
+	patternFunc := func() (string, error) {
+		return determineLogPattern(pod, logsBasePath, pt.legacyLogPaths)
 	}
 
 	// only watch logs for containers matching the given name, if
@@ -292,11 +289,10 @@ func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatc
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"Name":    pod.Name,
-		"UID":     pod.UID,
-		"Pattern": pattern,
+		"Name": pod.Name,
+		"UID":  pod.UID,
 	}).Info("Setting up watcher for pod")
 
-	watcher := tailer.NewPathWatcher(pattern, filterFunc, handlerFactory, pt.stateRecorder)
+	watcher := tailer.NewPathWatcher(patternFunc, filterFunc, handlerFactory, pt.stateRecorder)
 	return watcher, nil
 }
