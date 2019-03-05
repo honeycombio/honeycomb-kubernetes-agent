@@ -26,6 +26,10 @@ func TestDetermineLogPatternK8S110(t *testing.T) {
 	assert.Nil(t, err)
 	err = os.Mkdir(filepath.Join(path, "pods", string(pod.UID)), 0777)
 	assert.Nil(t, err)
+
+	_, err = determineLogPattern(pod, path, false)
+	assert.Error(t, err, "determine log pattern should fail if pod dir has no files yet")
+
 	err = os.Mkdir(filepath.Join(path, "pods", string(pod.UID), "container1"), 0777)
 	assert.Nil(t, err)
 	err = os.Mkdir(filepath.Join(path, "pods", string(pod.UID), "container2"), 0777)

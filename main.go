@@ -138,7 +138,10 @@ func main() {
 				// before actually setting up the watcher
 				logrus.WithError(err).Error("Error setting up watcher")
 			}
-			t := tailer.NewPathWatcher(path, nil, handlerFactory, stateRecorder)
+			// Even though we have a static path, NewPathWatcher expects a function
+			// so we build one that just returns the path
+			patternFunc := func() (string, error) { return path, nil }
+			t := tailer.NewPathWatcher(patternFunc, nil, handlerFactory, stateRecorder)
 			t.Start()
 			defer t.Stop()
 		}
