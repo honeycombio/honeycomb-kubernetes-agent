@@ -111,6 +111,18 @@ key | value | description
 :--|:--|:--
 field | string | The name of the field to drop.
 
+### rename_field
+
+The `rename_field` processor will rename the specified field in all events, if it exists, before sending them to Honeycomb. You can use this to standardize field names across data sources, for example. Note that if the `new` field already exists, it will be overwritten with the value in the `original` field.
+
+**Options:**
+
+key | type | description
+:--|:--|:--
+original | string | Name of field to be renamed. Required.
+new | string | The new field name to use. Required.
+
+
 ### timefield
 The `timefield` processor will replace the default timestamp in an event with
 one extracted from a specific field in the event.

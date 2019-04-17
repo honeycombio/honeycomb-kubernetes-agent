@@ -413,6 +413,32 @@ func TestDropField(t *testing.T) {
 	assert.Equal(t, mt.events[0], expected)
 }
 
+func TestRenameField(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg := &config.WatcherConfig{
+		Dataset: "kubernetestest",
+		Parser:  &config.ParserConfig{Name: "json"},
+		Processors: []map[string]map[string]interface{}{
+			map[string]map[string]interface{}{
+				"rename_field": map[string]interface{}{"original": "boring", "new": "interesting"},
+			},
+		},
+	}
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"boring": "field", "another": "field"}`)
+	assert.Equal(t, len(mt.events), 1)
+	expected := &event.Event{
+		Data:       map[string]interface{}{"interesting": "field", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"boring": "field", "another": "field"}`,
+	}
+	assert.Equal(t, mt.events[0], expected)
+}
+
 func TestStaticSampling(t *testing.T) {
 	mt := &MockTransmitter{}
 	cfg, err := watcherConfigFromYAML(`

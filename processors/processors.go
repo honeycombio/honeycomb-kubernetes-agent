@@ -20,7 +20,7 @@ type Processor interface {
 }
 
 // NewProcessorFromConfig takes a configuration map that's been unmarshalled
-// out of YAML, and tries to instantiate a corresponding parser.
+// out of YAML, and tries to instantiate a corresponding processor.
 // The syntax for processor configuration is:
 // processors:
 // - request_shape:
@@ -53,6 +53,8 @@ func NewProcessor(name string, options map[string]interface{}) (Processor, error
 		p = &Sampler{}
 	case "timefield":
 		p = &TimeFieldExtractor{}
+	case "rename_field":
+		p = &FieldRenamer{}
 	default:
 		return nil, fmt.Errorf("Unknown processor type %s", name)
 	}
