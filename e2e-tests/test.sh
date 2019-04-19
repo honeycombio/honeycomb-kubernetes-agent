@@ -6,7 +6,7 @@ set -euo pipefail
 PATH=$PATH:$(pwd)
 
 # Build the agent and mock API host images
-VERSION=$(git describe --tags --always --dirty)
+VERSION=$(cat version.txt | tr -d '\n')
 make container
 
 docker build -t apihost $(dirname $0)/apihost
