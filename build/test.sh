@@ -20,6 +20,10 @@ set -o pipefail
 
 export CGO_ENABLED=0
 
+mkdir -p .cache
+# needed in 1.12 when building in docker
+export GOCACHE=/go/.cache
+
 TARGETS=$(for d in "$@"; do go list ./$d/... | grep -v vendor ; done)
 
 echo "Running unit tests:"

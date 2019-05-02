@@ -104,7 +104,7 @@ func TestTailRestarting(t *testing.T) {
 }
 
 func TestPathWatching(t *testing.T) {
-	dir := "/tmp/honeycomb-log-test/"
+	dir := "/tmp/honeycomb-log-test"
 	stateFile, err := ioutil.TempFile("/tmp", "honeycomb-log-test-statefile")
 	assert.NoError(t, err)
 	stateRecorder, err := NewStateRecorder(stateFile.Name())
