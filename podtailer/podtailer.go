@@ -13,7 +13,6 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/types"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
@@ -21,6 +20,7 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/tailer"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 

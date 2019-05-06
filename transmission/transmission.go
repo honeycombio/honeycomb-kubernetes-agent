@@ -3,9 +3,9 @@ package transmission
 import (
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	libhoney "github.com/honeycombio/libhoney-go"
+	"github.com/sirupsen/logrus"
 )
 
 const truncatedLineMax = 1000
