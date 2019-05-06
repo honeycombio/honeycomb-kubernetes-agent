@@ -5,3 +5,6 @@ watchers:
 - labelSelector: app=nginx
   dataset: testdataset
   parser: json
+additionalFields:
+  foo: 1
+  bar: "2"

@@ -154,6 +154,7 @@ func main() {
 				stateRecorder,
 				kubeClient,
 				config.LegacyLogPaths,
+				config.AdditionalFields,
 			)
 			pt.Start()
 			defer pt.Stop()

@@ -4,3 +4,7 @@ watchers:
       name: nginx
       options:
         log_format: default
+    processors:
+      - additional_fields:
+          foo: "1"
+          bar: 2
