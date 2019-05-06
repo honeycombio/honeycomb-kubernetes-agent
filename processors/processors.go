@@ -55,6 +55,8 @@ func NewProcessor(name string, options map[string]interface{}) (Processor, error
 		p = &TimeFieldExtractor{}
 	case "rename_field":
 		p = &FieldRenamer{}
+	case "additional_fields":
+		p = &AdditionalFieldsProcessor{}
 	default:
 		return nil, fmt.Errorf("Unknown processor type %s", name)
 	}

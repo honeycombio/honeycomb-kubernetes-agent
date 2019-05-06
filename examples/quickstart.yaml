@@ -46,10 +46,16 @@ data:
       - dataset: kubernetes-logs
         labelSelector: ""
         parser: glog
+        # you can append arbitrary field information to watchers
+        # additionalFields:
+        #   owner_email: me@example.com
     verbosity: debug
     # support older container log paths, see:
     # https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/kubelet-cri-logging.md
     legacyLogPaths: true
+    # you can append arbitrary fields to all events sent from this agent
+    #additionalFields:
+    #  cluster_name: "dev_cluster"
 
 # Daemonset
 ---

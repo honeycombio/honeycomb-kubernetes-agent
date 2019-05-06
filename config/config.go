@@ -7,12 +7,13 @@ import (
 )
 
 type Config struct {
-	APIHost        string `yaml:"apiHost"`
-	WriteKey       string `yaml:"writekey"`
-	Watchers       []*WatcherConfig
-	Verbosity      string
-	LegacyLogPaths bool `yaml:"legacyLogPaths"`
-	SplitLogging   bool `yaml:"splitLogging"`
+	APIHost          string `yaml:"apiHost"`
+	WriteKey         string `yaml:"writekey"`
+	Watchers         []*WatcherConfig
+	Verbosity        string
+	LegacyLogPaths   bool                   `yaml:"legacyLogPaths"`
+	SplitLogging     bool                   `yaml:"splitLogging"`
+	AdditionalFields map[string]interface{} `yaml:"additionalFields"`
 }
 
 type WatcherConfig struct {

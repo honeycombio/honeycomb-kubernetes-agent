@@ -90,6 +90,19 @@ More parsers will be added in the future. If you'd like to see support for addit
 ## Processors
 Processors transform events after they're parsed. Currently, the following processors are supported:
 
+### additional_fields
+
+The `additional_fields` processor accepts a static map of field names and values and appends those to every event it processes. These values will overwrite existing fields of the same name, if they exist:
+
+**Example:**
+
+```yaml
+processors:
+  - additional_fields:
+      environment: production
+      owner: me@example.com
+```
+
 ### sample
 The `sample` processor will only send a subset of events to Honeycomb. Honeycomb natively supports sampled event streams, allowing you to send a representative subset of events while still getting high-fidelity query results.
 
@@ -188,6 +201,21 @@ into
     "request_query_id": "22",
     ...
 }
+```
+
+## Global Configuration Options
+
+### additionalFields
+
+You can append arbitrary key/value pairs to all events processed by the agent by defining the `additionalFields` section of the config. These values will overwrite existing fields of the same name, if they exist:
+
+```yaml
+writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
+watchers:
+  - # ...
+additionalFields:
+  cluster_name: my cluster
+  owner: me@example.com
 ```
 
 ## Sample configurations

@@ -26,3 +26,17 @@ func TestParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestAdditionalFieldsParsing(t *testing.T) {
+	path, _ := filepath.Abs(filepath.Join("testdata", "basic.yaml"))
+	c, err := ReadFromFile(path)
+	assert.NoError(t, err)
+
+	assert.Equal(t, map[string]interface{}{"foo": 1, "bar": "2"}, c.AdditionalFields)
+
+	path, _ = filepath.Abs(filepath.Join("testdata", "parser_with_options.yaml"))
+	c, err = ReadFromFile(path)
+	assert.NoError(t, err)
+
+	assert.Equal(t, map[string]interface{}{"foo": "1", "bar": 2}, c.Watchers[0].Processors[0]["additional_fields"])
+}

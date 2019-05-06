@@ -30,14 +30,15 @@ const maxPodWatcherRetries = 3
 // PodSetTailer is responsible for watching for all pods that match the
 // criteria defined by config, and managing tailers for each pod.
 type PodSetTailer struct {
-	config         *config.WatcherConfig
-	nodeSelector   string
-	transmitter    transmission.Transmitter
-	stateRecorder  tailer.StateRecorder
-	kubeClient     corev1.PodsGetter
-	stop           chan bool
-	wg             sync.WaitGroup
-	legacyLogPaths bool
+	config                 *config.WatcherConfig
+	nodeSelector           string
+	transmitter            transmission.Transmitter
+	stateRecorder          tailer.StateRecorder
+	kubeClient             corev1.PodsGetter
+	stop                   chan bool
+	wg                     sync.WaitGroup
+	legacyLogPaths         bool
+	additionalFieldsGlobal map[string]interface{}
 }
 
 func NewPodSetTailer(
@@ -47,15 +48,17 @@ func NewPodSetTailer(
 	stateRecorder tailer.StateRecorder,
 	kubeClient corev1.PodsGetter,
 	legacyLogPaths bool,
+	additionalFieldsGlobal map[string]interface{},
 ) *PodSetTailer {
 	return &PodSetTailer{
-		config:         config,
-		nodeSelector:   nodeSelector,
-		transmitter:    transmitter,
-		stateRecorder:  stateRecorder,
-		kubeClient:     kubeClient,
-		stop:           make(chan bool),
-		legacyLogPaths: legacyLogPaths,
+		config:                 config,
+		nodeSelector:           nodeSelector,
+		transmitter:            transmitter,
+		stateRecorder:          stateRecorder,
+		kubeClient:             kubeClient,
+		stop:                   make(chan bool),
+		legacyLogPaths:         legacyLogPaths,
+		additionalFieldsGlobal: additionalFieldsGlobal,
 	}
 }
 
@@ -273,14 +276,21 @@ func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatc
 	// one is specified
 	filterFunc := determineFilterFunc(pod, containerName, pt.legacyLogPaths)
 
-	k8sMetadataProcessor := &processors.KubernetesMetadataProcessor{
-		PodGetter: podWatcher,
-		UID:       pod.UID}
+	additionalProcessors := []processors.Processor{
+		&processors.KubernetesMetadataProcessor{
+			PodGetter: podWatcher,
+			UID:       pod.UID,
+		},
+	}
+	// the additionalFields section at the root of the config applies to all pod watchers
+	if pt.additionalFieldsGlobal != nil {
+		additionalProcessors = append(additionalProcessors, &processors.AdditionalFieldsProcessor{AdditionalFields: pt.additionalFieldsGlobal})
+	}
 	handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 		pt.config,
 		&unwrappers.DockerJSONLogUnwrapper{},
 		pt.transmitter,
-		k8sMetadataProcessor)
+		additionalProcessors...)
 	if err != nil {
 		// This shouldn't happen, since we check for configuration errors
 		// before actually setting up the watcher
