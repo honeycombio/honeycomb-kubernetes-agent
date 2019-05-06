@@ -15,6 +15,11 @@ run `make test`.
 CI runs an additional end-to-end smoke test that sets up a Minikube cluster and
 sends events through it. You can find that in the `e2e-tests/` directory.
 
+### Bumping the version
+
+- Update `version.txt` with the version number - this will be injected at build time.
+- Update the version everywhere it is referenced in `example/quickstart.yaml`
+
 ### Working with Minikube
 
 To test inside Minikube with a locally-built image:
