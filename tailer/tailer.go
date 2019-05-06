@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/hpcloud/tail"
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/pkg/api/v1"
 )
 

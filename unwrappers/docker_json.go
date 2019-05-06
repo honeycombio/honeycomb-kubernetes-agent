@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
+	"github.com/sirupsen/logrus"
 )
 
 type dockerJSONLogLine struct {

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/podtailer"
@@ -18,6 +17,7 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/version"
 	libhoney "github.com/honeycombio/libhoney-go"
 	flag "github.com/jessevdk/go-flags"
+	"github.com/sirupsen/logrus"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

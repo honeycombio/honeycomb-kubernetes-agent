@@ -8,12 +8,12 @@ package handlers
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/parsers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/processors"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
+	"github.com/sirupsen/logrus"
 )
 
 type LineHandler interface {
