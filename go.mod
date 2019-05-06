@@ -6,7 +6,6 @@ require (
 	cloud.google.com/go v0.0.0-20160913182117-3b1ae45394a2 // indirect
 	github.com/PuerkitoBio/purell v1.0.0 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2 // indirect
-	github.com/Sirupsen/logrus v0.0.0-20170620144510-3d4380f53a34
 	github.com/blang/semver v3.0.1+incompatible // indirect
 	github.com/boltdb/bolt v0.0.0-20160719165138-5cc10bbbc5c1
 	github.com/coreos/go-oidc v0.0.0-20160818215358-5644a2f50e2d // indirect
@@ -30,7 +29,7 @@ require (
 	github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad
 	github.com/honeycombio/dynsampler-go v0.0.0-20170809005534-e2e8a486b1ed
 	github.com/honeycombio/gonx v0.0.0-20161103000552-45c9e8369299
-	github.com/honeycombio/honeytail v0.0.0-20170804015214-caa5d01bbba5
+	github.com/honeycombio/honeytail v1.0.1
 	github.com/honeycombio/libhoney-go v0.0.0-20181120182722-a6839afb6be6
 	github.com/honeycombio/urlshaper v0.0.0-20161221211858-02612463a463
 	github.com/hpcloud/tail v0.0.0-20170707194310-a927b6857fc7
@@ -43,6 +42,7 @@ require (
 	github.com/mitchellh/mapstructure v0.0.0-20170523030023-d0303fe80992
 	github.com/pborman/uuid v0.0.0-20150603214016-ca53cad383ca // indirect
 	github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0 // indirect
+	github.com/sirupsen/logrus v0.0.0-20170620144510-3d4380f53a34
 	github.com/smartystreets/assertions v0.0.0-20170607222757-4ea54c1f28ad // indirect
 	github.com/smartystreets/goconvey v0.0.0-20170602164621-9e8dc3f972df // indirect
 	github.com/spf13/pflag v0.0.0-20161024131444-5ccb023bc27d // indirect

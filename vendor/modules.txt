@@ -5,8 +5,6 @@ cloud.google.com/go/internal
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2
 github.com/PuerkitoBio/urlesc
-# github.com/Sirupsen/logrus v0.0.0-20170620144510-3d4380f53a34
-github.com/Sirupsen/logrus
 # github.com/blang/semver v3.0.1+incompatible
 github.com/blang/semver
 # github.com/boltdb/bolt v0.0.0-20160719165138-5cc10bbbc5c1
@@ -62,7 +60,7 @@ github.com/hashicorp/golang-lru/simplelru
 github.com/honeycombio/dynsampler-go
 # github.com/honeycombio/gonx v0.0.0-20161103000552-45c9e8369299
 github.com/honeycombio/gonx
-# github.com/honeycombio/honeytail v0.0.0-20170804015214-caa5d01bbba5
+# github.com/honeycombio/honeytail v1.0.1
 github.com/honeycombio/honeytail/httime
 # github.com/honeycombio/libhoney-go v0.0.0-20181120182722-a6839afb6be6
 github.com/honeycombio/libhoney-go
@@ -92,6 +90,8 @@ github.com/mitchellh/mapstructure
 github.com/pborman/uuid
 # github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0
 github.com/pmezard/go-difflib/difflib
+# github.com/sirupsen/logrus v0.0.0-20170620144510-3d4380f53a34
+github.com/sirupsen/logrus
 # github.com/spf13/pflag v0.0.0-20161024131444-5ccb023bc27d
 github.com/spf13/pflag
 # github.com/stretchr/testify v0.0.0-20151208002404-e3a8ff8ce365
