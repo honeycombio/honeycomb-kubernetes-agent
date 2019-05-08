@@ -1,0 +1,31 @@
+# Use the latest 2.1 version of CircleCI pipeline processing engine, see https://circleci.com/docs/2.0/configuration-reference/
+version: 2.1
+
+jobs:
+  build_agent:
+    # needed to build docker images, attach mount points, etc
+    machine: true
+    steps:
+      - checkout
+      - run: make container
+      - run: make test
+      - run: e2e-tests/minikube-bootstrap.sh
+      - run: e2e-tests/test.sh
+      - run:
+          name: "Deploy on tagged master push"
+          command: |
+            if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${CIRCLE_TAG}" ]; then
+              echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin;
+              make push;
+              make push-head;
+            else
+              echo "skipping push. CIRCLE_PULL_REQUEST=${CIRCLE_PULL_REQUEST}, CIRCLE_BRANCH=${CIRCLE_BRANCH}, CIRCLE_TAG=${CIRCLE_TAG}"
+            fi;
+
+
+# Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build_agent
