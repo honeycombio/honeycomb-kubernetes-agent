@@ -8,13 +8,13 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"k8s.io/api/core/v1"
+	v1types "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/types"
-	"k8s.io/client-go/pkg/util/wait"
-	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -143,14 +143,14 @@ func runInformer(
 	client corev1.PodsGetter,
 	handler cache.ResourceEventHandlerFuncs,
 ) {
-	listOptions := v1.ListOptions{
+	listOptions := v1types.ListOptions{
 		LabelSelector: labelSelector,
 		FieldSelector: fieldSelector,
 	}
-	listFunc := func(options api.ListOptions) (runtime.Object, error) {
+	listFunc := func(options v1types.ListOptions) (runtime.Object, error) {
 		return client.Pods(namespace).List(listOptions)
 	}
-	watchFunc := func(options api.ListOptions) (watch.Interface, error) {
+	watchFunc := func(options v1types.ListOptions) (watch.Interface, error) {
 		return client.Pods(namespace).Watch(listOptions)
 	}
 

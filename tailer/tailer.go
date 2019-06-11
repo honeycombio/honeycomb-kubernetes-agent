@@ -9,8 +9,10 @@ import (
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/hpcloud/tail"
+
 	"github.com/sirupsen/logrus"
-	"k8s.io/client-go/pkg/api/v1"
+
+	"k8s.io/api/core/v1"
 )
 
 // Tailer tails a single file, passing each line off to the handler.
@@ -175,6 +177,7 @@ func (p *PathWatcher) check() {
 		pt, err := p.pattern()
 		// If we can't figure it out yet, that's OK, we'll try on the next check
 		if err != nil {
+			logrus.WithError(err).Debug("err getting pattern for pod")
 			return
 		}
 

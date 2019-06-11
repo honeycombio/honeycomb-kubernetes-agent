@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/types"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"

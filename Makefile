@@ -42,8 +42,8 @@ ALL_ARCH := amd64 arm arm64 ppc64le
 
 IMAGE := $(REGISTRY)/$(BIN)
 
-BUILD_IMAGE ?= golang:1.8-alpine
-BASEIMAGE ?= golang:1.8-alpine
+BUILD_IMAGE ?= golang:1.12-alpine
+BASEIMAGE ?= golang:1.12-alpine
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.

@@ -19,7 +19,7 @@ import (
 	flag "github.com/jessevdk/go-flags"
 	"github.com/sirupsen/logrus"
 
-	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -165,13 +165,13 @@ func main() {
 	waitForSignal()
 }
 
-func newKubeClient() (*kubernetes.Clientset, error) {
+func newKubeClient() (*corev1.CoreV1Client, error) {
 	// Get clientset to query API server.
 	kubeClientConfig, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
-	return kubernetes.NewForConfig(kubeClientConfig)
+	return corev1.NewForConfig(kubeClientConfig)
 }
 
 func parseFlags() (CmdLineOptions, error) {

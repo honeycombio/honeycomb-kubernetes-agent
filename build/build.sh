@@ -34,6 +34,10 @@ fi
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 
+mkdir -p .cache
+# needed in 1.12 when building in docker
+export GOCACHE=/go/.cache
+
 go install                                                         \
     -installsuffix "static"                                        \
     -ldflags "-X ${PKG}/version.VERSION=${VERSION}"            \

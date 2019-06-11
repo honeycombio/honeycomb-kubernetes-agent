@@ -10,8 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/types"
+	"k8s.io/api/core/v1"
+	v1types "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -581,7 +582,7 @@ func (mp *mockPodGetter) DeletedPods() chan types.UID { return nil }
 
 func (mp *mockPodGetter) Get(uid types.UID) (*v1.Pod, bool) {
 	return &v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: v1types.ObjectMeta{
 			Name: "examplePod",
 			UID:  uid,
 		},
