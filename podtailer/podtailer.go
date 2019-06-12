@@ -165,9 +165,22 @@ func determineLogPattern(pod *v1.Pod, basePath string, legacyLogPaths bool) (str
 	if legacyLogPaths {
 		return filepath.Join(basePath, "containers", fmt.Sprintf("%s_%s_*.log", pod.Name, pod.Namespace)), nil
 	}
+	// Added in https://github.com/kubernetes/kubernetes/pull/74441 - later k8s instances use
+	// /var/log/pods/NAMESPACE_NAME_UID/CONTAINER/INSTANCE.log
+	// If it exists, assume this log patern
+	namespaceNameUIDPath := filepath.Join(basePath, "pods", fmt.Sprintf("%s_%s_%s", pod.Namespace, pod.Name, pod.UID))
+	if _, err := os.Stat(namespaceNameUIDPath); err == nil {
+		return filepath.Join(namespaceNameUIDPath, "*", "*"), nil
+	}
+
 	// Critical pods seem to all use this config hash for their log directory
 	// instead of the pod UID. Use the hash if it exists
 	if hash, ok := pod.Annotations["kubernetes.io/config.hash"]; ok {
+		// Some newer system pods use NAMESPACE_NAME_HASH, so we have to support that too
+		namespaceNameHashPath := filepath.Join(basePath, "pods", fmt.Sprintf("%s_%s_%s", pod.Namespace, pod.Name, hash))
+		if _, err := os.Stat(namespaceNameHashPath); err == nil {
+			return filepath.Join(namespaceNameHashPath, "*", "*"), nil
+		}
 		hpath := filepath.Join(basePath, "pods", hash)
 		if _, err := os.Stat(hpath); err == nil {
 			logrus.WithFields(logrus.Fields{

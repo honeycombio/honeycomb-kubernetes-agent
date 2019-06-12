@@ -65,8 +65,8 @@ metadata:
   labels:
     k8s-app: honeycomb-agent
     kubernetes.io/cluster-service: 'true'
-    version: v1.3.0
-  name: honeycomb-agent-v1.3.0
+    version: v1.3.1
+  name: honeycomb-agent-v1.3.1
   namespace: kube-system
 spec:
   updateStrategy:
@@ -78,7 +78,7 @@ spec:
       labels:
         k8s-app: honeycomb-agent
         kubernetes.io/cluster-service: 'true'
-        version: v1.3.0
+        version: v1.3.1
     spec:
       tolerations:
         - operator: Exists
@@ -94,7 +94,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: honeycombio/honeycomb-kubernetes-agent:head
+        image: honeycombio/honeycomb-kubernetes-agent:1.3.1
         imagePullPolicy: IfNotPresent
         name: honeycomb-agent
         resources:
