@@ -1,5 +1,11 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 1.3.1 2019-06-12 Update recommended
+
+Fixes
+
+- Supports new log path pattern used in K8s versions published after [this](https://github.com/kubernetes/kubernetes/pull/74441) change. If you upgraded your K8s cluster and stopped receiving all log data, this is likely your issue.
+
 ## 1.3.0 2019-05-06
 
 Features

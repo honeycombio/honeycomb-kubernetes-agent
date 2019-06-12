@@ -12,6 +12,37 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+// test patterns after https://github.com/kubernetes/kubernetes/pull/74441
+func TestDetermineLogPatternK8S74441(t *testing.T) {
+	t.Parallel()
+	pod := &v1.Pod{}
+	pod.Namespace = "asdf"
+	pod.Name = "foo"
+	pod.UID = "123456"
+	podDirName := fmt.Sprintf("%s_%s_%s", pod.Namespace, pod.Name, pod.UID)
+
+	path, err := ioutil.TempDir("", "")
+	assert.Nil(t, err)
+	defer os.RemoveAll(path)
+
+	err = os.Mkdir(filepath.Join(path, "pods"), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(path, "pods", podDirName), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(path, "pods", podDirName, "container1"), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(path, "pods", podDirName, "container2"), 0777)
+	assert.Nil(t, err)
+	_, err = os.Create(filepath.Join(path, "pods", podDirName, "container1", "0.log"))
+	assert.Nil(t, err)
+	_, err = os.Create(filepath.Join(path, "pods", podDirName, "container2", "0.log"))
+	assert.Nil(t, err)
+
+	p, err := determineLogPattern(pod, path, false)
+	assert.Nil(t, err)
+	assert.Equal(t, filepath.Join(path, "pods", podDirName, "*", "*"), p)
+}
+
 func TestDetermineLogPatternK8S110(t *testing.T) {
 	t.Parallel()
 	pod := &v1.Pod{}
