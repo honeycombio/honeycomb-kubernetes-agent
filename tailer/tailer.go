@@ -171,6 +171,7 @@ func (p *PathWatcher) Stop() {
 	}
 }
 
+// check creates a new handlerFactory for the file to be parsed
 func (p *PathWatcher) check() {
 	// Have we figured out the pattern yet? If not, run our pattern function
 	if p.savedPattern == "" {
@@ -183,6 +184,10 @@ func (p *PathWatcher) check() {
 
 		// save the pattern so we don't have to keep running our pattern function
 		p.savedPattern = pt
+
+		logrus.WithFields(logrus.Fields{
+			"log pattern": pt,
+		}).Info("Log pattern")
 	}
 	files, err := filepath.Glob(p.savedPattern)
 	if err != nil {
@@ -198,6 +203,9 @@ func (p *PathWatcher) check() {
 		_, ok := p.tailers[file]
 		if !ok {
 			if p.filter != nil && !p.filter(file) {
+				logrus.WithFields(logrus.Fields{
+					"file": file,
+				}).Warn("File filtered out of tailing list based on containerName")
 				continue
 			}
 			handler := p.handlerFactory.New(file)

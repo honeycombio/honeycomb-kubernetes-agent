@@ -1,5 +1,11 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 1.3.2 2019-06-21 Update recommended
+
+Fixes
+
+- Supports new log path pattern for container filtering used in K8s versions published after [this](https://github.com/kubernetes/kubernetes/pull/74441) change. If using containerNames in your watchers configuration and have stopped receiving log data for those containers, this is likely your issue.
+
 ## 1.3.1 2019-06-12 Update recommended
 
 Fixes
@@ -12,7 +18,7 @@ Features
 
 - New `additional_field` processor for adding arbitrary fields to events. Docs [here](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#additional_fields).
 - New `rename_field` processor for renaming event fields. See docs [here](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#rename_field).
-- New global `additionalFields` opton for adding arbitrary fields to *all* event sent by the agent. Click [here](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#additionalfields) for more information.
+- New global `additionalFields` option for adding arbitrary fields to _all_ events sent by the agent. Click [here](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#additionalfields) for more information.
 
 Improvements
 
