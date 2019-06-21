@@ -130,7 +130,7 @@ func TestDetermineFilterFuncLegacyLogs(t *testing.T) {
 		return ok
 	}
 
-	f := determineFilterFunc(pod, "wibble", true)
+	f := determineFilterFunc(pod, "/var/log", "wibble", true)
 	// functions should have same output
 	assert.Equal(
 		t,
@@ -160,7 +160,7 @@ func TestDetermineFilterFunc(t *testing.T) {
 		return ok
 	}
 
-	f := determineFilterFunc(pod, "wibble", false)
+	f := determineFilterFunc(pod, "/var/log", "wibble", false)
 	assert.Equal(
 		t,
 		expected("/var/log/pods/123456/wibble_0.log"),
@@ -192,7 +192,7 @@ func TestDetermineFilterFuncK8S1Dot10(t *testing.T) {
 		return ok
 	}
 
-	f := determineFilterFunc(pod, "wibble", false)
+	f := determineFilterFunc(pod, "/var/log", "wibble", false)
 	assert.Equal(
 		t,
 		expected("/var/log/pods/123456/wibble/0.log"),
@@ -203,5 +203,50 @@ func TestDetermineFilterFuncK8S1Dot10(t *testing.T) {
 		t,
 		expected("/var/log/pods/123456/wobble/0.log"),
 		f("/var/log/pods/123456/wobble/0.log"),
+	)
+}
+
+func TestDetermineFilterFuncK8S74441(t *testing.T) {
+	t.Parallel()
+	// Format changed after https://github.com/kubernetes/kubernetes/pull/74441
+	// to /var/log/pods/<namespace>_<name>_<uid>/<containerName>/N.log
+	// Handle it if we see it
+	pod := &v1.Pod{}
+	pod.Namespace = "asdf"
+	pod.Name = "foo"
+	pod.UID = "123456"
+	podDirName := fmt.Sprintf("%s_%s_%s", pod.Namespace, pod.Name, pod.UID)
+
+	basePath, err := ioutil.TempDir("", "")
+	assert.Nil(t, err)
+	defer os.RemoveAll(basePath)
+
+	err = os.Mkdir(filepath.Join(basePath, "pods"), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(basePath, "pods", podDirName), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(basePath, "pods", podDirName, "container1"), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(basePath, "pods", podDirName, "container2"), 0777)
+	assert.Nil(t, err)
+	file1 := filepath.Join(basePath, "pods", podDirName, "container1", "0.log")
+	_, err = os.Create(file1)
+	assert.Nil(t, err)
+	file2 := filepath.Join(basePath, "pods", podDirName, "container2", "0.log")
+	_, err = os.Create(file2)
+	assert.Nil(t, err)
+
+	f := determineFilterFunc(pod, basePath, "container1", false)
+
+	assert.Equal(
+		t,
+		f(file1),
+		true,
+	)
+
+	assert.Equal(
+		t,
+		f(file2),
+		false,
 	)
 }
