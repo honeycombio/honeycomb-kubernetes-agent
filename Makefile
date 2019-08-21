@@ -77,8 +77,7 @@ bin/$(ARCH)/$(BIN): build-dirs
 	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
 	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH)                       \
 	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
-		-v /home/circleci/project:/go/src/$(PKG) \
-	    -w /go/src/$(PKG)                                                  \
+		-w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    /bin/sh -c "                                                       \
 	        ARCH=$(ARCH)                                                   \
