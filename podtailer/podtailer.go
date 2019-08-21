@@ -163,6 +163,10 @@ func determineLogPattern(pod *v1.Pod, basePath string, legacyLogPaths bool) (str
 		basePath = logsBasePath
 	}
 
+	// Welcome to "What log pattern is it, anyway?" The show where the log paths are made up and nothing matters.
+	// Here we guess where the pod logs are, since k8s changes them every few versions, but doesn't provide an API
+	// for asking the cluster for the path.
+
 	// Legacy pattern was:
 	// /var/log/containers/<pod_name>_<pod_namespace>_<container_name>-<container_id>.log`
 	// For now, this is still supported on newer k8s clusters with a symlink
@@ -192,6 +196,46 @@ func determineLogPattern(pod *v1.Pod, basePath string, legacyLogPaths bool) (str
 				"UID":     pod.UID,
 				"Hash":    hash,
 			}).Info("Critical pod detected, using config.hash for log dir")
+
+			// Now look for directories. Some newer k8s use /var/log/pods/<hash>/<podname>/NNN.log
+			f, err := os.Open(hpath)
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"PodName": pod.Name,
+					"UID":     pod.UID,
+					"Path":    hpath,
+				}).WithError(err).Warn("failed to open pod log directory")
+				return "", fmt.Errorf("Could not determine log path for pod %s", pod.UID)
+			}
+
+			files, err := f.Readdirnames(-1)
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"PodName": pod.Name,
+					"UID":     pod.UID,
+					"Path":    hpath,
+				}).WithError(err).Warn("failed to read pod log directory")
+				return "", fmt.Errorf("Could not determine log path for pod %s", pod.UID)
+			}
+			// it's possible that the pod log directory exists, but no files or directories
+			// exist so we can't know what the pattern should be yet
+			if len(files) == 0 {
+				logrus.WithFields(logrus.Fields{
+					"PodName": pod.Name,
+					"UID":     pod.UID,
+					"Path":    hpath,
+				}).Info("no files in log path yet, could not determine log pattern")
+				return "", fmt.Errorf("Could not determine log path for pod %s", pod.UID)
+			}
+			for _, f := range files {
+				if s, err := os.Stat(filepath.Join(hpath, f)); err == nil {
+					if s.IsDir() {
+						return filepath.Join(hpath, "*", "*"), nil
+					}
+				}
+			}
+
+			// older k8s use /var/log/pods/hash/NNN.log
 			return filepath.Join(hpath, "*"), nil
 		}
 	}
