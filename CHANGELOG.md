@@ -1,5 +1,11 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 1.3.3 2019-08-23 Update Recommended
+
+Fixes
+
+- Supports new system pod log path pattern used by Kubernetes 1.13 and newer. Previous versions of k8s stored pod logs at `/var/log/pods/<configHash>/*` but newer K8s versions write to `/var/log/pods/<configHash>/<containerName>/*`.
+
 ## 1.3.2 2019-06-21 Update recommended
 
 Fixes
