@@ -51,7 +51,7 @@ parser:
     # lines contain either tree data or city/state data
     expressions:
       - "(?P<species>[A-z]+) (?P<height>[0-9]{2}[0-9]?)"
-			- "(?P<city>[A-z ]+),(?P<state>[A-z]{2})"
+      - "(?P<city>[A-z ]+),(?P<state>[A-z]{2})"
 ```
 
 ### nginx
