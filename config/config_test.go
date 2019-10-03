@@ -40,3 +40,12 @@ func TestAdditionalFieldsParsing(t *testing.T) {
 
 	assert.Equal(t, map[string]interface{}{"foo": "1", "bar": 2}, c.Watchers[0].Processors[0]["additional_fields"])
 }
+
+func TestRegexExpressionsArrayParsing(t *testing.T) {
+	path, _ := filepath.Abs(filepath.Join("testdata", "parser_with_options.yaml"))
+	c, err := ReadFromFile(path)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "regex", c.Watchers[1].Parser.Name)
+	assert.Equal(t, map[string]interface{}{"expressions": []interface{}{"foo", "bar"}}, c.Watchers[1].Parser.Options)
+}
