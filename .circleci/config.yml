@@ -20,7 +20,7 @@ jobs:
       - run:
           name: "Deploy on tagged master push"
           command: |
-            if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${CIRCLE_TAG}" ]; then
+            if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ -z "${CIRCLE_BRANCH}" ] && [ -n "${CIRCLE_TAG}" ]; then
               echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin;
               make push;
               make push-head;
