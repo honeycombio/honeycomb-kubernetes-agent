@@ -1,6 +1,12 @@
 # Use the latest 2.1 version of CircleCI pipeline processing engine, see https://circleci.com/docs/2.0/configuration-reference/
 version: 2.1
 
+# required as all of the jobs need to have a tag filter for some reason
+tag_filters: &tag_filters
+  filters:
+      tags:
+        only: /.*/
+
 jobs:
   build_agent:
     # needed to build docker images, attach mount points, etc
@@ -28,4 +34,4 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - build_agent
+      - build_agent: *tag_filters

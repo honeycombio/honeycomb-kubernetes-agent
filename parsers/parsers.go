@@ -36,6 +36,8 @@ func NewParserFactory(config *config.ParserConfig) (ParserFactory, error) {
 		factory = &KeyvalParserFactory{}
 	case "audit":
 		factory = &AuditParserFactory{}
+	case "regex":
+		factory = &RegexFactory{}
 	default:
 		return nil, fmt.Errorf("Unknown parser type %s", config.Name)
 	}

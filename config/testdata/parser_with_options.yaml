@@ -8,3 +8,10 @@ watchers:
       - additional_fields:
           foo: "1"
           bar: 2
+  - dataset: custom
+    parser:
+      name: regex
+      options:
+        expressions:
+          - "foo"
+          - "bar"

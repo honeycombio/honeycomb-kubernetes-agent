@@ -39,3 +39,24 @@ func (r *extRegexp) FindStringSubmatchMap(s string) (string, map[string]string) 
 	}
 	return match[0], captures
 }
+
+// FindStringSubmatchMapIfaceMap behaves the same as FindStringSubmatchMap except it
+// returns a map[string]interface{}
+func (r *extRegexp) FindStringSubmatchIfaceMap(s string) (string, map[string]interface{}) {
+	match := r.FindStringSubmatch(s)
+	if match == nil {
+		return "", nil
+	}
+
+	captures := make(map[string]interface{})
+	for i, name := range r.SubexpNames() {
+		if i == 0 {
+			continue
+		}
+		if name != "" {
+			// ignore unnamed matches
+			captures[name] = match[i]
+		}
+	}
+	return match[0], captures
+}

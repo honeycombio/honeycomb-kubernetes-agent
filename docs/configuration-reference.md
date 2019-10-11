@@ -40,6 +40,20 @@ Currently, the following parsers are supported:
 ### json
 Parses logs in JSON format
 
+### regex
+
+Parses logs using a list of regex expressions. Uses the [RE2 Syntax](https://github.com/google/re2/wiki/Syntax). For each line processed, the first regex in the list to match is used. Note that adding many regex expressions can hurt performance.
+
+```yaml
+parser:
+  name: regex
+  options:
+    # lines contain either tree data or city/state data
+    expressions:
+      - "(?P<species>[A-z]+) (?P<height>[0-9]{2}[0-9]?)"
+      - "(?P<city>[A-z ]+),(?P<state>[A-z]{2})"
+```
+
 ### nginx
 Parses NGINX access logs.
 
@@ -85,7 +99,6 @@ Parses [Kubernetes audit logs](https://kubernetes.io/docs/tasks/debug-applicatio
 Does no parsing on logs, and returns an event with the entire contents of the log line in a `"log"` field.
 
 More parsers will be added in the future. If you'd like to see support for additional log formats, please open an issue or email support@honeycomb.io!
-
 
 ## Processors
 Processors transform events after they're parsed. Currently, the following processors are supported:
