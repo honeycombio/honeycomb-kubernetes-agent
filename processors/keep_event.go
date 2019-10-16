@@ -1,6 +1,7 @@
 package processors
 
 import (
+	"fmt"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/mitchellh/mapstructure"
 	"github.com/sirupsen/logrus"
@@ -8,7 +9,7 @@ import (
 
 type EventKeeper struct {
 	config *eventKeeperConfig
-	values map[string]bool
+	values map[string]struct{}
 }
 
 type eventKeeperConfig struct {
@@ -28,32 +29,32 @@ func (f *EventKeeper) Init(options map[string]interface{}) error {
 	}
 	f.config = config
 
-	values := make(map[string]bool)
+	f.values = make(map[string]struct{}, len(f.config.Values))
 	for _, val := range f.config.Values {
-		values[val] = true
+		f.values[val] = struct{}{}
 	}
-	f.values = values
 	return nil
 }
 
 func (f *EventKeeper) Process(ev *event.Event) bool {
-	if ev.Data != nil {
-		val, ok := ev.Data[f.config.Field]
-		if !ok {
-			return true
-		}
-		valString, ok := val.(string)
-		if !ok {
-			logrus.WithFields(logrus.Fields{
-				"key":   f.config.Field,
-				"value": val}).
-				Debug("Not filtering field of non-string type")
-		}
-		_, exists := f.values[valString]
-		if exists {
-			return true
-		}
-		return false
+	if ev.Data == nil {
+		return true
 	}
-	return true
+
+	val, ok := ev.Data[f.config.Field]
+	if !ok {
+		return true
+	}
+
+	valString, ok := val.(string)
+	if !ok {
+		logrus.WithFields(logrus.Fields{
+			"key":   f.config.Field,
+			"value": val,
+			"type":  fmt.Sprintf("%T", val),
+		}).
+			Debug("Not filtering field of non-string type")
+	}
+	_, exists := f.values[valString]
+	return exists
 }
