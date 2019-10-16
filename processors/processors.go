@@ -49,6 +49,10 @@ func NewProcessor(name string, options map[string]interface{}) (Processor, error
 		p = &RequestShaper{}
 	case "drop_field":
 		p = &FieldDropper{}
+	case "drop_event":
+		p = &EventDropper{}
+	case "keep_event":
+		p = &EventKeeper{}
 	case "sample":
 		p = &Sampler{}
 	case "timefield":
