@@ -141,33 +141,35 @@ field | string | The name of the field to drop.
 ### drop_event
 
 The `drop_event` processor will remove all events where the specified field
-exactly matches one of the listed values.
-This can be used to filter datasets from ingress to service based on which
-service or namespace is used.
+exactly matches one of the values in the blacklist.
 
-Events that do not have a key named `field` present will be kept.
+This can be used to filter datasets from _Ingress_ to _Service_ based on which
+_Service_ or _Namespace_ is used.
+
+Events that do not have a `field` matching this configuration will be kept.
 
 **Options:**
 key | value | description
 :--|:--|:--
-field | string | The name of the field to look into
-values | list  | A list of string values to match with
+field | string | The name of the event field to match against the blacklist
+values | list  | The set of field values that cause this processor to drop an event
+
 
 ### keep_event
 
 The `keep_event` processor will remove all events NOT matching one of the
-specified values. Careless configuration of this filter will drop all events.
+whitelisted values. Careless configuration of this filter will drop all events.
 
 It is effectively the inverse of `drop_event`.
 
-Events that do not have a key named `field` present will be kept to avoid
-accidental data loss.
+Events that do not have a `field` matching the configuration will be kept to
+avoid accidental data loss.
 
 **Options:**
 key | value | description
 :--|:--|:--
-field | string | The name of the field to look into
-values | list  | A list of string values to match with
+field | string | The name of the field to match against the whitelist
+values | list  | The name of the event field to match against the whitelist
 
 ### rename_field
 
