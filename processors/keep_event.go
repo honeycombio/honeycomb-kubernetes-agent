@@ -54,6 +54,7 @@ func (f *EventKeeper) Process(ev *event.Event) bool {
 			"type":  fmt.Sprintf("%T", val),
 		}).
 			Debug("Not filtering field of non-string type")
+		return true
 	}
 	_, exists := f.values[valString]
 	return exists
