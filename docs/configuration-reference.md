@@ -137,6 +137,45 @@ key | value | description
 :--|:--|:--
 field | string | The name of the field to drop.
 
+### route_event
+
+The `route_event` processor will route events to a different dataset depending
+on the value of a field.  This is mostly useful for load balancing web servers
+or other resources that serve multiple different backends, but where you still
+wish to track a common identifier between systems.
+
+
+**Options:**
+key | value | description
+:--|:--|:--
+field | string | The name of the event field to base routing on
+routes | list | A list of routing configurations
+
+**Routes:**
+
+key | value | description
+:--|:--|:--
+value   | string | Route if the event field is exactly this value
+dataset | string | The dataset to route to
+
+
+Example configuration
+```
+processors:
+- route_events:
+    field: host
+    routes:
+      - value: api.example.com
+        dataset: api
+      - value: www.example.com
+        dataset: web
+```
+
+The above configuration would route events where `host` exists and is equal to
+`api.example.com` to the `api` dataset. It would also route requests to
+`www.example.com` to the `www` dataset. All others would be routed to the
+default dataset for this watcher.
+
 ### rename_field
 
 The `rename_field` processor will rename the specified field in all events, if it exists, before sending them to Honeycomb. You can use this to standardize field names across data sources, for example. Note that if the `new` field already exists, it will be overwritten with the value in the `original` field.

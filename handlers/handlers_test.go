@@ -440,6 +440,52 @@ func TestRenameField(t *testing.T) {
 	assert.Equal(t, mt.events[0], expected)
 }
 
+func TestEventRouter(t *testing.T) {
+	mt := &MockTransmitter{}
+
+	cfg, err := watcherConfigFromYAML(`
+dataset: kubernetestest
+parser: json
+processors:
+- route_event:
+    field: host
+    routes:
+      - value: api
+        dataset: api
+      - value: www
+        dataset: not-api`)
+	assert.NoError(t, err)
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"host": "default", "another": "field"}`)
+	handler.Handle(`{"host": "api", "another": "field"}`)
+	handler.Handle(`{"host": "www", "another": "field"}`)
+	assert.Equal(t, len(mt.events), 3)
+	expected0 := &event.Event{
+		Data:       map[string]interface{}{"host": "default", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"host": "default", "another": "field"}`,
+	}
+	expected1 := &event.Event{
+		Data:       map[string]interface{}{"host": "api", "another": "field"},
+		Dataset:    "api",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"host": "api", "another": "field"}`,
+	}
+	expected2 := &event.Event{
+		Data:       map[string]interface{}{"host": "www", "another": "field"},
+		Dataset:    "not-api",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"host": "www", "another": "field"}`,
+	}
+	assert.Equal(t, mt.events[0], expected0)
+	assert.Equal(t, mt.events[1], expected1)
+	assert.Equal(t, mt.events[2], expected2)
+}
+
 func TestStaticSampling(t *testing.T) {
 	mt := &MockTransmitter{}
 	cfg, err := watcherConfigFromYAML(`
