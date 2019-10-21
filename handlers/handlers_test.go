@@ -440,7 +440,6 @@ func TestRenameField(t *testing.T) {
 	assert.Equal(t, mt.events[0], expected)
 }
 
-
 func TestEventDropper(t *testing.T) {
 	mt := &MockTransmitter{}
 
@@ -459,16 +458,23 @@ processors:
 	handler := hf.New("/tmp/testpath")
 	handler.Handle(`{"service": "dropthis", "another": "field"}`)
 	handler.Handle(`{"service": "keepme", "another": "field"}`)
-	assert.Equal(t, len(mt.events), 1)
-	expected := &event.Event{
+	handler.Handle(`{"no_service": "keepme", "another": "field"}`)
+	assert.Equal(t, len(mt.events), 2)
+	expected0 := &event.Event{
 		Data:       map[string]interface{}{"service": "keepme", "another": "field"},
 		Dataset:    "kubernetestest",
 		Path:       "/tmp/testpath",
 		RawMessage: `{"service": "keepme", "another": "field"}`,
 	}
-	assert.Equal(t, mt.events[0], expected)
+	expected1 := &event.Event{
+		Data:       map[string]interface{}{"no_service": "keepme", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"no_service": "keepme", "another": "field"}`,
+	}
+	assert.Equal(t, mt.events[0], expected0)
+	assert.Equal(t, mt.events[1], expected1)
 }
-
 
 func TestEventKeeper(t *testing.T) {
 	mt := &MockTransmitter{}
@@ -488,16 +494,23 @@ processors:
 	handler := hf.New("/tmp/testpath")
 	handler.Handle(`{"service": "dropthis", "another": "field"}`)
 	handler.Handle(`{"service": "keepme", "another": "field"}`)
-	assert.Equal(t, len(mt.events), 1)
-	expected := &event.Event{
+	handler.Handle(`{"no_service": "keepme", "another": "field"}`)
+	assert.Equal(t, len(mt.events), 2)
+	expected0 := &event.Event{
 		Data:       map[string]interface{}{"service": "keepme", "another": "field"},
 		Dataset:    "kubernetestest",
 		Path:       "/tmp/testpath",
 		RawMessage: `{"service": "keepme", "another": "field"}`,
 	}
-	assert.Equal(t, mt.events[0], expected)
+	expected1 := &event.Event{
+		Data:       map[string]interface{}{"no_service": "keepme", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"no_service": "keepme", "another": "field"}`,
+	}
+	assert.Equal(t, mt.events[0], expected0)
+	assert.Equal(t, mt.events[1], expected1)
 }
-
 
 func TestStaticSampling(t *testing.T) {
 	mt := &MockTransmitter{}
