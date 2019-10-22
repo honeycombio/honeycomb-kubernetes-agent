@@ -486,6 +486,79 @@ processors:
 	assert.Equal(t, mt.events[2], expected2)
 }
 
+func TestEventDropper(t *testing.T) {
+	mt := &MockTransmitter{}
+
+	cfg, err := watcherConfigFromYAML(`
+dataset: kubernetestest
+parser: json
+processors:
+- drop_event:
+    field: service
+    values:
+      - dropthis`)
+	assert.NoError(t, err)
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+
+  handler.Handle(`{"service": "dropthis", "another": "field"}`)
+	handler.Handle(`{"service": "keepme", "another": "field"}`)
+	handler.Handle(`{"no_service": "keepme", "another": "field"}`)
+	assert.Equal(t, len(mt.events), 2)
+	expected0 := &event.Event{
+		Data:       map[string]interface{}{"service": "keepme", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"service": "keepme", "another": "field"}`,
+	}
+	expected1 := &event.Event{
+		Data:       map[string]interface{}{"no_service": "keepme", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"no_service": "keepme", "another": "field"}`,
+	}
+	assert.Equal(t, mt.events[0], expected0)
+	assert.Equal(t, mt.events[1], expected1)
+}
+
+func TestEventKeeper(t *testing.T) {
+	mt := &MockTransmitter{}
+
+	cfg, err := watcherConfigFromYAML(`
+dataset: kubernetestest
+parser: json
+processors:
+- keep_event:
+    field: service
+    values:
+      - keepme`)
+	assert.NoError(t, err)
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"service": "dropthis", "another": "field"}`)
+	handler.Handle(`{"service": "keepme", "another": "field"}`)
+	handler.Handle(`{"no_service": "keepme", "another": "field"}`)
+	assert.Equal(t, len(mt.events), 2)
+	expected0 := &event.Event{
+		Data:       map[string]interface{}{"service": "keepme", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"service": "keepme", "another": "field"}`,
+	}
+	expected1 := &event.Event{
+		Data:       map[string]interface{}{"no_service": "keepme", "another": "field"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"no_service": "keepme", "another": "field"}`,
+	}
+	assert.Equal(t, mt.events[0], expected0)
+	assert.Equal(t, mt.events[1], expected1)
+}
+
 func TestStaticSampling(t *testing.T) {
 	mt := &MockTransmitter{}
 	cfg, err := watcherConfigFromYAML(`

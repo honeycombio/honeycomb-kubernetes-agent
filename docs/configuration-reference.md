@@ -129,6 +129,7 @@ keys | list of strings | The list of field keys to use when doing dynamic sampli
 windowSize | int | How often to refresh estimated sample rates when doing dynamic sampling, in seconds. Defaults to 30 seconds.
 
 ### drop_field
+
 The `drop_field` processor will remove the specified field from all events before sending them to Honeycomb. This is useful for removing sensitive information from events.
 
 **Options:**
@@ -136,6 +137,39 @@ The `drop_field` processor will remove the specified field from all events befor
 key | value | description
 :--|:--|:--
 field | string | The name of the field to drop.
+
+### drop_event
+
+The `drop_event` processor will remove all events where the specified field
+exactly matches one of the values in the blacklist.
+
+This can be used to filter datasets from _Ingress_ to _Service_ based on which
+_Service_ or _Namespace_ is used.
+
+Events that do not have a `field` matching this configuration will be kept.
+
+**Options:**
+key | value | description
+:--|:--|:--
+field | string | The name of the event field to match against the blacklist
+values | list  | The set of field values that cause this processor to drop an event
+
+### keep_event
+
+The `keep_event` processor will remove all events NOT matching one of the
+whitelisted values. Careless configuration of this filter will drop all events.
+
+It is effectively the inverse of `drop_event`.
+
+Events that do not have a `field` matching the configuration will be kept to
+avoid accidental data loss.
+
+**Options:**
+key | value | description
+:--|:--|:--
+field | string | The name of the field to match against the whitelist
+values | list  | The name of the event field to match against the whitelist
+
 
 ### route_event
 
