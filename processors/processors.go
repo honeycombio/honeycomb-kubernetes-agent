@@ -45,6 +45,8 @@ func NewProcessorFromConfig(config map[string]map[string]interface{}) (Processor
 func NewProcessor(name string, options map[string]interface{}) (Processor, error) {
 	var p Processor
 	switch name {
+	case "route_event":
+		p = &EventRouter{}
 	case "request_shape":
 		p = &RequestShaper{}
 	case "drop_field":
