@@ -1,5 +1,20 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 1.5.0 2019-10-22
+
+Features
+
+- new [drop_event](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#drop_event) and [keep_event](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#keep_event) processors, for doing simple filtering on events. [#52]
+- new [route_event](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#route_event) processor for routing events to different datasets based on content. [#53](https://github.com/honeycombio/honeycomb-kubernetes-agent/pull/53)
+
+Thanks @Spindel for these contributions!
+
+## 1.4.0 2019-10-11
+
+Features
+
+- new [regex](https://github.com/honeycombio/honeycomb-kubernetes-agent/blob/master/docs/configuration-reference.md#regex) parser, allowing lines to be processed with a list of [RE2](https://github.com/google/re2/wiki/Syntax) regular expressions. [#51](https://github.com/honeycombio/honeycomb-kubernetes-agent/pull/51)
+
 ## 1.3.3 2019-08-23 Update Recommended
 
 Fixes
