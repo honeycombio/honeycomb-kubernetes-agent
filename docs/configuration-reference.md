@@ -149,6 +149,7 @@ _Service_ or _Namespace_ is used.
 Events that do not have a `field` matching this configuration will be kept.
 
 **Options:**
+
 key | value | description
 :--|:--|:--
 field | string | The name of the event field to match against the blacklist
