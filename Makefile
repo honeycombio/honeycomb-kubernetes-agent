@@ -41,9 +41,7 @@ SRC_DIRS := . # directories which hold app source (not vendored)
 ALL_ARCH := amd64 arm arm64 ppc64le
 
 IMAGE := $(REGISTRY)/$(BIN)
-
-BUILD_IMAGE ?= golang:1.12-alpine
-BASEIMAGE ?= golang:1.12-alpine
+BASEIMAGE ?= cimg/go:1.14
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -69,22 +67,7 @@ build: bin/$(ARCH)/$(BIN)
 
 bin/$(ARCH)/$(BIN): build-dirs
 	@echo "building: $@"
-	@docker run                                                            \
-	    -ti                                                                \
-	    -u $$(id -u):$$(id -g)                                             \
-	    -v $$(pwd)/.go:/go                                                 \
-	    -v $$(pwd):/go/src/$(PKG)                                          \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH)                       \
-	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
-		-w /go/src/$(PKG)                                                  \
-	    $(BUILD_IMAGE)                                                     \
-	    /bin/sh -c "                                                       \
-	        ARCH=$(ARCH)                                                   \
-	        VERSION=$(VERSION)                                             \
-	        PKG=$(PKG)                                                     \
-	        ./build/build.sh                                               \
-	    "
+	ARCH=$(ARCH) VERSION=$(VERSION) PKG=$(PKG) BIN=$(BIN) ./build/build.sh
 
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
@@ -119,23 +102,10 @@ version:
 	@echo $(VERSION)
 
 test: build-dirs
-	@docker run                                                            \
-	    -ti                                                                \
-	    -u $$(id -u):$$(id -g)                                             \
-	    -v $$(pwd)/.go:/go                                                 \
-	    -v $$(pwd):/go/src/$(PKG)                                          \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
-	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
-	    -v /home/circleci/project:/go/src/$(PKG) \
-	    -w /go/src/$(PKG)                                                  \
-	    $(BUILD_IMAGE)                                                     \
-	    /bin/sh -c "                                                       \
-	        ./build/test.sh $(SRC_DIRS)                                    \
-	    "
+	./build/test.sh $(SRC_DIRS)                                    \
 
 build-dirs:
 	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 
 clean: container-clean bin-clean
 
@@ -143,4 +113,4 @@ container-clean:
 	rm -rf .container-* .dockerfile-* .push-*
 
 bin-clean:
-	rm -rf .go bin
+	rm -rf bin

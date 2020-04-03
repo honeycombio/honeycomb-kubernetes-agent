@@ -3,7 +3,7 @@ import collections
 import flask
 import sys
 import json
-import gzip
+import zstd
 import io
 
 app = flask.Flask(__name__)
@@ -14,9 +14,8 @@ events = collections.defaultdict(list)
 @app.route("/1/batch/<dataset>", methods=['POST'])
 def receive_events(dataset):
     data = flask.request.data
-    if flask.request.headers.get("Content-Encoding") == "gzip":
-        stream = io.BytesIO(flask.request.data)
-        data = gzip.GzipFile(fileobj=stream, mode='r').read()
+    if flask.request.headers.get("Content-Encoding") == "zstd":
+      data = zstd.decompress(data)
     data = json.loads(data)
     events[dataset].extend(data)
     resp = len(data) * [{"status": 202}]

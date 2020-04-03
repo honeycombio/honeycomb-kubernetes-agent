@@ -9,13 +9,14 @@ tag_filters: &tag_filters
 
 jobs:
   build_agent:
+    docker:
+      - image: cimg/go:1.14
     # needed to build docker images, attach mount points, etc
-    machine: true
     steps:
       - checkout
+      - setup_remote_docker
       - run: make container
       - run: make test
-      - run: e2e-tests/minikube-bootstrap.sh
       - run: e2e-tests/test.sh
       - run:
           name: "Deploy on tagged master push"
