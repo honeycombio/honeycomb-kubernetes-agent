@@ -45,7 +45,7 @@ func (u *CriLogUnwrapper) Unwrap(rawLine string, parser parsers.Parser) (*event.
 
 	ts, err := time.Parse(time.RFC3339Nano, line.Time)
 	if err != nil {
-		logrus.WithError(err).Info("Error parsing docker JSON timestamp")
+		logrus.WithError(err).Info("Error parsing CRI timestamp")
 	}
 
 	return &event.Event{

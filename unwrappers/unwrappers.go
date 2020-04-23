@@ -12,3 +12,22 @@ import (
 type Unwrapper interface {
 	Unwrap(string, parsers.Parser) (*event.Event, error)
 }
+
+type InferUnwrapper struct{
+	raw RawLogUnwrapper
+	json DockerJSONLogUnwrapper
+	cri CriLogUnwrapper
+}
+
+func (w *InferUnwrapper) Unwrap(s string, p parsers.Parser) (*event.Event, error) {
+	if s[0] == '{' {
+		// Scan for the start of a JSON blob.
+		return w.json.Unwrap(s, p)
+	} else if s[4] == '-' && s[7] == '-' && s[10] == 'T' {
+		// Scan for what looks like an RFC3339 timestamp.
+		return w.cri.Unwrap(s, p)
+	} else {
+		// Treat as raw.
+		return w.raw.Unwrap(s, p)
+	}
+}
