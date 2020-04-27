@@ -371,7 +371,7 @@ func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatc
 	}
 	handlerFactory, err := handlers.NewLineHandlerFactoryFromConfig(
 		pt.config,
-		&unwrappers.DockerJSONLogUnwrapper{},
+		&unwrappers.InferUnwrapper{},
 		pt.transmitter,
 		additionalProcessors...)
 	if err != nil {

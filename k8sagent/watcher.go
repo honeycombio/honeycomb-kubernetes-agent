@@ -3,6 +3,7 @@
 package k8sagent
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -148,10 +149,10 @@ func runInformer(
 		FieldSelector: fieldSelector,
 	}
 	listFunc := func(options v1types.ListOptions) (runtime.Object, error) {
-		return client.Pods(namespace).List(listOptions)
+		return client.Pods(namespace).List(context.Background(), listOptions)
 	}
 	watchFunc := func(options v1types.ListOptions) (watch.Interface, error) {
-		return client.Pods(namespace).Watch(listOptions)
+		return client.Pods(namespace).Watch(context.Background(), listOptions)
 	}
 
 	watchlist := &cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 The Kubernetes Authors.
 #
@@ -20,15 +20,10 @@ set -o pipefail
 
 export CGO_ENABLED=0
 
-mkdir -p .cache
-# needed in 1.12 when building in docker
-export GOCACHE=/go/.cache
-
-TARGETS=$(for d in "$@"; do go list ./$d/... | grep -v vendor ; done)
+TARGETS=$(for d in "$@"; do go list ./$d/...; done)
 
 echo "Running unit tests:"
-go test -i -installsuffix "static" ${TARGETS}
-go test -installsuffix "static" ${TARGETS}
+go test ${TARGETS}
 echo
 
 echo "Checking go vet:"

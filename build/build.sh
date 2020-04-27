@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 The Kubernetes Authors.
 #
@@ -22,6 +22,10 @@ if [ -z "${PKG}" ]; then
     echo "PKG must be set"
     exit 1
 fi
+if [ -z "${BIN}" ]; then
+    echo "BIN must be set"
+    exit 1
+fi
 if [ -z "${ARCH}" ]; then
     echo "ARCH must be set"
     exit 1
@@ -34,11 +38,6 @@ fi
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 
-mkdir -p .cache
-# needed in 1.12 when building in docker
-export GOCACHE=/go/.cache
-
-go install                                                         \
-    -installsuffix "static"                                        \
-    -ldflags "-X ${PKG}/version.VERSION=${VERSION}"            \
-    ./...
+go build -o ./bin/${ARCH}/${BIN} \
+    -ldflags "-X ${PKG}/version.VERSION=${VERSION}" \
+    .

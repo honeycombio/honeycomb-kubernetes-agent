@@ -1,8 +1,8 @@
 honeycomb-kubernetes-agent
 config-test.yaml
-minikube-ds.yaml
 /bin
-/.go
 /.push-*
 /.container-*
 /.dockerfile-*
+kind
+.kube

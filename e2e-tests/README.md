@@ -1,5 +1,5 @@
 This directory contains scripts to run a simple end-to-end smoke test of the
-agent inside Minikube. It starts:
+agent inside KIND. It starts:
 
 - a sample nginx service
 - the Honeycomb agent, configured to slurp logs from the nginx service
