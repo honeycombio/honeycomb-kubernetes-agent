@@ -138,6 +138,16 @@ key | value | description
 :--|:--|:--
 field | string | The name of the field to drop.
 
+### scrub_field
+
+The `scrub_field` processor will replace the specified field with a one-way hash before sending them to Honeycomb. This is useful for sanitizing sensitive information from events, while still allowing for inclusion and frequency analysis. May be specified multiple times.
+
+**Options:**
+
+key | value | description
+:--|:--|:--
+field | string | The name of the field to scrub.
+
 ### drop_event
 
 The `drop_event` processor will remove all events where the specified field

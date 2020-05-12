@@ -414,6 +414,32 @@ func TestDropField(t *testing.T) {
 	assert.Equal(t, mt.events[0], expected)
 }
 
+func TestScrubField(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg := &config.WatcherConfig{
+		Dataset: "kubernetestest",
+		Parser:  &config.ParserConfig{Name: "json"},
+		Processors: []map[string]map[string]interface{}{
+			map[string]map[string]interface{}{
+				"scrub_field": map[string]interface{}{"field": "toscrub"},
+			},
+		},
+	}
+
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt)
+	assert.NoError(t, err)
+	handler := hf.New("/tmp/testpath")
+	handler.Handle(`{"toscrub": "a", "dontscrub": "b"}`)
+	assert.Equal(t, len(mt.events), 1)
+	expected := &event.Event{
+		Data:       map[string]interface{}{"toscrub": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb", "dontscrub": "b"},
+		Dataset:    "kubernetestest",
+		Path:       "/tmp/testpath",
+		RawMessage: `{"toscrub": "a", "dontscrub": "b"}`,
+	}
+	assert.Equal(t, mt.events[0], expected)
+}
+
 func TestRenameField(t *testing.T) {
 	mt := &MockTransmitter{}
 	cfg := &config.WatcherConfig{
@@ -503,7 +529,7 @@ processors:
 	assert.NoError(t, err)
 	handler := hf.New("/tmp/testpath")
 
-  handler.Handle(`{"service": "dropthis", "another": "field"}`)
+	handler.Handle(`{"service": "dropthis", "another": "field"}`)
 	handler.Handle(`{"service": "keepme", "another": "field"}`)
 	handler.Handle(`{"no_service": "keepme", "another": "field"}`)
 	assert.Equal(t, len(mt.events), 2)
