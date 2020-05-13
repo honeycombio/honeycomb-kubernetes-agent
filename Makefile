@@ -26,6 +26,9 @@ REGISTRY ?= honeycombio
 # Which architecture to build - see $(ALL_ARCH) for options.
 ARCH ?= amd64
 
+# Which OS to build
+GOOS ?= linux
+
 # This version-strategy uses git tags to set the version string
 VERSION := $(shell cat version.txt | tr -d '\n')
 #
@@ -67,7 +70,7 @@ build: bin/$(ARCH)/$(BIN)
 
 bin/$(ARCH)/$(BIN): build-dirs
 	@echo "building: $@"
-	ARCH=$(ARCH) VERSION=$(VERSION) PKG=$(PKG) BIN=$(BIN) ./build/build.sh
+	ARCH=$(ARCH) GOOS=$(GOOS) VERSION=$(VERSION) PKG=$(PKG) BIN=$(BIN) ./build/build.sh
 
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
