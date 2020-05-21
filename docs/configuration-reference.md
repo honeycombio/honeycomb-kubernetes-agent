@@ -148,6 +148,14 @@ key | value | description
 :--|:--|:--
 field | string | The name of the field to scrub.
 
+**Example:**
+
+```yaml
+processors:
+  - scrub_field:
+      field: request.cookie
+```
+
 ### drop_event
 
 The `drop_event` processor will remove all events where the specified field
