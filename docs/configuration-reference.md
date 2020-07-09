@@ -159,7 +159,7 @@ processors:
 ### drop_event
 
 The `drop_event` processor will remove all events where the specified field
-exactly matches one of the values in the blacklist.
+exactly matches one of the values in the deny list.
 
 This can be used to filter datasets from _Ingress_ to _Service_ based on which
 _Service_ or _Namespace_ is used.
@@ -170,13 +170,13 @@ Events that do not have a `field` matching this configuration will be kept.
 
 key | value | description
 :--|:--|:--
-field | string | The name of the event field to match against the blacklist
+field | string | The name of the event field to match against the deny list
 values | list  | The set of field values that cause this processor to drop an event
 
 ### keep_event
 
 The `keep_event` processor will remove all events NOT matching one of the
-whitelisted values. Careless configuration of this filter will drop all events.
+allow listed values. Careless configuration of this filter will drop all events.
 
 It is effectively the inverse of `drop_event`.
 
@@ -186,8 +186,8 @@ avoid accidental data loss.
 **Options:**
 key | value | description
 :--|:--|:--
-field | string | The name of the field to match against the whitelist
-values | list  | The name of the event field to match against the whitelist
+field | string | The name of the field to match against the allow list
+values | list  | The set of field values that cause this processor to keep an event
 
 
 ### route_event
@@ -245,7 +245,7 @@ new | string | The new field name to use. Required.
 The `timefield` processor will replace the default timestamp in an event with
 one extracted from a specific field in the event.
 
-**Options:
+**Options:**
 
 key | value | description
 :--|:--|:--
@@ -267,7 +267,7 @@ key | value | description
 :--|:--|:--
 field | string | The name of the field containing the HTTP request (e.g., `"request"`)
 patterns | list of strings | A list of URL patterns to match when unpacking the request
-queryKeys | list of strings | A whitelist of keys in the URL query string to unpack
+queryKeys | list of strings | An allow list of keys in the URL query string to unpack
 prefix | string | A prefix to prepend to the unpacked field names
 
 For example, with the following configuration:
