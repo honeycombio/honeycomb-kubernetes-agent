@@ -54,6 +54,9 @@ func (l *logger) Write() error {
 	if err != nil {
 		return err
 	}
+	if err = l.file.Sync(); err != nil {
+		return err
+	}
 	l.counter++
 	return nil
 }
