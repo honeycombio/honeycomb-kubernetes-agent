@@ -16,7 +16,7 @@ require (
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/klauspost/compress v1.10.5 // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
-	github.com/mitchellh/mapstructure v1.3.2
+	github.com/mitchellh/mapstructure v1.3.3
 	github.com/sirupsen/logrus v1.6.0
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/stretchr/testify v1.6.1
