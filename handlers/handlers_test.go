@@ -638,7 +638,7 @@ processors:
 	for _, ev := range mt.events {
 		countsByKey[ev.Data["sampleKey"].(string)]++
 	}
-	assert.InDelta(t, countsByKey["a"], count/10, 500)
+	assert.InDelta(t, countsByKey["a"], count/10, float64(count/10)*0.05)
 	for i := 0; i < 100; i++ {
 		assert.Equal(t, countsByKey[fmt.Sprintf("%d", i)], 1)
 	}

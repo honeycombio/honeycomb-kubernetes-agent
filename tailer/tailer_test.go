@@ -122,7 +122,7 @@ func TestPathWatching(t *testing.T) {
 		stateRecorder,
 	)
 
-	watcher.checkInterval = time.Millisecond
+	watcher.checkInterval = 100 * time.Millisecond
 	watcher.Start()
 
 	err = os.MkdirAll(dir, os.FileMode(0755))
