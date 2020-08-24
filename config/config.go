@@ -1,19 +1,24 @@
 package config
 
 import (
+	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 	"io/ioutil"
+	"time"
 
 	yaml "gopkg.in/yaml.v2"
 )
 
 type Config struct {
-	APIHost          string `yaml:"apiHost"`
+	APIKey  string `yaml:"apiKey"`
+	APIHost string `yaml:"apiHost"`
+	// Deprecated: use APIKey instead.
 	WriteKey         string `yaml:"writekey"`
 	Watchers         []*WatcherConfig
 	Verbosity        string
 	LegacyLogPaths   bool                   `yaml:"legacyLogPaths"`
 	SplitLogging     bool                   `yaml:"splitLogging"`
 	AdditionalFields map[string]interface{} `yaml:"additionalFields"`
+	Metrics          *MetricsConfig
 }
 
 type WatcherConfig struct {
@@ -33,6 +38,21 @@ type WatcherConfig struct {
 type ParserConfig struct {
 	Name    string
 	Options map[string]interface{}
+}
+
+type MetricsConfig struct {
+	Enabled     bool
+	Dataset     string
+	Endpoint    string
+	Interval    time.Duration
+	ClusterName string `yaml:"clusterName"`
+	// Labels to omit from becoming fields in Honeycomb
+	// By default `controller-revision-hash` is omitted
+	OmitLabels []metrics.OmitLabel `yaml:"omitLabels"`
+	// MetricGroupsToCollect provides a list of metrics groups to collect metrics from.
+	// "container", "pod", "node" and "volume" are the only valid groups.
+	MetricGroups     []metrics.MetricGroup  `yaml:"metricGroups"`
+	AdditionalFields map[string]interface{} `yaml:"additionalFields"`
 }
 
 func (p *ParserConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
