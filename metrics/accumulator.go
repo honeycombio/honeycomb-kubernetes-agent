@@ -40,7 +40,7 @@ func (a *MetricDataAccumulator) nodeStats(nodeResource *Resource, s stats.NodeSt
 	a.accumulate(
 		nodeResource,
 		a.mp.UptimeMetrics(s.StartTime.Time),
-		a.mp.CpuMetrics(s.CPU),
+		a.mp.CpuMetrics(s.CPU, 0),
 		a.mp.FsMetrics(s.Fs),
 		a.mp.MemMetrics(s.Memory),
 		a.mp.NetworkMetrics(s.Network),
@@ -55,7 +55,7 @@ func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats
 	a.accumulate(
 		podResource,
 		a.mp.UptimeMetrics(s.StartTime.Time),
-		a.mp.CpuMetrics(s.CPU),
+		a.mp.CpuMetrics(s.CPU, podResource.PodMetadata.GetCpuLimit()),
 		a.mp.FsMetrics(s.EphemeralStorage),
 		a.mp.MemMetrics(s.Memory),
 		a.mp.NetworkMetrics(s.Network),
@@ -67,7 +67,8 @@ func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.Co
 		return
 	}
 
-	resource, err := getContainerResource(podResource, s, a.metadata)
+	resource, err := getContainerResource(podResource, s)
+
 	if err != nil {
 		a.logger.WithFields(logrus.Fields{
 			"pod":       podResource.Labels[LabelPodName],
@@ -79,7 +80,7 @@ func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.Co
 	a.accumulate(
 		resource,
 		a.mp.UptimeMetrics(s.StartTime.Time),
-		a.mp.CpuMetrics(s.CPU),
+		a.mp.CpuMetrics(s.CPU, resource.PodMetadata.GetCpuLimitForContainer(s.Name)),
 		a.mp.MemMetrics(s.Memory),
 		a.mp.FsMetrics(s.Rootfs),
 	)
@@ -90,7 +91,7 @@ func (a *MetricDataAccumulator) volumeStats(podResource *Resource, s stats.Volum
 		return
 	}
 
-	volume := getVolumeResource(podResource, s, a.metadata)
+	volume := getVolumeResource(podResource, s)
 
 	a.accumulate(
 		volume,

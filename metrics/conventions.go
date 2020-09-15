@@ -20,10 +20,11 @@ const (
 	StatusContainerReason   = PrefixContainer + "status.reason"
 
 	MeasureUptime                = "uptime"
-	MeasureCpuTime               = "cpu.time"
 	MeasureCpuUsage              = "cpu.usage"
+	MeasureCpuUtilization        = "cpu.utilization"
 	MeasureMemoryAvailable       = "memory.available"
 	MeasureMemoryUsage           = "memory.usage"
+	MeasureMemoryUtilization     = "memory.utilization"
 	MeasureMemoryRSS             = "memory.rss"
 	MeasureMemoryWorkingSet      = "memory.working_set"
 	MeasureMemoryPageFaults      = "memory.page_faults"

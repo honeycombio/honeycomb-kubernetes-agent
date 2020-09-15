@@ -28,6 +28,7 @@ func (p *Processor) GenerateMetricsData(summary *stats.Summary, metadata *Metada
 	acc := &MetricDataAccumulator{
 		metadata:              metadata,
 		metricGroupsToCollect: metricGroupsToCollect,
+		mp:                    p,
 		time:                  time.Now(),
 		logger:                p.logger,
 	}
@@ -97,7 +98,7 @@ func (p *Processor) UptimeMetrics(startTime time.Time) Metrics {
 
 }
 
-func (p *Processor) CpuMetrics(s *stats.CPUStats) Metrics {
+func (p *Processor) CpuMetrics(s *stats.CPUStats, limit float64) Metrics {
 	var cpuUsage float64
 	nanoCores := s.UsageNanoCores
 	if nanoCores == nil {
@@ -106,18 +107,28 @@ func (p *Processor) CpuMetrics(s *stats.CPUStats) Metrics {
 		cpuUsage = float64(*nanoCores) / 1000000000
 	}
 
-	cpuTime := float64(*s.UsageCoreNanoSeconds) / 1000000000
+	cpuUtilization := float64(0)
+	if limit > 0 {
+		cpuUtilization = (cpuUsage / limit) * 100
+	}
 
 	return Metrics{
-		MeasureCpuUsage: &Metric{Type: MetricTypeFloat, FloatValue: &cpuUsage},
-		MeasureCpuTime:  &Metric{Type: MetricTypeFloat, IsCounter: true, FloatValue: &cpuTime},
+		MeasureCpuUsage:       &Metric{Type: MetricTypeFloat, FloatValue: &cpuUsage},
+		MeasureCpuUtilization: &Metric{Type: MetricTypeFloat, FloatValue: &cpuUtilization},
 	}
 }
 
 func (p *Processor) MemMetrics(s *stats.MemoryStats) Metrics {
+	var utilization float64
+	if s.AvailableBytes != nil && *s.AvailableBytes != 0 {
+		usage := float64(*s.UsageBytes)
+		available := float64(*s.AvailableBytes)
+		utilization = (usage / (usage + available)) * 100
+	}
 	return Metrics{
 		MeasureMemoryAvailable:       &Metric{Type: MetricTypeInt, IntValue: s.AvailableBytes},
 		MeasureMemoryUsage:           &Metric{Type: MetricTypeInt, IntValue: s.UsageBytes},
+		MeasureMemoryUtilization:     &Metric{Type: MetricTypeFloat, FloatValue: &utilization},
 		MeasureMemoryRSS:             &Metric{Type: MetricTypeInt, IntValue: s.RSSBytes},
 		MeasureMemoryWorkingSet:      &Metric{Type: MetricTypeInt, IntValue: s.WorkingSetBytes},
 		MeasureMemoryPageFaults:      &Metric{Type: MetricTypeInt, IntValue: s.PageFaults},

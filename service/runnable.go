@@ -56,6 +56,7 @@ func (r *runnable) Setup() error {
 
 func (r *runnable) Run() error {
 
+	// get all stats from stats provider
 	summary, err := r.statsProvider.StatsSummary()
 	if err != nil {
 		logrus.WithError(err).Error("Could not retrieve stats")
@@ -65,8 +66,8 @@ func (r *runnable) Run() error {
 		"podCount": len(summary.Pods),
 	}).Debug("Retrieved Stats")
 
+	// fetch metadata for all pods/containers
 	var podsMetadata *v1.PodList
-	// fetch metadata only when extra metadata labels are needed
 	podsMetadata, err = r.metadataProvider.Pods()
 	if err != nil {
 		r.logger.WithError(err).Error("Could not retrieve metadata")
@@ -76,12 +77,14 @@ func (r *runnable) Run() error {
 		"podCount": len(podsMetadata.Items),
 	}).Debug("Retrieved Metadata")
 
+	// Get resource metrics
 	metadata := metrics.NewMetadata(podsMetadata, r.omitLabels, r.logger)
 	resourceMetrics := r.metricsProvider.GenerateMetricsData(summary, metadata, r.metricGroupsToCollect)
 	r.logger.WithFields(logrus.Fields{
 		"resourceCount": len(resourceMetrics),
 	}).Debug("Processing Metrics Data...")
 
+	// iterate over resource metrics data
 	for _, rm := range resourceMetrics {
 
 		ev, err := r.createEventFromResource(rm.Resource)
@@ -98,7 +101,6 @@ func (r *runnable) Run() error {
 			"resourceName": rm.Resource.Name,
 		}).Trace("Creating event for resource")
 
-		//pre := getPrefixForType(rm.Resource.Type)
 		pre := metrics.PrefixMetrics
 
 		for k, v := range rm.Metrics {

@@ -24,16 +24,29 @@ func NewMetadata(podsMetadata *v1.PodList, omitLabels []OmitLabel, logger *logru
 	}
 }
 
-func (m *Metadata) GetLabelsForPod(uid string) map[string]string {
-	pod, err := m.getPodByUid(types.UID(uid))
-	if err != nil {
-		return nil
+func (m *Metadata) GetPodMetadataByUid(uid types.UID) (*PodMetadata, error) {
+	for _, p := range m.PodsMetadata.Items {
+		if p.UID == uid {
+			return &PodMetadata{m, &p}, nil
+		}
 	}
 
+	m.logger.WithFields(logrus.Fields{
+		"podUid": uid,
+	}).Error("Metadata: Pod not found")
+	return &PodMetadata{}, errors.New("pod not found")
+}
+
+type PodMetadata struct {
+	Metadata *Metadata
+	Pod      *v1.Pod
+}
+
+func (p *PodMetadata) GetLabels() map[string]string {
 	labels := make(map[string]string)
-	for k, v := range pod.Labels {
+	for k, v := range p.Pod.Labels {
 		keep := true
-		for _, o := range m.OmitLabels {
+		for _, o := range p.Metadata.OmitLabels {
 			if o == OmitLabel(k) {
 				keep = false
 				break
@@ -46,37 +59,51 @@ func (m *Metadata) GetLabelsForPod(uid string) map[string]string {
 	return labels
 }
 
-func (m *Metadata) GetStatusForPod(uid string) map[string]string {
-	pod, err := m.getPodByUid(types.UID(uid))
-	if err != nil {
-		return nil
+func (p *PodMetadata) GetCpuLimit() float64 {
+	var limit float64
+	for _, c := range p.Pod.Spec.Containers {
+		val, err := strconv.ParseFloat(c.Resources.Limits.Cpu().AsDec().String(), 64)
+		if err != nil {
+			val = 0
+		}
+		limit += val
 	}
+	return limit
+}
+
+func (p *PodMetadata) GetCpuLimitForContainer(name string) float64 {
+	for _, c := range p.Pod.Spec.Containers {
+		if c.Name == name {
+			limit, _ := strconv.ParseFloat(c.Resources.Limits.Cpu().AsDec().String(), 64)
+			return limit
+		}
+	}
+	return 0
+}
+
+func (p *PodMetadata) GetStatus() map[string]string {
 
 	status := map[string]string{
-		StatusPodMessage: pod.Status.Message,
-		StatusPodPhase:   string(pod.Status.Phase),
-		StatusPodReason:  pod.Status.Reason,
+		StatusPodMessage: p.Pod.Status.Message,
+		StatusPodPhase:   string(p.Pod.Status.Phase),
+		StatusPodReason:  p.Pod.Status.Reason,
 	}
 
 	return status
 }
 
-func (m *Metadata) GetStatusForContainer(uid string, name string) map[string]string {
-	pod, err := m.getPodByUid(types.UID(uid))
-	if err != nil {
-		return nil
-	}
+func (p *PodMetadata) GetStatusForContainer(name string) map[string]string {
 
 	var s v1.ContainerStatus
-	for _, cs := range pod.Status.ContainerStatuses {
+	for _, cs := range p.Pod.Status.ContainerStatuses {
 		if cs.Name == name {
 			s = cs
 			break
 		}
 	}
 	if s.ContainerID == "" {
-		m.logger.WithFields(logrus.Fields{
-			"podUid":        uid,
+		p.Metadata.logger.WithFields(logrus.Fields{
+			"podName":       p.Pod.Name,
 			"containerName": name,
 		}).Error("Metadata: Container not found")
 		return nil
@@ -104,17 +131,4 @@ func (m *Metadata) GetStatusForContainer(uid string, name string) map[string]str
 	}
 
 	return status
-}
-
-func (m *Metadata) getPodByUid(uid types.UID) (v1.Pod, error) {
-	for _, p := range m.PodsMetadata.Items {
-		if p.UID == uid {
-			return p, nil
-		}
-	}
-
-	m.logger.WithFields(logrus.Fields{
-		"podUid": uid,
-	}).Error("Metadata: Pod not found")
-	return v1.Pod{}, errors.New("pod not found")
 }
