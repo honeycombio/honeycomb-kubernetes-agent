@@ -50,26 +50,31 @@ data:
 
 # Daemonset
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
     k8s-app: honeycomb-agent
     kubernetes.io/cluster-service: 'true'
-    version: v2.0.0
-  name: honeycomb-agent-v2.0.0
+    version: v2.1.0
+  name: honeycomb-agent-v2.1.0
   namespace: kube-system
 spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
+  selector:
+    matchLabels:
+      k8s-app: honeycomb-agent
+      kubernetes.io/cluster-service: 'true'
+      version: v2.1.0
   template:
     metadata:
       labels:
         k8s-app: honeycomb-agent
         kubernetes.io/cluster-service: 'true'
-        version: v2.0.0
+        version: v2.1.0
     spec:
       tolerations:
         - operator: Exists
@@ -125,3 +130,4 @@ spec:
       - hostPath:
           path: "/mnt/sda1/var/lib/docker/containers"
         name: minikube
+

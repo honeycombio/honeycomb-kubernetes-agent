@@ -65,8 +65,8 @@ metadata:
   labels:
     k8s-app: honeycomb-agent
     kubernetes.io/cluster-service: 'true'
-    version: v2.0.0
-  name: honeycomb-agent-v2.0.0
+    version: v2.1.0
+  name: honeycomb-agent-v2.1.0
   namespace: kube-system
 spec:
   selector:
@@ -81,7 +81,7 @@ spec:
       labels:
         k8s-app: honeycomb-agent
         kubernetes.io/cluster-service: 'true'
-        version: v2.0.0
+        version: v2.1.0
     spec:
       tolerations:
         - operator: Exists
