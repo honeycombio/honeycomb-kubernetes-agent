@@ -118,12 +118,11 @@ func (p *Processor) CpuMetrics(s *stats.CPUStats, limit float64) Metrics {
 	}
 }
 
-func (p *Processor) MemMetrics(s *stats.MemoryStats) Metrics {
+func (p *Processor) MemMetrics(s *stats.MemoryStats, limit float64) Metrics {
 	var utilization float64
-	if s.AvailableBytes != nil && *s.AvailableBytes != 0 {
+	if limit > 0 {
 		usage := float64(*s.UsageBytes)
-		available := float64(*s.AvailableBytes)
-		utilization = (usage / (usage + available)) * 100
+		utilization = (usage / limit) * 100
 	}
 	return Metrics{
 		MeasureMemoryAvailable:       &Metric{Type: MetricTypeInt, IntValue: s.AvailableBytes},
@@ -137,6 +136,10 @@ func (p *Processor) MemMetrics(s *stats.MemoryStats) Metrics {
 }
 
 func (p *Processor) FsMetrics(s *stats.FsStats) Metrics {
+	if s == nil {
+		return Metrics{}
+	}
+
 	return Metrics{
 		MeasureFilesystemAvailable: &Metric{Type: MetricTypeInt, IntValue: s.AvailableBytes},
 		MeasureFilesystemCapacity:  &Metric{Type: MetricTypeInt, IntValue: s.CapacityBytes},
@@ -145,6 +148,10 @@ func (p *Processor) FsMetrics(s *stats.FsStats) Metrics {
 }
 
 func (p *Processor) NetworkMetrics(s *stats.NetworkStats) Metrics {
+	if s == nil {
+		return Metrics{}
+	}
+
 	return Metrics{
 		MeasureNetworkBytesReceive:  &Metric{Type: MetricTypeInt, IsCounter: true, IntValue: s.RxBytes},
 		MeasureNetworkBytesSend:     &Metric{Type: MetricTypeInt, IsCounter: true, IntValue: s.TxBytes},

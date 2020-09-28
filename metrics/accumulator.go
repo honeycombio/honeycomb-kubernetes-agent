@@ -42,7 +42,7 @@ func (a *MetricDataAccumulator) nodeStats(nodeResource *Resource, s stats.NodeSt
 		a.mp.UptimeMetrics(s.StartTime.Time),
 		a.mp.CpuMetrics(s.CPU, 0),
 		a.mp.FsMetrics(s.Fs),
-		a.mp.MemMetrics(s.Memory),
+		a.mp.MemMetrics(s.Memory, float64(*s.Memory.AvailableBytes)),
 		a.mp.NetworkMetrics(s.Network),
 	)
 }
@@ -57,13 +57,17 @@ func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats
 		a.mp.UptimeMetrics(s.StartTime.Time),
 		a.mp.CpuMetrics(s.CPU, podResource.PodMetadata.GetCpuLimit()),
 		a.mp.FsMetrics(s.EphemeralStorage),
-		a.mp.MemMetrics(s.Memory),
+		a.mp.MemMetrics(s.Memory, podResource.PodMetadata.GetMemoryLimit()),
 		a.mp.NetworkMetrics(s.Network),
 	)
 }
 
 func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.ContainerStats) {
 	if !a.metricGroupsToCollect[ContainerMetricGroup] {
+		return
+	}
+
+	if s.CPU == nil {
 		return
 	}
 
@@ -81,7 +85,7 @@ func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.Co
 		resource,
 		a.mp.UptimeMetrics(s.StartTime.Time),
 		a.mp.CpuMetrics(s.CPU, resource.PodMetadata.GetCpuLimitForContainer(s.Name)),
-		a.mp.MemMetrics(s.Memory),
+		a.mp.MemMetrics(s.Memory, podResource.PodMetadata.GetMemoryLimitForContainer(s.Name)),
 		a.mp.FsMetrics(s.Rootfs),
 	)
 }

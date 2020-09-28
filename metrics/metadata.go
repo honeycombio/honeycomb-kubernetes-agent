@@ -81,6 +81,28 @@ func (p *PodMetadata) GetCpuLimitForContainer(name string) float64 {
 	return 0
 }
 
+func (p *PodMetadata) GetMemoryLimit() float64 {
+	var limit float64
+	for _, c := range p.Pod.Spec.Containers {
+		val, err := strconv.ParseFloat(c.Resources.Limits.Memory().AsDec().String(), 64)
+		if err != nil {
+			val = 0
+		}
+		limit += val
+	}
+	return limit
+}
+
+func (p *PodMetadata) GetMemoryLimitForContainer(name string) float64 {
+	for _, c := range p.Pod.Spec.Containers {
+		if c.Name == name {
+			limit, _ := strconv.ParseFloat(c.Resources.Limits.Memory().AsDec().String(), 64)
+			return limit
+		}
+	}
+	return 0
+}
+
 func (p *PodMetadata) GetStatus() map[string]string {
 
 	status := map[string]string{
@@ -112,7 +134,7 @@ func (p *PodMetadata) GetStatusForContainer(name string) map[string]string {
 	status := map[string]string{
 		LabelContainerId:        s.Name,
 		StatusContainerReady:    strconv.FormatBool(s.Ready),
-		StatusContainerRestarts: string(s.RestartCount),
+		StatusContainerRestarts: strconv.FormatInt(int64(s.RestartCount), 10),
 	}
 
 	if s.State.Running != nil {
