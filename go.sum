@@ -121,6 +121,8 @@ github.com/honeycombio/libhoney-go v1.12.4 h1:rWAoxhpvu2briq85wZc04osHgKtueCLAk/
 github.com/honeycombio/libhoney-go v1.12.4/go.mod h1:tp2qtK0xMZyG/ZfykkebQESKFS78xpyPr2wEswZ1j6U=
 github.com/honeycombio/libhoney-go v1.13.0 h1:lWd1XhTRW/YDA6V3b7s7UriK41ont4qwZ9hncGyfqFM=
 github.com/honeycombio/libhoney-go v1.13.0/go.mod h1:lBcR6gxKpGxcqd69bjE55/z2xurM7sz66tXLUoSmABE=
+github.com/honeycombio/libhoney-go v1.14.1 h1:TyFJrPua66YodzBf/eyi0nWEOL/YMhtegkAHVBocUa8=
+github.com/honeycombio/libhoney-go v1.14.1/go.mod h1:SPNdLieCW/Ryt6cAIeELQENobj8H9bYXezWkA5ZI+u4=
 github.com/honeycombio/mongodbtools v0.0.0-20180629202505-358295c47f68 h1:kdms2gIMWNKuOfoTwUlKS4Q8rv9glKTpEKnc+UQYi1Y=
 github.com/honeycombio/mongodbtools v0.0.0-20180629202505-358295c47f68/go.mod h1:+cPJg3CL8JvSaXh/G3WoMZ5KIs/P+gTLmG4PpoA3zH4=
 github.com/honeycombio/mysqltools v0.0.1 h1:VyC2Z3npDpgXuwlBXwNcE/IH72STTZ1Tjt3pZlLPsDM=
@@ -156,6 +158,8 @@ github.com/klauspost/compress v1.10.5 h1:7q6vHIqubShURwQz8cQK6yIe/xC3IF0Vm7TGfqj
 github.com/klauspost/compress v1.10.5/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/compress v1.10.10 h1:a/y8CglcM7gLGYmlbP/stPE5sR3hbhFRUjCBfd/0B3I=
 github.com/klauspost/compress v1.10.10/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
+github.com/klauspost/compress v1.10.11 h1:K9z59aO18Aywg2b/WSgBaUX99mHy2BES18Cr5lBKZHk=
+github.com/klauspost/compress v1.10.11/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
