@@ -38,6 +38,7 @@ const (
 	MeasureNetworkErrorsSend     = "network.errors.send"
 	MeasureVolumeAvailable       = "volume.available"
 	MeasureVolumeCapacity        = "volume.capacity"
+	MeasureVolumeUsed            = "volume.used"
 	MeasureVolumeInodesTotal     = "volume.inodes.total"
 	MeasureVolumeInodesFree      = "volume.inodes.free"
 	MeasureVolumeInodesUsed      = "volume.inodes.used"

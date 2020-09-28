@@ -164,6 +164,7 @@ func (p *Processor) VolumeMetrics(s stats.VolumeStats) Metrics {
 	return Metrics{
 		MeasureVolumeAvailable:   &Metric{Type: MetricTypeInt, IntValue: s.AvailableBytes},
 		MeasureVolumeCapacity:    &Metric{Type: MetricTypeInt, IntValue: s.CapacityBytes},
+		MeasureVolumeUsed:        &Metric{Type: MetricTypeInt, IntValue: s.UsedBytes},
 		MeasureVolumeInodesTotal: &Metric{Type: MetricTypeInt, IntValue: s.Inodes},
 		MeasureVolumeInodesFree:  &Metric{Type: MetricTypeInt, IntValue: s.InodesFree},
 		MeasureVolumeInodesUsed:  &Metric{Type: MetricTypeInt, IntValue: s.InodesUsed},
