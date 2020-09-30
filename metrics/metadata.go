@@ -63,8 +63,8 @@ func (p *PodMetadata) GetCpuLimit() float64 {
 	var limit float64
 	for _, c := range p.Pod.Spec.Containers {
 		val, err := strconv.ParseFloat(c.Resources.Limits.Cpu().AsDec().String(), 64)
-		if err != nil {
-			val = 0
+		if err != nil || val == 0 {
+			return 0
 		}
 		limit += val
 	}
@@ -85,8 +85,8 @@ func (p *PodMetadata) GetMemoryLimit() float64 {
 	var limit float64
 	for _, c := range p.Pod.Spec.Containers {
 		val, err := strconv.ParseFloat(c.Resources.Limits.Memory().AsDec().String(), 64)
-		if err != nil {
-			val = 0
+		if err != nil || val == 0 {
+			return 0
 		}
 		limit += val
 	}
