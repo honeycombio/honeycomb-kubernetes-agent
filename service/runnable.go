@@ -87,6 +87,7 @@ func (r *runnable) Run() error {
 	// iterate over resource metrics data
 	for _, rm := range resourceMetrics {
 
+		// create event from Resource meta
 		ev, err := r.createEventFromResource(rm.Resource)
 		if err != nil {
 			r.logger.WithFields(logrus.Fields{
@@ -103,6 +104,7 @@ func (r *runnable) Run() error {
 
 		pre := metrics.PrefixMetrics
 
+		// loop through all metrics to add them to resource event
 		for k, v := range rm.Metrics {
 			r.logger.WithFields(logrus.Fields{
 				"resourceType": rm.Resource.Type,
@@ -110,12 +112,15 @@ func (r *runnable) Run() error {
 				"metricName":   k,
 			}).Trace("Metric to event field")
 
+			// check if metric is a counter
 			var val float64
 			if v.IsCounter {
 				val = r.metricsProvider.GetCounterRate(rm.Resource, k, v)
 			} else {
 				val = v.GetValue()
 			}
+
+			// add metric to resource event
 			ev.AddField(pre+k, val)
 		}
 
@@ -125,6 +130,7 @@ func (r *runnable) Run() error {
 			"metricCount":  len(rm.Metrics),
 		}).Debug("Event Data: ", ev.Fields())
 
+		// send resource event to Honeycomb
 		if err = ev.Send(); err != nil {
 			r.logger.WithFields(logrus.Fields{
 				"resourceType": rm.Resource.Type,
@@ -139,6 +145,8 @@ func (r *runnable) Run() error {
 
 func (r *runnable) createEventFromResource(res *metrics.Resource) (*libhoney.Event, error) {
 	ev := r.builder.NewEvent()
+
+	// add basic attributes to each resource event
 	_ = ev.Add(map[string]string{
 		metrics.PrefixMetrics + metrics.MetricSourceName: res.Name,
 		metrics.PrefixMetrics + metrics.MetricSourceType: res.Type,
@@ -146,13 +154,18 @@ func (r *runnable) createEventFromResource(res *metrics.Resource) (*libhoney.Eve
 		metrics.PrefixCluster + "name":                   r.k8sClusterName,
 	})
 	ev.Timestamp = res.Timestamp
+
+	// add all labels to event
 	if err := ev.Add(res.Labels); err != nil {
 		return nil, err
 	}
+
+	// add status attributes as fields in event
 	if res.Status != nil {
 		if err := ev.Add(res.Status); err != nil {
 			return nil, err
 		}
 	}
+
 	return ev, nil
 }

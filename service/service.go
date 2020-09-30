@@ -57,6 +57,7 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, log
 		cfg.OmitLabels = defaultOmitLabels
 	}
 
+	// create a map[string]bool from a list of strings
 	mg, err := getMapFromSlice(cfg.MetricGroups)
 	if err != nil {
 		return nil, err
@@ -123,10 +124,13 @@ func (s *Service) Start() error {
 		"omitLabels":   s.options.OmitLabels,
 		"metricGroups": s.options.MetricGroupsToCollect,
 	}).Info("Creating Metrics Service Runner...")
+
+	// setup primary interval runner for metrics service
 	runnable := newRunnable(s.restClient, s.builder, s.options, s.logger)
 	s.runner = interval.NewRunner("k8s-stats", s.options.Interval, runnable)
 	s.logger.Debug("Metrics Service Runner created")
 
+	// start metrics service in go routine
 	go func() {
 		if err := s.runner.Start(); err != nil {
 			s.logger.WithError(err).Error("Failed to start Metrics Service")
