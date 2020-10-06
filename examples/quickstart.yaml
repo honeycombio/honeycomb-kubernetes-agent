@@ -41,21 +41,27 @@ metadata:
   name: honeycomb-agent-config
   namespace: kube-system
 data:
-  config.yaml: |-
+  config.yaml: |
+    apiHost: https://api.honeycomb.io/
     watchers:
       - dataset: kubernetes-logs
-        labelSelector: ""
+        labelSelector: component=kube-controller-manager
+        namespace: kube-system
         parser: glog
-        # you can append arbitrary field information to watchers
-        # additionalFields:
-        #   owner_email: me@example.com
-    verbosity: debug
-    # support older container log paths, see:
-    # https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/kubelet-cri-logging.md
-    legacyLogPaths: true
-    # you can append arbitrary fields to all events sent from this agent
-    #additionalFields:
-    #  cluster_name: "dev_cluster"
+      - dataset: kubernetes-logs
+        labelSelector: component=kube-scheduler
+        namespace: kube-system
+        parser: glog
+    verbosity: info
+    splitLogging: false
+
+    metrics:
+      clusterName: k8s-cluster
+      dataset: kubernetes-metrics
+      enabled: true
+      metricGroups:
+      - node
+      - pod
 
 # Daemonset
 ---
@@ -88,16 +94,16 @@ spec:
           effect: NoSchedule
       containers:
       - env:
-        - name: HONEYCOMB_WRITEKEY
+        - name: HONEYCOMB_APIKEY
           valueFrom:
             secretKeyRef:
-              key: key
-              name: honeycomb-writekey
+              key: api-key
+              name: honeycomb
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: honeycombio/honeycomb-kubernetes-agent:2.0.0
+        image: honeycombio/honeycomb-kubernetes-agent:2.1.0
         imagePullPolicy: IfNotPresent
         name: honeycomb-agent
         resources:
