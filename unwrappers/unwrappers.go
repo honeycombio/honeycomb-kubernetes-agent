@@ -20,10 +20,10 @@ type InferUnwrapper struct{
 }
 
 func (w *InferUnwrapper) Unwrap(s string, p parsers.Parser) (*event.Event, error) {
-	if s[0] == '{' {
+	if len(s) > 0 && s[0] == '{' {
 		// Scan for the start of a JSON blob.
 		return w.json.Unwrap(s, p)
-	} else if s[4] == '-' && s[7] == '-' && s[10] == 'T' {
+	} else if len(s) > 10 && s[4] == '-' && s[7] == '-' && s[10] == 'T' {
 		// Scan for what looks like an RFC3339 timestamp.
 		return w.cri.Unwrap(s, p)
 	} else {
