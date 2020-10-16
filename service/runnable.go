@@ -165,6 +165,23 @@ func (r *runnable) createEventFromResource(res *metrics.Resource) (*libhoney.Eve
 		if err := ev.Add(res.Status); err != nil {
 			return nil, err
 		}
+
+		// Check if resource restarted
+		if rc, ok := res.Status[metrics.StatusRestartCount]; ok {
+			// get current restart count
+			if rci, ok := rc.(int32); ok {
+				restarts := uint64(rci)
+				m := &metrics.Metric{Type: metrics.MetricTypeInt, IsCounter: true, IntValue: &restarts}
+
+				// use metricsProvider counter cache to check if restarts increased
+				delta := r.metricsProvider.GetCounterDelta(res, "restarts", m)
+				if delta > 0 {
+					// resource had a restart since last collection
+					ev.AddField(metrics.StatusRestart, true)
+				}
+				ev.AddField(metrics.StatusRestartDelta, delta)
+			}
+		}
 	}
 
 	return ev, nil

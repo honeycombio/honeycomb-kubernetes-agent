@@ -103,18 +103,27 @@ func (p *PodMetadata) GetMemoryLimitForContainer(name string) float64 {
 	return 0
 }
 
-func (p *PodMetadata) GetStatus() map[string]string {
+func (p *PodMetadata) GetStatus() map[string]interface{} {
 
-	status := map[string]string{
-		StatusPodMessage: p.Pod.Status.Message,
-		StatusPodPhase:   string(p.Pod.Status.Phase),
-		StatusPodReason:  p.Pod.Status.Reason,
+	status := map[string]interface{}{
+		StatusMessage: p.Pod.Status.Message,
+		StatusPhase:   string(p.Pod.Status.Phase),
+		StatusReason:  p.Pod.Status.Reason,
 	}
+
+	// Pod restarts is the max restart count from all containers
+	restarts := int32(0)
+	for _, cs := range p.Pod.Status.ContainerStatuses {
+		if restarts < cs.RestartCount {
+			restarts = cs.RestartCount
+		}
+	}
+	status[StatusRestartCount] = restarts
 
 	return status
 }
 
-func (p *PodMetadata) GetStatusForContainer(name string) map[string]string {
+func (p *PodMetadata) GetStatusForContainer(name string) map[string]interface{} {
 
 	var s v1.ContainerStatus
 	for _, cs := range p.Pod.Status.ContainerStatuses {
@@ -131,25 +140,25 @@ func (p *PodMetadata) GetStatusForContainer(name string) map[string]string {
 		return nil
 	}
 
-	status := map[string]string{
-		LabelContainerId:        s.Name,
-		StatusContainerReady:    strconv.FormatBool(s.Ready),
-		StatusContainerRestarts: strconv.FormatInt(int64(s.RestartCount), 10),
+	status := map[string]interface{}{
+		LabelContainerId:   s.Name,
+		StatusReady:        s.Ready,
+		StatusRestartCount: s.RestartCount,
 	}
 
 	if s.State.Running != nil {
-		status[StatusContainerState] = "running"
+		status[StatusState] = "running"
 	} else if s.State.Terminated != nil {
-		status[StatusContainerState] = "terminated"
-		status[StatusContainerExitCode] = string(s.State.Terminated.ExitCode)
-		status[StatusContainerMessage] = s.State.Terminated.Message
-		status[StatusContainerReason] = s.State.Terminated.Reason
+		status[StatusState] = "terminated"
+		status[StatusExitCode] = s.State.Terminated.ExitCode
+		status[StatusMessage] = s.State.Terminated.Message
+		status[StatusReason] = s.State.Terminated.Reason
 	} else if s.State.Waiting != nil {
-		status[StatusContainerState] = "waiting"
-		status[StatusContainerMessage] = s.State.Waiting.Message
-		status[StatusContainerReason] = s.State.Waiting.Reason
+		status[StatusState] = "waiting"
+		status[StatusMessage] = s.State.Waiting.Message
+		status[StatusReason] = s.State.Waiting.Reason
 	} else {
-		status[StatusContainerState] = "waiting"
+		status[StatusState] = "waiting"
 	}
 
 	return status

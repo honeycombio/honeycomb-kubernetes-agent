@@ -35,14 +35,18 @@ func (p *Processor) GenerateMetricsData(summary *stats.Summary, metadata *Metada
 
 	nodeResource := getNodeResource(summary.Node)
 	acc.nodeStats(nodeResource, summary.Node)
+
 	for _, podStats := range summary.Pods {
-		// propagate the pod resource down to the container
+
 		podResource := getPodResource(nodeResource, podStats, metadata)
 		acc.podStats(podResource, podStats)
+
+		// Container stats rely on podResource for meta
 		for _, containerStats := range podStats.Containers {
 			acc.containerStats(podResource, containerStats)
 		}
 
+		// Volume stats rely on podResource for meta
 		for _, volumeStats := range podStats.VolumeStats {
 			acc.volumeStats(podResource, volumeStats)
 		}
@@ -51,9 +55,27 @@ func (p *Processor) GenerateMetricsData(summary *stats.Summary, metadata *Metada
 	return acc.Data
 }
 
-func (p *Processor) GetCounterRate(res *Resource, name string, newMetric *Metric) float64 {
+func (p *Processor) GetCounterDelta(res *Resource, name string, newMetric *Metric) float64 {
+	key := p.getCounterKey(res, name)
 
-	key := res.Name + "." + name
+	var delta float64
+	if counter, ok := p.counterCache.Get(key); ok {
+		// CounterValue exists, compute delta
+		delta = newMetric.GetValue() - counter.Value.GetValue()
+	}
+
+	// Store new counter value
+	p.counterCache.Set(key, &CounterValue{
+		Key:       key,
+		Value:     newMetric,
+		Timestamp: res.Timestamp,
+	})
+
+	return delta
+}
+
+func (p *Processor) GetCounterRate(res *Resource, name string, newMetric *Metric) float64 {
+	key := p.getCounterKey(res, name)
 
 	var rate float64
 	if counter, ok := p.counterCache.Get(key); ok {
@@ -62,33 +84,34 @@ func (p *Processor) GetCounterRate(res *Resource, name string, newMetric *Metric
 		delta := newMetric.GetValue() - counter.Value.GetValue()
 		secs := res.Timestamp.Unix() - counter.Timestamp.Unix()
 
-		if secs == 0 {
-			rate = 0
-		} else {
+		if secs != 0 {
 			rate = delta / float64(secs)
 		}
-
-	} else {
-		// CounterValue doesn't already exists, return 0
-		rate = 0
 	}
 
 	// Store new counter value
-	newCounter := &CounterValue{
+	p.counterCache.Set(key, &CounterValue{
 		Key:       key,
 		Value:     newMetric,
 		Timestamp: res.Timestamp,
-	}
-	p.counterCache.Set(key, newCounter)
+	})
 
 	return rate
 }
 
+func (p *Processor) getCounterKey(res *Resource, name string) string {
+	key := res.Type
+	if res.PodMetadata != nil {
+		key += "-" + string(res.PodMetadata.Pod.UID)
+	}
+	key += "-" + res.Name + "-" + name
+
+	return key
+}
+
 func (p *Processor) UptimeMetrics(startTime time.Time) Metrics {
 	var uptime uint64
-	if startTime.IsZero() {
-		uptime = 0
-	} else {
+	if !startTime.IsZero() {
 		uptime = uint64(time.Since(startTime).Nanoseconds() / time.Millisecond.Nanoseconds())
 	}
 
@@ -99,15 +122,15 @@ func (p *Processor) UptimeMetrics(startTime time.Time) Metrics {
 }
 
 func (p *Processor) CpuMetrics(s *stats.CPUStats, limit float64) Metrics {
+	// Convert nanoCores to seconds
 	var cpuUsage float64
 	nanoCores := s.UsageNanoCores
-	if nanoCores == nil {
-		cpuUsage = 0
-	} else {
+	if nanoCores != nil {
 		cpuUsage = float64(*nanoCores) / 1000000000
 	}
 
-	cpuUtilization := float64(0)
+	// if resource limits defined, get utilization
+	var cpuUtilization float64
 	if limit > 0 {
 		cpuUtilization = (cpuUsage / limit) * 100
 	}
@@ -119,11 +142,13 @@ func (p *Processor) CpuMetrics(s *stats.CPUStats, limit float64) Metrics {
 }
 
 func (p *Processor) MemMetrics(s *stats.MemoryStats, limit float64) Metrics {
+	// if resource limits defined get utilization
 	var utilization float64
 	if limit > 0 {
 		usage := float64(*s.UsageBytes)
 		utilization = (usage / limit) * 100
 	}
+
 	return Metrics{
 		MeasureMemoryAvailable:       &Metric{Type: MetricTypeInt, IntValue: s.AvailableBytes},
 		MeasureMemoryUsage:           &Metric{Type: MetricTypeInt, IntValue: s.UsageBytes},

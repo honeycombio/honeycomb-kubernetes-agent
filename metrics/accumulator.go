@@ -33,6 +33,10 @@ type MetricDataAccumulator struct {
 }
 
 func (a *MetricDataAccumulator) nodeStats(nodeResource *Resource, s stats.NodeStats) {
+	a.logger.WithFields(logrus.Fields{
+		"name": nodeResource.Name,
+	}).Debug("nodeStats")
+
 	if !a.metricGroupsToCollect[NodeMetricGroup] {
 		return
 	}
@@ -48,6 +52,10 @@ func (a *MetricDataAccumulator) nodeStats(nodeResource *Resource, s stats.NodeSt
 }
 
 func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats) {
+	a.logger.WithFields(logrus.Fields{
+		"name": podResource.Name,
+	}).Debug("podStats")
+
 	if !a.metricGroupsToCollect[PodMetricGroup] {
 		return
 	}
@@ -63,6 +71,11 @@ func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats
 }
 
 func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.ContainerStats) {
+	a.logger.WithFields(logrus.Fields{
+		"podName": podResource.Name,
+		"name":    s.Name,
+	}).Debug("containerStats")
+
 	if !a.metricGroupsToCollect[ContainerMetricGroup] {
 		return
 	}
@@ -91,6 +104,11 @@ func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.Co
 }
 
 func (a *MetricDataAccumulator) volumeStats(podResource *Resource, s stats.VolumeStats) {
+	a.logger.WithFields(logrus.Fields{
+		"podName": podResource.Name,
+		"name":    s.Name,
+	}).Debug("volumeStats")
+
 	if !a.metricGroupsToCollect[VolumeMetricGroup] {
 		return
 	}

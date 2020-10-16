@@ -11,7 +11,7 @@ type Resource struct {
 	Name        string
 	Labels      map[string]string
 	Timestamp   time.Time
-	Status      map[string]string
+	Status      map[string]interface{}
 	PodMetadata *PodMetadata
 }
 

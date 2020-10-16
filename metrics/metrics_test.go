@@ -128,7 +128,7 @@ func TestGetStatus(t *testing.T) {
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	status := pmd.GetStatus()
-	assert.Equal(t, "Running", status[StatusPodPhase])
+	assert.Equal(t, "Running", status[StatusPhase])
 }
 
 func TestGetStatusForContainer(t *testing.T) {
@@ -136,9 +136,9 @@ func TestGetStatusForContainer(t *testing.T) {
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	status := pmd.GetStatusForContainer("speaker")
-	assert.Equal(t, "54", status[StatusContainerRestarts])
-	assert.Equal(t, "true", status[StatusContainerReady])
-	assert.Equal(t, "running", status[StatusContainerState])
+	assert.Equal(t, "54", status[StatusRestartCount])
+	assert.Equal(t, "true", status[StatusReady])
+	assert.Equal(t, "running", status[StatusState])
 }
 
 func TestGenerateMetricsData(t *testing.T) {
@@ -320,7 +320,7 @@ func TestContainerStats(t *testing.T) {
 
 	assert.Equal(t, "speaker", data.Resource.Name)
 	assert.Equal(t, 4, len(data.Resource.Status))
-	assert.Equal(t, "running", data.Resource.Status[StatusContainerState])
+	assert.Equal(t, "running", data.Resource.Status[StatusState])
 	assert.Equal(t, 9, len(data.Resource.Labels))
 	assert.Equal(t, "metallb", data.Resource.Labels[PrefixLabel+"app"])
 	assert.Equal(t, "metallb-system", data.Resource.Labels[LabelNamespaceName])
