@@ -136,8 +136,8 @@ func TestGetStatusForContainer(t *testing.T) {
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	status := pmd.GetStatusForContainer("speaker")
-	assert.Equal(t, "54", status[StatusRestartCount])
-	assert.Equal(t, "true", status[StatusReady])
+	assert.Equal(t, int32(54), status[StatusRestartCount])
+	assert.Equal(t, true, status[StatusReady])
 	assert.Equal(t, "running", status[StatusState])
 }
 
@@ -298,7 +298,7 @@ func TestPodStats(t *testing.T) {
 	data := acc.Data[0]
 
 	assert.Equal(t, "speaker-cpxhz", data.Resource.Name)
-	assert.Equal(t, 3, len(data.Resource.Status))
+	assert.Equal(t, 4, len(data.Resource.Status))
 	assert.Equal(t, 8, len(data.Resource.Labels))
 	assert.Equal(t, "metallb", data.Resource.Labels[PrefixLabel+"app"])
 	assert.Equal(t, "metallb-system", data.Resource.Labels[LabelNamespaceName])
