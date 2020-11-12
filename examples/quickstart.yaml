@@ -26,12 +26,15 @@ metadata:
   namespace: kube-system
 rules:
   - apiGroups:
-    - "*"
+      - "*"
     resources:
-    - pods
+      - pods
+      - nodes/stats
+      - nodes/proxy
     verbs:
-    - list
-    - watch
+      - list
+      - watch
+      - get
 
 # ConfigMap specifying which logs the agent should watch
 ---
