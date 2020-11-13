@@ -3,10 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/service"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
@@ -63,37 +65,24 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error parsing options:\n%v\n", err)
 	}
-	config, err := config.ReadFromFile(flags.ConfigPath)
+	cfg, err := config.ReadFromFile(flags.ConfigPath)
 	if err != nil {
 		fmt.Printf("Error reading configuration:\n%v\n", err)
 		os.Exit(1)
 	}
 
-	if len(config.Watchers) == 0 {
-		fmt.Printf("No watchers defined in the configuration!")
-		os.Exit(1)
+	if flags.Validate {
+		logrus.Println("Configuration looks good!")
+		os.Exit(0)
 	}
 
-	err = validateWatchers(config.Watchers)
-	if err != nil {
-		// TODO: it'd be really nice to reference the specific configuration
-		// block that's problematic when returning an error to the user.
-		fmt.Printf("Error in watcher configuration:\n%v\n", err)
-		os.Exit(1)
-	}
-
-	if config.SplitLogging {
+	if cfg.SplitLogging {
 		logrus.SetOutput(&OutputSplitter{})
 		logrus.Info("Configured split logging. trace, debug, info, and warn levels will now go to stdout")
 	}
 
-	if config.Verbosity == "debug" {
+	if cfg.Verbosity == "debug" {
 		logrus.SetLevel(logrus.DebugLevel)
-	}
-
-	if flags.Validate {
-		fmt.Println("Configuration looks good!")
-		os.Exit(0)
 	}
 
 	// Read write key from environment if not specified in config file.
@@ -101,27 +90,71 @@ func main() {
 	// trailing newline, so trim that.
 	// (That's because 'echo "KEY" | base64' encodes KEY plus a trailing
 	// newline.)
-	if config.WriteKey == "" {
-		config.WriteKey = strings.TrimSpace(os.Getenv("HONEYCOMB_WRITEKEY"))
+	apiKey := cfg.APIKey
+	if apiKey == "" {
+		apiKey = strings.TrimSpace(os.Getenv("HONEYCOMB_APIKEY"))
+		if apiKey == "" {
+			// Backwards compatibility check for WriteKey
+			apiKey = cfg.WriteKey
+			if apiKey == "" {
+				apiKey = strings.TrimSpace(os.Getenv("HONEYCOMB_WRITEKEY"))
+			}
+		}
 	}
 
-	err = transmission.InitLibhoney(config.WriteKey, config.APIHost)
+	err = transmission.InitLibhoney(apiKey, cfg.APIHost)
 	if err != nil {
-		fmt.Printf("Error initializing Honeycomb transmission:\n%v\n", err)
-		os.Exit(1)
+		logrus.WithError(err).Fatal("Error initializing Honeycomb transmission")
 	}
+
+	if cfg.Metrics != nil {
+		if cfg.Metrics.AdditionalFields == nil && cfg.AdditionalFields != nil {
+			cfg.Metrics.AdditionalFields = cfg.AdditionalFields
+		}
+
+		err = startMetricsService(cfg.Metrics)
+		if err != nil {
+			logrus.WithError(err).Fatal("Error while starting metrics service")
+		}
+	}
+
+	if len(cfg.Watchers) > 0 {
+		err = validateWatchers(cfg.Watchers)
+
+		if err != nil {
+			// TODO: it'd be really nice to reference the specific configuration
+			// block that's problematic when returning an error to the user.
+			logrus.WithError(err).Fatal("Error in watcher configuration")
+		} else {
+
+			pws, pts := createLogTailers(cfg)
+			for _, pw := range pws {
+				pw.Start()
+				defer pw.Stop()
+			}
+
+			for _, pt := range pts {
+				pt.Start()
+				defer pt.Stop()
+			}
+		}
+	}
+
+	fmt.Println("running")
+	waitForSignal()
+}
+
+func createLogTailers(config *config.Config) ([]*tailer.PathWatcher, []*podtailer.PodSetTailer) {
 	transmitter := &transmission.HoneycombTransmitter{}
 
 	kubeClient, err := newKubeClient()
 	if err != nil {
-		fmt.Printf("Error instantiating kube client:\n%v\n", err)
-		os.Exit(1)
+		logrus.WithError(err).Fatal("Error instantiating kube client")
 	}
 
 	nodeName := os.Getenv("NODE_NAME")
 	if nodeName == "" {
-		fmt.Printf("No node name set!\n")
-		os.Exit(1)
+		logrus.Fatal("No node name set!\n")
 	}
 	nodeSelector := fmt.Sprintf("spec.nodeName=%s", nodeName)
 
@@ -129,6 +162,9 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Error("Error initializing state recorder. Agent progress won't be persisted across restarts.")
 	}
+
+	pws := make([]*tailer.PathWatcher, 0)
+	pts := make([]*podtailer.PodSetTailer, 0)
 
 	for _, watcherConfig := range config.Watchers {
 		for _, path := range watcherConfig.FilePaths {
@@ -143,13 +179,13 @@ func main() {
 				// This shouldn't happen, since we check for configuration errors
 				// before actually setting up the watcher
 				logrus.WithError(err).Error("Error setting up watcher")
+				continue
 			}
 			// Even though we have a static path, NewPathWatcher expects a function
 			// so we build one that just returns the path
 			patternFunc := func() (string, error) { return path, nil }
 			t := tailer.NewPathWatcher(patternFunc, nil, handlerFactory, stateRecorder)
-			t.Start()
-			defer t.Stop()
+			pws = append(pws, t)
 		}
 
 		if watcherConfig.LabelSelector != nil {
@@ -162,13 +198,45 @@ func main() {
 				config.LegacyLogPaths,
 				config.AdditionalFields,
 			)
-			pt.Start()
-			defer pt.Stop()
+			pts = append(pts, pt)
 		}
 	}
+	return pws, pts
+}
 
-	fmt.Println("running")
-	waitForSignal()
+func startMetricsService(config *config.MetricsConfig) error {
+	if config.Enabled {
+
+		if config.Interval == 0 {
+			config.Interval = 10 * time.Second
+		}
+
+		if config.ClusterName == "" {
+			config.ClusterName = "k8s-cluster"
+		}
+
+		if config.Dataset == "" {
+			config.Dataset = "kubernetes-metrics"
+		}
+		builder := libhoney.NewBuilder()
+		builder.Dataset = config.Dataset
+
+		for k, v := range config.AdditionalFields {
+			builder.AddField(k, v)
+		}
+
+		logger := logrus.StandardLogger()
+
+		svc, err := service.NewMetricsService(config, builder, logger)
+		if err != nil {
+			return err
+		}
+
+		if err := svc.Start(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func newKubeClient() (*corev1.CoreV1Client, error) {

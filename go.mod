@@ -16,6 +16,7 @@ require (
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 	github.com/mitchellh/mapstructure v1.3.3
+	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/stretchr/testify v1.6.1
@@ -29,5 +30,6 @@ require (
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v0.18.8
+	k8s.io/kubernetes v1.12.0
 	k8s.io/utils v0.0.0-20200414100711-2df71ebbae66 // indirect
 )
