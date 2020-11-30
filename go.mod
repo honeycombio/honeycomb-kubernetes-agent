@@ -15,7 +15,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
-	github.com/mitchellh/mapstructure v1.3.3
+	github.com/mitchellh/mapstructure v1.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
