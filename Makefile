@@ -44,7 +44,7 @@ SRC_DIRS := . # directories which hold app source (not vendored)
 ALL_ARCH := amd64 arm arm64 ppc64le
 
 IMAGE := $(REGISTRY)/$(BIN)
-BASEIMAGE ?= cimg/go:1.14
+BASEIMAGE ?= scratch
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
