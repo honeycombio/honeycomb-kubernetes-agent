@@ -48,12 +48,12 @@ data:
     apiHost: https://api.honeycomb.io/
     watchers:
       - dataset: kubernetes-logs
-        labelSelector: component=kube-controller-manager
-        namespace: honeycomb
+        labelSelector: component=kube-controller-manager,tier=control-plane
+        namespace: kube-system
         parser: glog
       - dataset: kubernetes-logs
-        labelSelector: component=kube-scheduler
-        namespace: honeycomb
+        labelSelector: component=kube-scheduler,tier=control-plane
+        namespace: kube-system
         parser: glog
     verbosity: info
     splitLogging: false
@@ -73,14 +73,12 @@ kind: DaemonSet
 metadata:
   labels:
     k8s-app: honeycomb-agent
-    kubernetes.io/cluster-service: 'true'
-    version: v2.1.0
-  name: honeycomb-agent-v2.1.0
+  name: honeycomb-agent
   namespace: honeycomb
 spec:
   selector:
     matchLabels:
-      k8s-app: honeycomb-agent
+      app: honeycomb-agent
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
@@ -88,9 +86,7 @@ spec:
   template:
     metadata:
       labels:
-        k8s-app: honeycomb-agent
-        kubernetes.io/cluster-service: 'true'
-        version: v2.1.0
+        app: honeycomb-agent
     spec:
       tolerations:
         - operator: Exists
