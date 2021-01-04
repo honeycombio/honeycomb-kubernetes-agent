@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM golang:alpine AS build
+
+RUN apk --update add ca-certificates
+
 FROM ARG_FROM
 
-MAINTAINER Team Honeycomb <bees@honeycomb.io>
+LABEL maintainer="Team Honeycomb <bees@honeycomb.io>"
 
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 ADD bin/ARG_ARCH/ARG_BIN /ARG_BIN
 
-USER root:root
 ENTRYPOINT ["/ARG_BIN"]
