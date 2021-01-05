@@ -7,3 +7,4 @@ config-test.yaml
 kind
 .kube
 .idea/**
+/_local
