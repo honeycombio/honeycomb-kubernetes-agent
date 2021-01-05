@@ -117,14 +117,3 @@ container-clean:
 
 bin-clean:
 	rm -rf bin
-
-dev-env:
-    VERSION=dev
-    REGISTRY=$(shell cat ./_local/registry.txt | tr -d '\n')
-    IMAGE=$(REGISTRY)/$(BIN)
-
-dev-deploy: dev-env push dev-clean
-	kubectl apply -f ./_local/
-
-dev-clean:
-	-kubectl delete -f ./_local/
