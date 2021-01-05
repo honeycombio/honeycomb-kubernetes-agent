@@ -145,8 +145,10 @@ func (p *Processor) MemMetrics(s *stats.MemoryStats, limit float64) Metrics {
 	// if resource limits defined get utilization
 	var utilization float64
 	if limit > 0 {
-		usage := float64(*s.UsageBytes)
-		utilization = (usage / limit) * 100
+		if s.UsageBytes != nil {
+			usage := float64(*s.UsageBytes)
+			utilization = (usage / limit) * 100
+		}
 	}
 
 	return Metrics{
