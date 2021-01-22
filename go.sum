@@ -169,8 +169,8 @@ github.com/honeycombio/honeytail v1.2.0 h1:qCunNewOZW8bIXmDJhFDuD/jzLwyx7xj00K6k
 github.com/honeycombio/honeytail v1.2.0/go.mod h1:BO4BrtO4VDDiGltS1SYQ2Q3H40kTKU4nUqWAzGtY8ow=
 github.com/honeycombio/libhoney-go v1.12.4 h1:rWAoxhpvu2briq85wZc04osHgKtueCLAk/3igqTX3+Q=
 github.com/honeycombio/libhoney-go v1.12.4/go.mod h1:tp2qtK0xMZyG/ZfykkebQESKFS78xpyPr2wEswZ1j6U=
-github.com/honeycombio/libhoney-go v1.15.0 h1:RZTzGhKfaJQ3i0qKZg0rYvx3c8jH4KvB5oZkzpYe+X4=
-github.com/honeycombio/libhoney-go v1.15.0/go.mod h1:oa9PAQSksfcIFkHT0K7vgrp9Y0Nax9iK7EDFEVl5NfY=
+github.com/honeycombio/libhoney-go v1.15.2 h1:5NGcjOxZZma13dmzNcl3OtGbF1hECA0XHJNHEb2t2ck=
+github.com/honeycombio/libhoney-go v1.15.2/go.mod h1:JzhRPYgoBCd0rZvudrqmej4Ntx0w7AT3wAJpf5+t1WA=
 github.com/honeycombio/mongodbtools v0.0.0-20201022144302-c92638964ed8/go.mod h1:+cPJg3CL8JvSaXh/G3WoMZ5KIs/P+gTLmG4PpoA3zH4=
 github.com/honeycombio/mysqltools v0.0.1 h1:VyC2Z3npDpgXuwlBXwNcE/IH72STTZ1Tjt3pZlLPsDM=
 github.com/honeycombio/mysqltools v0.0.1/go.mod h1:r/WQhfDgxowZatJvhdy2VL801FOv5u8K6NzYqCGBJkQ=
@@ -200,8 +200,8 @@ github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQL
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/klauspost/compress v1.10.3 h1:OP96hzwJVBIHYU52pVTI6CczrxPvrGfgqF9N5eTO0Q8=
 github.com/klauspost/compress v1.10.3/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
-github.com/klauspost/compress v1.11.2 h1:MiK62aErc3gIiVEtyzKfeOHgW7atJb5g/KNX5m3c2nQ=
-github.com/klauspost/compress v1.11.2/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
+github.com/klauspost/compress v1.11.4 h1:kz40R/YWls3iqT9zX9AHN3WoVsrAWVyui5sxuLqiXqU=
+github.com/klauspost/compress v1.11.4/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
@@ -264,6 +264,8 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/vmihailenco/msgpack/v4 v4.3.11 h1:Q47CePddpNGNhk4GCnAx9DDtASi2rasatE0cd26cZoE=
 github.com/vmihailenco/msgpack/v4 v4.3.11/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
 github.com/vmihailenco/msgpack/v4 v4.3.12 h1:07s4sz9IReOgdikxLTKNbBdqDMLsjPKXwvCazn8G65U=
