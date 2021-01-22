@@ -17,7 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.20.1
