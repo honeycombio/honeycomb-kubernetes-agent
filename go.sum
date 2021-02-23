@@ -165,8 +165,8 @@ github.com/honeycombio/dynsampler-go v0.2.1 h1:IbhjbdB0IbLSZn7xVYuk6jjk/ZDk/EO+D
 github.com/honeycombio/dynsampler-go v0.2.1/go.mod h1:BOeTUPT6fCRH5X/+QqF6Kza3IyLp9uSq/rWgEtI4aZI=
 github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8 h1:rOkOm6ixU8JxjK/OmJBaWhGQ4YX0sO/e8YUz7twniRc=
 github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8/go.mod h1:b5vehEHPr2kpld6NR9gSja7nMX8lGQbU5ACKOd9aa9g=
-github.com/honeycombio/honeytail v1.2.0 h1:qCunNewOZW8bIXmDJhFDuD/jzLwyx7xj00K6kWR7fis=
-github.com/honeycombio/honeytail v1.2.0/go.mod h1:BO4BrtO4VDDiGltS1SYQ2Q3H40kTKU4nUqWAzGtY8ow=
+github.com/honeycombio/honeytail v1.3.0 h1:Nmx3/N4dWmp/Qo0Jhmghos6mf3JEDjWSsfT8Bzym190=
+github.com/honeycombio/honeytail v1.3.0/go.mod h1:BO4BrtO4VDDiGltS1SYQ2Q3H40kTKU4nUqWAzGtY8ow=
 github.com/honeycombio/libhoney-go v1.12.4 h1:rWAoxhpvu2briq85wZc04osHgKtueCLAk/3igqTX3+Q=
 github.com/honeycombio/libhoney-go v1.12.4/go.mod h1:tp2qtK0xMZyG/ZfykkebQESKFS78xpyPr2wEswZ1j6U=
 github.com/honeycombio/libhoney-go v1.15.2 h1:5NGcjOxZZma13dmzNcl3OtGbF1hECA0XHJNHEb2t2ck=
