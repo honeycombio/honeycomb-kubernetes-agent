@@ -397,3 +397,20 @@ Here are some example configurations for the Honeycomb agent.
         parser: json
         dataset: frontend
     ```
+    
+* Process all logs except for those with a given field set to a certain value:
+
+    ```
+    ---
+    writekey: "YOUR_HONEYCOMB_WRITEKEY_HERE"
+    watchers:
+      - labelSelector: "app=frontend-web"
+        containerName: sidecar
+        parser: json
+        dataset: app
+        processors:
+          - drop_event:
+              field: level
+              values:
+                - debug       
+    ```
