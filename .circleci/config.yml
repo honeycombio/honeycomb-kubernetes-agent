@@ -10,7 +10,7 @@ tag_filters: &tag_filters
 jobs:
   build_agent:
     docker:
-      - image: cimg/go:1.14
+      - image: cimg/go:1.15.8
     # needed to build docker images, attach mount points, etc
     steps:
       - checkout
