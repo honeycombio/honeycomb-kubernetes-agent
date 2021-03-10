@@ -43,7 +43,10 @@ type Options struct {
 func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, logger *logrus.Logger) (*Service, error) {
 
 	if cfg.Endpoint == "" {
-		if nodeName := os.Getenv("NODE_NAME"); nodeName != "" {
+		// Not all Managed K8s offerings allow the nodename to be DNS reachable, try by IP if available.
+		if nodeIp := os.Getenv("NODE_IP"); nodeIp != "" {
+			cfg.Endpoint = nodeIp + ":10250"
+		} else if nodeName := os.Getenv("NODE_NAME"); nodeName != "" {
 			cfg.Endpoint = nodeName + ":10250"
 		}
 	}

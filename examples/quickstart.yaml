@@ -72,7 +72,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    k8s-app: honeycomb-agent
+    app: honeycomb-agent
   name: honeycomb-agent
   namespace: honeycomb
 spec:
@@ -102,6 +102,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
         image: honeycombio/honeycomb-kubernetes-agent:2.1.2
         imagePullPolicy: IfNotPresent
         name: honeycomb-agent
