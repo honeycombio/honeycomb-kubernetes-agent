@@ -124,6 +124,8 @@ func (r *runnable) Run() error {
 			ev.AddField(pre+k, val)
 		}
 
+		ev.AddField("agent.interval.seconds", r.interval.Seconds())
+
 		r.logger.WithFields(logrus.Fields{
 			"resourceType": rm.Resource.Type,
 			"resourceName": rm.Resource.Name,
