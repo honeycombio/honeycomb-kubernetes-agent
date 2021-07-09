@@ -52,6 +52,8 @@ if [ $count -ne 1 ]; then
     kubectl logs -n kube-system -l k8s-app=honeycomb-agent
     echo "nginx logs:"
     kubectl logs -l app=nginx
+    echo "apihost logs:"
+    kubectl logs -l app=apihost
 
     exit 1
 fi
