@@ -32,6 +32,9 @@ if [ $count -ne 1 ]; then
     echo "Didn't receive expected number of events!"
     echo "agent logs:"
     kubectl logs -n kube-system -l k8s-app=honeycomb-agent
+    echo "nginx logs:"
+    kubectl logs -l app=nginx
+
     exit 1
 fi
 kubectl delete pod,svc --all
