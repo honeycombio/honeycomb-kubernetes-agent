@@ -81,25 +81,25 @@ container: .container-$(DOTFILE_IMAGE) container-name
 	    -e 's|ARG_ARCH|$(ARCH)|g' \
 	    -e 's|ARG_FROM|$(BASEIMAGE)|g' \
 	    Dockerfile.in > .dockerfile-$(ARCH)
-	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-$(ARCH) .
-	@docker images -q $(IMAGE):$(VERSION) > $@
+	@docker build -t $(IMAGE):$(VERSION)-$(ARCH) -f .dockerfile-$(ARCH) .
+	@docker images -q $(IMAGE):$(VERSION)-$(ARCH) > $@
 
 container-name:
 	@echo "container: $(IMAGE):$(VERSION)"
 
 push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-	@docker push $(IMAGE):$(VERSION)
-	@docker images -q $(IMAGE):$(VERSION) > $@
+	@docker push $(IMAGE):$(VERSION)-$(ARCH)
+	@docker images -q $(IMAGE):$(VERSION)-$(ARCH) > $@
 
 push-name:
 	@echo "pushed: $(IMAGE):$(VERSION)"
 
 # Push the image tagged with :head
 push-head:
-	@docker tag $(IMAGE):$(VERSION) $(IMAGE):head
-	@docker push $(IMAGE):head
-	@echo "pushed: $(IMAGE):head"
+	@docker tag $(IMAGE):$(VERSION) $(IMAGE)-$(ARCH):head-$(ARCH)
+	@docker push $(IMAGE):head-$(ARCH)
+	@echo "pushed: $(IMAGE):head-$(ARCH)"
 
 version:
 	@echo $(VERSION)
@@ -117,3 +117,10 @@ container-clean:
 
 bin-clean:
 	rm -rf bin
+
+# If any of the inputs (arm64, amd64) is missing, manifest-tool will terminate
+# with an error like: `FATA[0001] Inspect of image
+# registry.docker.com/$(image):$(version)-amd64"
+# failed with error: manifest unknown: Requested image not found`
+manifest-push:
+	manifest-tool push from-args --platforms linux/amd64,linux-arm64 --template $(VERSION)-ARCH --target $(VERSION)

@@ -8,16 +8,58 @@ tag_filters: &tag_filters
         only: /.*/
 
 jobs:
-  build_agent:
+  deploy_join:
+    parameters:
+      manifest_tool_version:
+        type: string
+        default: "1.0.3"
     docker:
-      - image: cimg/go:1.15.8
+      - image: cimg/python:3.9.5
+    steps:
+      - checkout
+      - restore_cache:
+          key: manifest-tool-v1-<< parameters.manifest_tool_version >>
+      - run:
+          name: Install manifest tool
+          command: |
+            set -euo pipefail
+            set -x
+
+            manifest_tool_version=<< parameters.manifest_tool_version >>
+
+            if ! ( command -v manifest-tool ); then
+              if [[ $(uname -m) == aarch64 ]]; then
+                arch=arm64
+              else
+                arch=amd64
+              fi
+
+              curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v${manifest_tool_version}/manifest-tool-linux-${arch}
+              chmod +x manifest-tool
+            fi
+      - save_cache:
+          key: manifest-tool-v1-<< parameters.manifest_tool_version >>
+          paths:
+            - manifest-tool
+
+      - run: make manifest-push
+
+  build_agent:
+    parameters:
+      arch:
+        type: string
+      resource_class:
+        type: string
+    machine:
+      image: ubuntu-2004:202101-01
+      resource_class: << parameters.resource_class >>
     # needed to build docker images, attach mount points, etc
     steps:
       - checkout
-      - setup_remote_docker
       - run: make container
       - run: make test
       - run: e2e-tests/test.sh
+      # TODO
       - run:
           name: "Deploy on tagged master push"
           command: |
@@ -35,4 +77,18 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - build_agent: *tag_filters
+      - build_agent:
+        << *tag_filters
+          name: build_agent_amd64
+          arch: amd64
+          resource_class: large
+      - build_agent:
+        << *tag_filters
+          name: build_agent_arm64
+          arch: arm64
+          resource_class: arm.large
+      - push_multiarch_manifest:
+        << *tag_filters
+        require:
+          - build_agent_amd64
+          - build_agent_arm64
