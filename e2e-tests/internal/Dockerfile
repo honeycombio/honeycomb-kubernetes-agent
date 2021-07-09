@@ -1,6 +1,6 @@
 FROM bitnami/kubectl:1.18
 USER 0
-RUN install_packages jq
+RUN install_packages jq netcat
 RUN mkdir /.kube
 RUN chown 1001 .kube
 USER 1001

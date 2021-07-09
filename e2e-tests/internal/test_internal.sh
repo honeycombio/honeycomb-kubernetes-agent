@@ -2,7 +2,25 @@
 set -euo pipefail
 
 export KUBECONFIG=/.kube/config
-kubectl config set-cluster kind-kind --server=https://172.17.0.2:6443
+
+# get server ip. This used to be hardcoded, but my local docker has a different
+# value for this than CircleCI, so ... let's make it check.
+ip_prefix=$(cat /etc/hosts | grep -o 172.[0-9]*.0.)
+ip_suffix=0
+port=6443
+set +e
+until ( nc -z "${ip_prefix}${ip_suffix}" $port ); do
+  echo "tried: ${ip_prefix}${ip_suffix}"
+  ((ip_suffix++))
+  if [[ "$ip_suffix" -ge 255 ]]; then
+    echo "Could not find control plane in ${ip_prefix}0-254."
+    exit 1
+  fi
+done
+set -e
+echo "Control plane ip: ${ip_prefix}${ip_suffix}."
+
+kubectl config set-cluster kind-kind --server=https://${ip_prefix}${ip_suffix}:$port
 kubectl config set-context kind-kind
 # Configure the agent, a basic nginx service, and a mock Honeycomb API host for
 # the agent to write to
