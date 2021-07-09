@@ -43,7 +43,8 @@ SRC_DIRS := . # directories which hold app source (not vendored)
 
 ALL_ARCH := amd64 arm arm64 ppc64le
 
-IMAGE := $(REGISTRY)/$(BIN)
+IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
+MULTIARCH_IMAGE := $(REGISTRY)/$(BIN)
 BASEIMAGE ?= scratch
 
 # If you want to build all binaries, see the 'all-build' rule.
@@ -81,25 +82,25 @@ container: .container-$(DOTFILE_IMAGE) container-name
 	    -e 's|ARG_ARCH|$(ARCH)|g' \
 	    -e 's|ARG_FROM|$(BASEIMAGE)|g' \
 	    Dockerfile.in > .dockerfile-$(ARCH)
-	@docker build -t $(IMAGE):$(VERSION)-$(ARCH) -f .dockerfile-$(ARCH) .
-	@docker images -q $(IMAGE):$(VERSION)-$(ARCH) > $@
+	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-$(ARCH) .
+	@docker images -q $(IMAGE):$(VERSION) > $@
 
 container-name:
 	@echo "container: $(IMAGE):$(VERSION)"
 
 push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-	@docker push $(IMAGE):$(VERSION)-$(ARCH)
-	@docker images -q $(IMAGE):$(VERSION)-$(ARCH) > $@
+	@docker push $(IMAGE):$(VERSION)
+	@docker images -q $(IMAGE):$(VERSION) > $@
 
 push-name:
-	@echo "pushed: $(IMAGE):$(VERSION)-$(ARCH)"
+	@echo "pushed: $(IMAGE):$(VERSION)"
 
 # Push the image tagged with :head
 push-head:
-	@docker tag $(IMAGE)-$(VERSION)-$(ARCH):head-$(ARCH)
-	@docker push $(IMAGE):head-$(ARCH)
-	@echo "pushed: $(IMAGE):head-$(ARCH)"
+	@docker tag $(IMAGE)-$(VERSION):head
+	@docker push $(IMAGE):head
+	@echo "pushed: $(IMAGE):head"
 
 version:
 	@echo $(VERSION)
@@ -119,9 +120,9 @@ bin-clean:
 	rm -rf bin
 
 manifest:
-	docker manifest create $(IMAGE):$(VERSION) $(IMAGE)-$(VERSION)-amd64 $(IMAGE):$(VERSION)-arm64
-	docker manifest oush $(IMAGE):$(VERSION)
+	docker manifest create $(MULTIARCH_IMAGE):$(VERSION) $(MULTIARCH_IMAGE)-amd64:-$(VERSION) $(MULTIARCH_IMAGE)-arm64:$(VERSION)
+	docker manifest push $(MULTIARCH_IMAGE):$(VERSION)
 
-manifest:
-	docker manifest create $(IMAGE):head $(IMAGE)-$(VERSION)-amd64 $(IMAGE):$(VERSION)-arm64
-	docker manifest oush $(IMAGE):head
+manifest-head:
+	docker manifest create $(MULTIARCH_IMAGE):head $(MULTIARCH_IMAGE)-amd64-$(VERSION) $(MULTIARCH_IMAGE)-arm64:$(VERSION)
+	docker manifest push $(MULTIARCH_IMAGE):head
