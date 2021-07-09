@@ -10,39 +10,19 @@ tag_filters: &tag_filters
 jobs:
   deploy_join:
     parameters:
-      manifest_tool_version:
-        type: string
-        default: "1.0.3"
     docker:
       - image: cimg/python:3.9.5
     steps:
       - checkout
-      - restore_cache:
-          key: manifest-tool-v1-<< parameters.manifest_tool_version >>
       - run:
-          name: Install manifest tool
+          name: "Deploy on tagged master push"
           command: |
-            set -euo pipefail
-            set -x
-
-            manifest_tool_version=<< parameters.manifest_tool_version >>
-
-            if ! ( command -v manifest-tool ); then
-              if [[ $(uname -m) == aarch64 ]]; then
-                arch=arm64
-              else
-                arch=amd64
-              fi
-
-              curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v${manifest_tool_version}/manifest-tool-linux-${arch}
-              chmod +x manifest-tool
-            fi
-      - save_cache:
-          key: manifest-tool-v1-<< parameters.manifest_tool_version >>
-          paths:
-            - manifest-tool
-
-      - run: make manifest-push
+            if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ -z "${CIRCLE_BRANCH}" ] && [ -n "${CIRCLE_TAG}" ]; then
+              echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin;
+              make manifest;
+            else
+              echo "skipping push. CIRCLE_PULL_REQUEST=${CIRCLE_PULL_REQUEST}, CIRCLE_BRANCH=${CIRCLE_BRANCH}, CIRCLE_TAG=${CIRCLE_TAG}"
+            fi;
 
   build_agent:
     parameters:
@@ -56,10 +36,9 @@ jobs:
     # needed to build docker images, attach mount points, etc
     steps:
       - checkout
-      - run: make container
-      - run: make test
+      - run: make container-<< parameters.arch >>
+      - run: make test-<< parameters.arch >>
       - run: e2e-tests/test.sh
-      # TODO
       - run:
           name: "Deploy on tagged master push"
           command: |

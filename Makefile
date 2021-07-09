@@ -93,11 +93,11 @@ push: .push-$(DOTFILE_IMAGE) push-name
 	@docker images -q $(IMAGE):$(VERSION)-$(ARCH) > $@
 
 push-name:
-	@echo "pushed: $(IMAGE):$(VERSION)"
+	@echo "pushed: $(IMAGE):$(VERSION)-$(ARCH)"
 
 # Push the image tagged with :head
 push-head:
-	@docker tag $(IMAGE):$(VERSION) $(IMAGE)-$(ARCH):head-$(ARCH)
+	@docker tag $(IMAGE)-$(VERSION)-$(ARCH):head-$(ARCH)
 	@docker push $(IMAGE):head-$(ARCH)
 	@echo "pushed: $(IMAGE):head-$(ARCH)"
 
@@ -118,9 +118,10 @@ container-clean:
 bin-clean:
 	rm -rf bin
 
-# If any of the inputs (arm64, amd64) is missing, manifest-tool will terminate
-# with an error like: `FATA[0001] Inspect of image
-# registry.docker.com/$(image):$(version)-amd64"
-# failed with error: manifest unknown: Requested image not found`
-manifest-push:
-	manifest-tool push from-args --platforms linux/amd64,linux-arm64 --template $(VERSION)-ARCH --target $(VERSION)
+manifest:
+	docker manifest create $(IMAGE):$(VERSION) $(IMAGE)-$(VERSION)-amd64 $(IMAGE):$(VERSION)-arm64
+	docker manifest oush $(IMAGE):$(VERSION)
+
+manifest:
+	docker manifest create $(IMAGE):head $(IMAGE)-$(VERSION)-amd64 $(IMAGE):$(VERSION)-arm64
+	docker manifest oush $(IMAGE):head
