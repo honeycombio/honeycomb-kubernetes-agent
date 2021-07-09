@@ -8,8 +8,7 @@ tag_filters: &tag_filters
         only: /.*/
 
 jobs:
-  deploy_join:
-    parameters:
+  push_multiarch_manifest:
     docker:
       - image: cimg/python:3.9.5
     steps:
@@ -57,17 +56,17 @@ workflows:
   build_and_deploy:
     jobs:
       - build_agent:
-        << *tag_filters
+          <<: *tag_filters
           name: build_agent_amd64
           arch: amd64
           resource_class: large
       - build_agent:
-        << *tag_filters
+          <<: *tag_filters
           name: build_agent_arm64
           arch: arm64
           resource_class: arm.large
       - push_multiarch_manifest:
-        << *tag_filters
-        require:
-          - build_agent_amd64
-          - build_agent_arm64
+          <<: *tag_filters
+          requires:
+            - build_agent_amd64
+            - build_agent_arm64
