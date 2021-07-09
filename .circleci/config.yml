@@ -36,7 +36,7 @@ jobs:
     steps:
       - checkout
       - run: make container-<< parameters.arch >>
-      - run: make test-<< parameters.arch >>
+      - run: make test
       - run: e2e-tests/test.sh
       - run:
           name: "Deploy on tagged master push"
