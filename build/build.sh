@@ -18,6 +18,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+unset GOOS
+unset GOARCH
 export KO_DOCKER_REPO=${KO_DOCKER_REPO:-ko.local}
 ko publish \
   --tags "head,$(cat "$(dirname "$(readlink -f "$0")")"/../version.txt)" \
