@@ -38,6 +38,10 @@ agent_digest=$(kubectl -n kube-system get pods -l k8s-app=honeycomb-agent   -o j
 echo
 echo "==================="
 
+echo "agent describe"
+kubectl -n kube-system describe pods -l k8s-app=honeycomb-agent
+echo "==================="
+
 sleep 15
 
 NGINX_URL=localhost:9111
