@@ -1,0 +1,9 @@
+# KO_DOCKER_REPO should be either honeycombio (our dockerhub user), kind.local
+# (for KinD) or ko.local
+
+defaultBaseImage: gcr.io/distroless/static
+builds:
+  - id: honeycomb-kubernetes-agent
+    main: .
+    ldflags:
+      - -X honeycomb-kubernetes-agent/version.VERSION={{.Env.VERSION}}
