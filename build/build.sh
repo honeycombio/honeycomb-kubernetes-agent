@@ -20,7 +20,7 @@ set -o pipefail
 
 export KO_DOCKER_REPO=${KO_DOCKER_REPO:-ko.local}
 ko publish \
-  --tags "head,$(cat "$(readlink -f "$0")")" \
+  --tags "head,$(cat "$(dirname "$(readlink -f "$0")")"/../version.txt)" \
   --base-import-paths \
   --platform=linux/amd64,linux/arm64 \
   .
