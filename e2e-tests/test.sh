@@ -11,7 +11,7 @@ VERSION=$(cat version.txt | tr -d '\n')
 make container
 
 docker build -t apihost:test $(dirname $0)/apihost
-docker tag honeycombio/honeycomb-kubernetes-agent:$VERSION \
+docker tag ko.local/honeycomb-kubernetes-agent:$VERSION \
   honeycombio/honeycomb-kubernetes-agent:test
 ./kind load docker-image apihost:test
 ./kind load docker-image honeycombio/honeycomb-kubernetes-agent:test
