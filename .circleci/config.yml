@@ -23,8 +23,9 @@ jobs:
             sudo rm -rf /usr/local/go
             sudo mv go /usr/local
             echo GOROOT=/usr/local/go >> $BASH_ENV
-            echo 'GOPATH=$GOROOT/bin' >> $BASH_ENV
-            echo 'PATH=$GOPATH:$PATH' >> $BASH_ENV
+            mkdir ~/go
+            echo 'GOPATH=~/go' >> $BASH_ENV
+            echo 'PATH=$GOPATH/bin:$PATH' >> $BASH_ENV
       - run: go get github.com/google/ko
       - run: echo "VERSION=$(cat version.txt | tr -d '\n')" >> $BASH_ENV
       - run: ./build/build.sh
