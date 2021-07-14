@@ -20,6 +20,7 @@ jobs:
             set -x
             wget https://dl.google.com/go/go1.16.4.linux-amd64.tar.gz
             sudo tar -xvf go1.16.4.linux-amd64.tar.gz
+            sudo rm -rf /usr/local/go
             sudo mv go /usr/local
             echo GOROOT=/usr/local/go >> $BASH_ENV
             echo 'GOPATH=$GOROOT/bin' >> $BASH_ENV
