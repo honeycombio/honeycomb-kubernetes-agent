@@ -8,7 +8,6 @@ export KUBECONFIG=$(dirname $0)/internal/.kube/config
 
 # Build the agent and mock API host images
 VERSION=$(cat version.txt | tr -d '\n')
-make container
 
 docker build -t apihost:test $(dirname $0)/apihost
 docker tag ko.local/honeycomb-kubernetes-agent:$VERSION \
