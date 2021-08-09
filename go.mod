@@ -4,7 +4,6 @@ go 1.12
 
 require (
 	github.com/boltdb/bolt v1.3.1
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/honeycombio/dynsampler-go v0.2.1
 	github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8
@@ -21,8 +20,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.21.3
-	k8s.io/apimachinery v0.21.3
-	k8s.io/client-go v0.21.3
+	k8s.io/api v0.22.0
+	k8s.io/apimachinery v0.22.0
+	k8s.io/client-go v0.22.0
 	k8s.io/kubernetes v1.12.0
 )
