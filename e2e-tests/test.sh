@@ -1,10 +1,10 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
-curl -C - -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64 && chmod +x kind
+curl -C - -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/v0.11.1/kind-linux-amd64 && chmod +x kind
 export KUBECONFIG=$(dirname $0)/internal/.kube/config
 ./kind delete cluster
-./kind create cluster --wait 300s --image kindest/node:v1.18.0
+./kind create cluster --wait 300s
 
 # Build the agent and mock API host images
 VERSION=$(cat version.txt | tr -d '\n')
@@ -16,4 +16,4 @@ docker tag ko.local/honeycomb-kubernetes-agent:$VERSION \
 ./kind load docker-image honeycombio/honeycomb-kubernetes-agent:test
 
 docker build -t internal:test $(dirname $0)/internal
-docker run --network=bridge --rm --name internal internal:test
+docker run --network=kind --rm --name internal internal:test

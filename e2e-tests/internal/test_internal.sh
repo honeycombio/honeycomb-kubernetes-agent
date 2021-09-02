@@ -5,11 +5,12 @@ export KUBECONFIG=/.kube/config
 
 # get server ip. This used to be hardcoded, but my local docker has a different
 # value for this than CircleCI, so ... let's make it check.
-ip_prefix="172.17.0."
+ip_prefix=$(cat /etc/hosts | grep -o 172.[0-9]*.0.)
 ip_suffix=0
 port=6443
 set +e
 until ( nc -z "${ip_prefix}${ip_suffix}" $port ); do
+  echo "tried: ${ip_prefix}${ip_suffix}"
   ((ip_suffix++))
   if [[ "$ip_suffix" -ge 255 ]]; then
     echo "Could not find control plane in ${ip_prefix}0-254."
