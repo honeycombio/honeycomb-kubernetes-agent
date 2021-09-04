@@ -66,10 +66,11 @@ func (pt *PodSetTailer) run() {
 	defer pt.wg.Done()
 	labelSelector := *pt.config.LabelSelector
 	// Exclude the agent's own logs from being watched
+	// This is quasi-hack. Though we recommend the use of the `app: honeycomb-agent` label, this can't be enforced.
 	if labelSelector == "" {
-		labelSelector = "k8s-app!=honeycomb-agent"
+		labelSelector = "app!=honeycomb-agent"
 	} else {
-		labelSelector = labelSelector + ",k8s-app!=honeycomb-agent"
+		labelSelector = labelSelector + ",app!=honeycomb-agent"
 	}
 
 	podWatcher := k8sagent.NewPodWatcher(
