@@ -18,11 +18,18 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+if [ -z "${VERSION}" ]; then
+  VERSION=$(cat "$(dirname "$(readlink -f "$0")")"/../version.txt)
+fi
+PLATFORM="${PLATFORM:-linux/amd64,linux/arm64}"
+
 unset GOOS
 unset GOARCH
 export KO_DOCKER_REPO=${KO_DOCKER_REPO:-ko.local}
+# shellcheck disable=SC2086
 ko publish \
-  --tags "head,$(cat "$(dirname "$(readlink -f "$0")")"/../version.txt)" \
+  --tags "head,${VERSION}" \
   --base-import-paths \
-  --platform=linux/amd64,linux/arm64 \
+  --platform "${PLATFORM}" \
+  ${PUBLISH_ARGS} \
   .
