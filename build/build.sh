@@ -18,9 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${VERSION-}" ]; then
-  export VERSION=${VERSION:-$(cat "$(dirname "$0")"/../version.txt)}
-fi
+export VERSION=${VERSION:-$(cat "$(dirname "$0")"/../version.txt)}
 PLATFORM="${PLATFORM:-linux/amd64,linux/arm64}"
 
 unset GOOS
