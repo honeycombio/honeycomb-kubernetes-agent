@@ -18,8 +18,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${VERSION}" ]; then
-  VERSION=$(cat "$(dirname "$(readlink -f "$0")")"/../version.txt)
+if [ -z "${VERSION-}" ]; then
+  export VERSION=${VERSION:-$(cat "$(dirname "$0")"/../version.txt)}
 fi
 PLATFORM="${PLATFORM:-linux/amd64,linux/arm64}"
 
@@ -31,5 +31,5 @@ ko publish \
   --tags "head,${VERSION}" \
   --base-import-paths \
   --platform "${PLATFORM}" \
-  ${PUBLISH_ARGS} \
+  ${PUBLISH_ARGS-} \
   .
