@@ -18,26 +18,16 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${PKG}" ]; then
-    echo "PKG must be set"
-    exit 1
-fi
-if [ -z "${BIN}" ]; then
-    echo "BIN must be set"
-    exit 1
-fi
-if [ -z "${ARCH}" ]; then
-    echo "ARCH must be set"
-    exit 1
-fi
-if [ -z "${VERSION}" ]; then
-    echo "VERSION must be set"
-    exit 1
-fi
+export VERSION=${VERSION:-$(cat "$(dirname "$0")"/../version.txt)}
+PLATFORM="${PLATFORM:-linux/amd64,linux/arm64}"
 
-export CGO_ENABLED=0
-export GOARCH="${ARCH}"
-
-go build -o ./bin/${ARCH}/${BIN} \
-    -ldflags "-X ${PKG}/version.VERSION=${VERSION}" \
-    .
+unset GOOS
+unset GOARCH
+export KO_DOCKER_REPO=${KO_DOCKER_REPO:-ko.local}
+# shellcheck disable=SC2086
+ko publish \
+  --tags "head,${VERSION}" \
+  --base-import-paths \
+  --platform "${PLATFORM}" \
+  ${PUBLISH_ARGS-} \
+  .
