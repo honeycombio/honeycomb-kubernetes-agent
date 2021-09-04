@@ -104,12 +104,12 @@ kube-scheduler-docker-for-desktop            1/1       Running   1          5d
 
 To view the events and describe the pod you can run, this has a lot of useful information:
 ```
-$ kubectl describe pods --namespace=kube-system --selector=k8s-app=honeycomb-agent
+$ kubectl describe pods --namespace=kube-system --selector=app=honeycomb-agent
 ```
 
 To view logs you can run:
 ```
-kubectl logs --namespace=kube-system --selector=k8s-app=honeycomb-agent
+kubectl logs --namespace=kube-system --selector=app=honeycomb-agent
 ```
 
 ##### For iterative local changes
@@ -250,8 +250,8 @@ $ kubectl apply -f quickstart.yaml
 **7. Check the logs, poke around, verify your code, etc**
 
 ```bash
-$ kubectl logs -l k8s-app=honeycomb-agent
-time="2018-11-09T22:01:48Z" level=debug msg="Starting informer" fieldSelector="spec.nodeName=minikube" labelSelector="k8s-app=kube-controller-manager,k8s-app!=honeycomb-agent" namespace=kube-system
-time="2018-11-09T22:01:48Z" level=debug msg="Starting informer" fieldSelector="spec.nodeName=minikube" labelSelector="app=guestbook,k8s-app!=honeycomb-agent" namespace=default
+$ kubectl logs -l app=honeycomb-agent
+time="2018-11-09T22:01:48Z" level=debug msg="Starting informer" fieldSelector="spec.nodeName=minikube" labelSelector="component=kube-controller-manager,app!=honeycomb-agent" namespace=kube-system
+time="2018-11-09T22:01:48Z" level=debug msg="Starting informer" fieldSelector="spec.nodeName=minikube" labelSelector="app=guestbook,app!=honeycomb-agent" namespace=default
 ...
 ```

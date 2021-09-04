@@ -48,11 +48,23 @@ data:
     apiHost: https://api.honeycomb.io/
     watchers:
       - dataset: kubernetes-logs
-        labelSelector: component=kube-controller-manager,tier=control-plane
+        labelSelector: "component=kube-apiserver,tier=control-plane"
         namespace: kube-system
         parser: glog
       - dataset: kubernetes-logs
-        labelSelector: component=kube-scheduler,tier=control-plane
+        labelSelector: "component=kube-scheduler,tier=control-plane"
+        namespace: kube-system
+        parser: glog
+      - dataset: kubernetes-logs
+        labelSelector: "component=kube-controller-manager,tier=control-plane"
+        namespace: kube-system
+        parser: glog
+      - dataset: kubernetes-logs
+        labelSelector: "k8s-app=kube-proxy"
+        namespace: kube-system
+        parser: glog
+      - dataset: kubernetes-logs
+        labelSelector: "k8s-app=kube-dns"
         namespace: kube-system
         parser: glog
     verbosity: info
@@ -86,7 +98,7 @@ spec:
   template:
     metadata:
       labels:
-        app: honeycomb-agent
+        akcupp: honeycomb-agent
     spec:
       tolerations:
         - operator: Exists
