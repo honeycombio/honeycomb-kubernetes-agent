@@ -98,7 +98,7 @@ spec:
   template:
     metadata:
       labels:
-        akcupp: honeycomb-agent
+        app: honeycomb-agent
     spec:
       tolerations:
         - operator: Exists
