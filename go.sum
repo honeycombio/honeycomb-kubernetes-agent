@@ -109,8 +109,6 @@ github.com/golang/protobuf v1.4.2/go.mod h1:oDoupMAO8OvCJWAcko0GGGIgR6R6ocIYbsSw
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/golang/protobuf v1.5.2 h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=
 github.com/golang/protobuf v1.5.2/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
-github.com/golang/snappy v0.0.3 h1:fHPg5GQYlCeLIPB9BZqMVR5nR9A+IM5zcgeTdjMYmLA=
-github.com/golang/snappy v0.0.3/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
 github.com/google/btree v1.0.0/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
 github.com/google/btree v1.0.1/go.mod h1:xXMiIv4Fb/0kKde4SpL7qlzvu5cMJDRkFDxJfI9uaxA=
@@ -152,8 +150,8 @@ github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8/go.mod h1:b5veh
 github.com/honeycombio/honeytail v1.5.0 h1:Y7WTLWkNw45UQfE7i0NtzjoJVSILRaIIB6Diofy+Wpw=
 github.com/honeycombio/honeytail v1.5.0/go.mod h1:XltOpB6cwylMU/bPg4ujVR43c6RukeDlCetA0mRUK0w=
 github.com/honeycombio/libhoney-go v1.15.2/go.mod h1:JzhRPYgoBCd0rZvudrqmej4Ntx0w7AT3wAJpf5+t1WA=
-github.com/honeycombio/libhoney-go v1.15.4 h1:D6UftkvQC9ZnPXK00wET9Le8zxdc+vPeGlqCpWWHS5Y=
-github.com/honeycombio/libhoney-go v1.15.4/go.mod h1:heFH+SMgmpF2m3aHwnQqUS5feImLHnzP6RaIvFkWsKU=
+github.com/honeycombio/libhoney-go v1.15.5 h1:Djren7ovq6pnPljEow3F1uu3FCc9ailigm9qtTPpEWA=
+github.com/honeycombio/libhoney-go v1.15.5/go.mod h1:8NyBoM746bz+nw3yQzQF8gtJO/z4mkr/MD5C4r4uC2Y=
 github.com/honeycombio/mongodbtools v0.0.0-20201022144302-c92638964ed8/go.mod h1:+cPJg3CL8JvSaXh/G3WoMZ5KIs/P+gTLmG4PpoA3zH4=
 github.com/honeycombio/mysqltools v0.0.1/go.mod h1:r/WQhfDgxowZatJvhdy2VL801FOv5u8K6NzYqCGBJkQ=
 github.com/honeycombio/sqlparser v0.0.0-20180730202938-aab361df519b/go.mod h1:sq+YMepz8Z3OK2R1PkNlaJy4JlNpptYnl/pas5xA6sM=
@@ -178,8 +176,8 @@ github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/klauspost/compress v1.11.4/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/compress v1.11.13/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
-github.com/klauspost/compress v1.12.3 h1:G5AfA94pHPysR56qqrkO2pxEexdDzrpFJ6yt/VqWxVU=
-github.com/klauspost/compress v1.12.3/go.mod h1:8dP1Hq4DHOhN9w426knH3Rhby4rFm6D8eO+e+Dq5Gzg=
+github.com/klauspost/compress v1.13.5 h1:9O69jUPDcsT9fEm74W92rZL9FQY7rCdaXVneq+yyzl4=
+github.com/klauspost/compress v1.13.5/go.mod h1:/3/Vjq9QcHkK5uEr5lBEmyoZ1iFhe47etQ6QUkpK6sk=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 h1:T+h1c/A9Gawja4Y9mFVWj2vyii2bbUNDw3kt9VxK2EY=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
@@ -240,8 +238,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/vmihailenco/msgpack/v4 v4.3.12/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
-github.com/vmihailenco/msgpack/v5 v5.2.0 h1:ZhIAtVUP1mme8GIlpiAnmTzjSWMexA/uNF2We85DR0w=
-github.com/vmihailenco/msgpack/v5 v5.2.0/go.mod h1:fEM7KuHcnm0GvDCztRpw9hV0PuoO2ciTismP6vjggcM=
+github.com/vmihailenco/msgpack/v5 v5.3.4 h1:qMKAwOV+meBw2Y8k9cVwAy7qErtYCwBzZ2ellBfvnqc=
+github.com/vmihailenco/msgpack/v5 v5.3.4/go.mod h1:7xyJ9e+0+9SaZT0Wt1RGleJXzli6Q/V5KbhBonMG9jc=
 github.com/vmihailenco/tagparser v0.1.1 h1:quXMXlA39OCbd2wAdTsGDlK9RkOk6Wuw+x37wVyIuWY=
 github.com/vmihailenco/tagparser v0.1.1/go.mod h1:OeAg3pn3UbLjkWt+rN9oFYB6u/cQgqMEUPoW2WPyhdI=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
