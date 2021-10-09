@@ -23,7 +23,7 @@ The following steps will deploy the Honeycomb agent to each node in your cluster
 
 1. Grab your Honeycomb writekey from your [account page](https://ui.honeycomb.io/account), and create a Kubernetes secret from it:
     ```
-    kubectl create secret generic honeycomb-writekey --from-literal=api-key=$WRITEKEY --namespace=honeycomb
+    kubectl create secret generic honeycomb --from-literal=api-key=$WRITEKEY --namespace=honeycomb
     ```
 
 2.  Run the agent
