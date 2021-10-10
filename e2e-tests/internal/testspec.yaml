@@ -55,7 +55,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    k8s-app: honeycomb-agent
+    app: honeycomb-agent
     kubernetes.io/cluster-service: 'true'
     version: v1.1
   name: honeycomb-agent-v1.1
@@ -63,11 +63,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      k8s-app: honeycomb-agent
+      app: honeycomb-agent
   template:
     metadata:
       labels:
-        k8s-app: honeycomb-agent
+        app: honeycomb-agent
         kubernetes.io/cluster-service: 'true'
         version: v1.1
     spec:

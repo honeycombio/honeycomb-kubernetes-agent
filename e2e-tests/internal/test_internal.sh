@@ -49,7 +49,7 @@ count=$(echo $ret | jq ".kubernetestest | length")
 if [ $count -ne 1 ]; then
     echo "Didn't receive expected number of events!"
     echo "agent logs:"
-    kubectl logs -n kube-system -l k8s-app=honeycomb-agent
+    kubectl logs -n kube-system -l app=honeycomb-agent
     exit 1
 fi
 kubectl delete pod,svc --all

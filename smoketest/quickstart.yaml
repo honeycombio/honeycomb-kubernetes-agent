@@ -6,7 +6,7 @@ metadata:
   name: honeycomb-serviceaccount
   namespace: default
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: honeycomb-serviceaccount
@@ -20,7 +20,7 @@ subjects:
   namespace: default
 ---
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: honeycomb-serviceaccount
   namespace: default
@@ -43,18 +43,18 @@ metadata:
 data:
   config.yaml: |-
     # By default, submit logs from interesting system pods such as the
-    # kube API server
+    # kube API server, scheduler, etc
     watchers:
       - dataset: kubernetes-logs
-        labelSelector: "k8s-app=kube-apiserver"
+        labelSelector: "component=kube-apiserver,tier=control-plane"
         namespace: kube-system
         parser: glog
       - dataset: kubernetes-logs
-        labelSelector: "k8s-app=kube-scheduler"
+        labelSelector: "component=kube-scheduler,tier=control-plane"
         namespace: kube-system
         parser: glog
       - dataset: kubernetes-logs
-        labelSelector: "k8s-app=kube-controller-manager"
+        labelSelector: "component=kube-controller-manager,tier=control-plane"
         namespace: kube-system
         parser: glog
       - dataset: kubernetes-logs
@@ -62,7 +62,7 @@ data:
         namespace: kube-system
         parser: glog
       - dataset: kubernetes-logs
-        labelSelector: "k8s-app=dns-controller"
+        labelSelector: "k8s-app=kube-dns"
         namespace: kube-system
         parser: glog
       - dataset: frontend
@@ -76,16 +76,19 @@ data:
 
 # Daemonset
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    k8s-app: honeycomb-agent
+    app: honeycomb-agent
     kubernetes.io/cluster-service: 'true'
     version: v1.1
-  name: honeycomb-agent-v1.1
+  name: honeycomb-agent
   namespace: default
 spec:
+  selector:
+    matchLabels:
+      app: honeycomb-agent
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
@@ -93,7 +96,7 @@ spec:
   template:
     metadata:
       labels:
-        k8s-app: honeycomb-agent
+        app: honeycomb-agent
         kubernetes.io/cluster-service: 'true'
         version: v1.1
     spec:
