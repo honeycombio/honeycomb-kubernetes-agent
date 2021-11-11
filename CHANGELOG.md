@@ -1,5 +1,33 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.2.0 2021-09-07
+
+- Adds multiple architecture image support (amd64, arm64) [#164](https://github.com/honeycombio/honeycomb-kubernetes-agent/pull/164)
+
+## 2.1.3 2021-03-22
+
+- Fixes [#144](https://github.com/honeycombio/honeycomb-kubernetes-agent/issues/144) leveraging a new `NODE_IP` environment variable
+
+## 2.1.2 2021-03-03
+
+- Update Go to 1.15.8, fixing http2 race condition [#143](https://github.com/honeycombio/honeycomb-kubernetes-agent/pull/143)
+
+## 2.1.1 2021-01-05
+
+- Drastically reduces image size
+- Fixes panic in K8s 1.20
+
+## 2.1.0 2020-11-13
+
+- Introduces native metrics collection support for nodes, pods, containers, and volumes.
+- Includes status collection for pods and containers.
+
+## 2.0.0 2020-05-13
+
+- Compatible with latest Kubernetes release (1.18)
+- support for CRI runtime
+- support for kind (Kubernetes IN Docker)
+
 ## 1.5.0 2019-10-22
 
 Features
