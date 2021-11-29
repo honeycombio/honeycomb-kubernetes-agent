@@ -1,0 +1,17 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# When opening a file, EditorConfig plugins look for a file named .editorconfig
+# in the directory of the opened file and in every parent directory.
+# A search for .editorconfig files will stop if the root filepath is reached
+# or an EditorConfig file with root=true is found.
+
+# EditorConfig files are read top to bottom and the most recent rules found
+# take precedence. Properties from matching EditorConfig sections are applied
+# in the order they were read, so properties in closer files take precedence.
+
+# go files
+[*.go]
+
+indent_size = 8
+indent_style = tab
+tab_width = 8

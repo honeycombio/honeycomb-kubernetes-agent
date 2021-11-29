@@ -10,5 +10,6 @@ updates:
     schedule:
       interval: "weekly"
     reviewers:
+      - "honeycombio/telemetry-team"
       - "lizthegrey"
       - "puckpuck"

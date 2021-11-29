@@ -1,6 +1,7 @@
 # Cluster-level Kubernetes Logging with Honeycomb
 
-[![Build Status](https://travis-ci.org/honeycombio/honeycomb-kubernetes-agent.svg?branch=master)](https://travis-ci.org/honeycombio/honeycomb-kubernetes-agent)
+[![OSS Lifecycle](https://img.shields.io/osslifecycle/honeycombio/honeycomb-kubernetes-agent?color=success)](https://github.com/honeycombio/home/blob/main/honeycomb-oss-lifecycle-and-practices.md)
+[![CircleCI](https://circleci.com/gh/honeycombio/honeycomb-kubernetes-agent.svg?style=shield)](https://circleci.com/gh/honeycombio/honeycomb-kubernetes-agent)
 
 [Honeycomb's](https://honeycomb.io) Kubernetes agent aggregates logs across a Kubernetes cluster. Stop managing log storage in all your clusters and start tracking down real problems.
 
