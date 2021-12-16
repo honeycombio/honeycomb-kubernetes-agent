@@ -1,7 +1,6 @@
 package processors
 
 import (
-	"path"
 	"regexp"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
@@ -68,14 +67,13 @@ func extractMetadataFromPod(pod *v1.Pod, containerName string) map[string]interf
 }
 
 func getContainerNameFromPath(filePath string) string {
-	r := regexp.MustCompile("(?P<name>.*)_[0-9]+.log")
-	filename := path.Base(filePath)
-	match := r.FindStringSubmatch(filename)
+	r := regexp.MustCompile("/var/log/pods/(.*)/(?P<name>.*)/[0-9]+.log")
+	match := r.FindStringSubmatch(filePath)
 	if match == nil {
 		return ""
 	}
-	if len(match) < 2 {
+	if len(match) < 3 {
 		return ""
 	}
-	return match[1]
+	return match[2]
 }
