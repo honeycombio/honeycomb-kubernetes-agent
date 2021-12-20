@@ -759,7 +759,7 @@ func TestKubernetesMetadata(t *testing.T) {
 	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt, k8sProcessor)
 	assert.NoError(t, err)
 
-	handler := hf.New("/var/log/pods/examplePodUID/container_0.log")
+	handler := hf.New("/var/log/pods/examplePodUID/container/0.log")
 	handler.Handle(`{"field": "a"}`)
 	assert.Equal(t, len(mt.events), 1)
 
