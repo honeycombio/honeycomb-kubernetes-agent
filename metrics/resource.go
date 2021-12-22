@@ -1,9 +1,10 @@
 package metrics
 
 import (
+	"time"
+
 	"k8s.io/apimachinery/pkg/types"
 	stats "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
-	"time"
 )
 
 type Resource struct {
@@ -15,9 +16,26 @@ type Resource struct {
 	PodMetadata *PodMetadata
 }
 
-func getNodeResource(s stats.NodeStats) *Resource {
+func getNodeResource(s stats.NodeStats, metadata *Metadata) *Resource {
 	labels := map[string]string{
 		LabelNodeName: s.NodeName,
+	}
+
+	if metadata.IncludeNodeLabels {
+		nodeMetadata, err := metadata.GetNodeMetadataByName(s.NodeName)
+		if err != nil {
+			return &Resource{
+				Type:      "node",
+				Name:      s.NodeName,
+				Labels:    labels,
+				Timestamp: s.CPU.Time.Time,
+			}
+		}
+
+		nodeLabels := nodeMetadata.GetLabels()
+		for k, v := range nodeLabels {
+			labels[PrefixLabel+k] = v
+		}
 	}
 
 	return &Resource{

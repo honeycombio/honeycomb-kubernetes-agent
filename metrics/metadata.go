@@ -2,26 +2,44 @@ package metrics
 
 import (
 	"errors"
+	"strconv"
+
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"strconv"
 )
 
 type OmitLabel string
 
 type Metadata struct {
-	PodsMetadata *v1.PodList
-	OmitLabels   []OmitLabel
-	logger       *logrus.Logger
+	PodsMetadata      *v1.PodList
+	NodesMetadata     *v1.NodeList
+	OmitLabels        []OmitLabel
+	IncludeNodeLabels bool
+	logger            *logrus.Logger
 }
 
-func NewMetadata(podsMetadata *v1.PodList, omitLabels []OmitLabel, logger *logrus.Logger) *Metadata {
+func NewMetadata(podsMetadata *v1.PodList, nodesMetadata *v1.NodeList, omitLabels []OmitLabel, includeNodeLabels bool, logger *logrus.Logger) *Metadata {
 	return &Metadata{
-		PodsMetadata: podsMetadata,
-		OmitLabels:   omitLabels,
-		logger:       logger,
+		PodsMetadata:      podsMetadata,
+		NodesMetadata:     nodesMetadata,
+		OmitLabels:        omitLabels,
+		IncludeNodeLabels: includeNodeLabels,
+		logger:            logger,
 	}
+}
+
+func (m *Metadata) GetNodeMetadataByName(name string) (*NodeMetadata, error) {
+	for _, n := range m.NodesMetadata.Items {
+		if n.ObjectMeta.Name == name {
+			return &NodeMetadata{m, &n}, nil
+		}
+	}
+
+	m.logger.WithFields(logrus.Fields{
+		"nodeName": name,
+	}).Error("Metadata: Node not found")
+	return &NodeMetadata{}, errors.New("node not found")
 }
 
 func (m *Metadata) GetPodMetadataByUid(uid types.UID) (*PodMetadata, error) {
@@ -35,6 +53,28 @@ func (m *Metadata) GetPodMetadataByUid(uid types.UID) (*PodMetadata, error) {
 		"podUid": uid,
 	}).Error("Metadata: Pod not found")
 	return &PodMetadata{}, errors.New("pod not found")
+}
+
+type NodeMetadata struct {
+	Metadata *Metadata
+	Node     *v1.Node
+}
+
+func (n *NodeMetadata) GetLabels() map[string]string {
+	labels := make(map[string]string)
+	for k, v := range n.Node.Labels {
+		keep := true
+		for _, o := range n.Metadata.OmitLabels {
+			if o == OmitLabel(k) {
+				keep = false
+				break
+			}
+		}
+		if keep {
+			labels[k] = v
+		}
+	}
+	return labels
 }
 
 type PodMetadata struct {

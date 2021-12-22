@@ -4,12 +4,16 @@
 package service
 
 import (
+	"context"
+	"time"
+
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
-	"time"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/interval"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
@@ -18,25 +22,29 @@ import (
 var _ interval.Runnable = (*runnable)(nil)
 
 type runnable struct {
-	statsProvider         *kubelet.StatsProvider
-	metadataProvider      *kubelet.MetadataProvider
-	metricsProvider       *metrics.Processor
-	interval              time.Duration
-	k8sClusterName        string
-	restClient            kubelet.RestClient
-	builder               *libhoney.Builder
-	omitLabels            []metrics.OmitLabel
+	statsProvider     *kubelet.StatsProvider
+	metadataProvider  *kubelet.MetadataProvider
+	metricsProvider   *metrics.Processor
+	interval          time.Duration
+	k8sClusterName    string
+	restClient        kubelet.RestClient
+	builder           *libhoney.Builder
+	omitLabels        []metrics.OmitLabel
+	includeNodeLabels bool
+
 	metricGroupsToCollect map[metrics.MetricGroup]bool
 	logger                *logrus.Logger
+	apiClient             corev1.NodesGetter
 }
 
-func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, logger *logrus.Logger) *runnable {
+func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, logger *logrus.Logger, client *corev1.CoreV1Client) *runnable {
 	return &runnable{
 		interval:              opt.Interval,
 		k8sClusterName:        opt.ClusterName,
 		restClient:            rc,
 		builder:               builder,
 		omitLabels:            opt.OmitLabels,
+		includeNodeLabels:     opt.IncludeNodeLabels,
 		metricGroupsToCollect: opt.MetricGroupsToCollect,
 		logger:                logger,
 	}
@@ -70,15 +78,28 @@ func (r *runnable) Run() error {
 	var podsMetadata *v1.PodList
 	podsMetadata, err = r.metadataProvider.Pods()
 	if err != nil {
-		r.logger.WithError(err).Error("Could not retrieve metadata")
+		r.logger.WithError(err).Error("Could not retrieve pod metadata")
 		return nil
 	}
 	r.logger.WithFields(logrus.Fields{
 		"podCount": len(podsMetadata.Items),
-	}).Debug("Retrieved Metadata")
+	}).Debug("Retrieved Pod Metadata")
+
+	var nodesMetadata *v1.NodeList
+	// fetch metadata for all nodes
+	if r.includeNodeLabels {
+		nodesMetadata, err = r.apiClient.Nodes().List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			r.logger.WithError(err).Error("Could not retrieve node metadata")
+			return nil
+		}
+		r.logger.WithFields(logrus.Fields{
+			"nodeCount": len(nodesMetadata.Items),
+		}).Debug("Retrieved Node Metadata")
+	}
 
 	// Get resource metrics
-	metadata := metrics.NewMetadata(podsMetadata, r.omitLabels, r.logger)
+	metadata := metrics.NewMetadata(podsMetadata, nodesMetadata, r.omitLabels, r.includeNodeLabels, r.logger)
 	resourceMetrics := r.metricsProvider.GenerateMetricsData(summary, metadata, r.metricGroupsToCollect)
 	r.logger.WithFields(logrus.Fields{
 		"resourceCount": len(resourceMetrics),
