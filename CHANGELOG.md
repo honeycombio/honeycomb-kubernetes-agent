@@ -1,5 +1,29 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.2.1 2021-12-23
+
+### Fixes
+
+- container metadata missing (#198) | [@vreynolds](https://github.com/vreynolds)
+- Fix base selector for logs (#183) | [@puckpuck](https://github.com/puckpuck)
+
+### Maintenance
+
+- docs: update developing for new build (#199) | [@vreynolds](https://github.com/vreynolds)
+- Makes image non transparent (#191) | [@bdarfler](https://github.com/bdarfler)
+- add release process (#190) | [@puckpuck](https://github.com/puckpuck)
+- Update dependabot.yml (#195) | [@vreynolds](https://github.com/vreynolds)
+- maint: Update ownership and community health files (#194) | [@JamieDanielson](https://github.com/JamieDanielson)
+- update labeler to trigger with power (#187) | [Robb Kidd]
+- Bump k8s.io/client-go from 0.22.3 to 0.22.4 (#193) | [dependabot[bot]]
+- Bump k8s.io/api from 0.22.3 to 0.22.4 (#192) | [dependabot[bot]]
+- Bump github.com/honeycombio/honeytail from 1.5.0 to 1.6.0 (#188) | [dependabot[bot]]
+- Bump github.com/honeycombio/libhoney-go from 1.15.5 to 1.15.6 (#189) | [dependabot[bot]]
+- Bump k8s.io/client-go from 0.22.2 to 0.22.3 (#186) | [dependabot[bot]]
+- Bump github.com/honeycombio/libhoney-go from 1.15.4 to 1.15.5 (#184) | [dependabot[bot]]
+- Bump k8s.io/client-go from 0.21.3 to 0.22.2 (#180) | [dependabot[bot]]
+- Bump github.com/mitchellh/mapstructure from 1.4.1 to 1.4.2 (#179) | [dependabot[bot]]
+
 ## 2.2.0 2021-09-07
 
 - Adds multiple architecture image support (amd64, arm64) [#164](https://github.com/honeycombio/honeycomb-kubernetes-agent/pull/164)
