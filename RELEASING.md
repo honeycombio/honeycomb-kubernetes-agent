@@ -8,3 +8,4 @@
 6. Add a tag to the `main` branch with the new version in the following format: `v1.2.3`.
 7. Push the new version tag up to the project repository to kick off the CI workflow, which will package and publish the image to Docker Hub.
 8. Update the Draft Release with proper release notes (copied from CHANGELOG or auto-generated).
+9. Update the [Honeycomb Helm Chart](https://github.com/honeycombio/helm-charts/tree/main/charts/honeycomb) with the changes
