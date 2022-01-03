@@ -1,9 +1,10 @@
 package metrics
 
 import (
-	"k8s.io/apimachinery/pkg/types"
-	stats "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
 	"time"
+
+	"k8s.io/apimachinery/pkg/types"
+	stats "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 )
 
 type Resource struct {

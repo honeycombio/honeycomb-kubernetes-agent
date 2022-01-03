@@ -1,14 +1,15 @@
 package metrics
 
 import (
+	"math"
+	"testing"
+	"time"
+
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics/mock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	stats "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
-	"math"
-	"testing"
-	"time"
+	stats "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 
 	"github.com/stretchr/testify/require"
 )
