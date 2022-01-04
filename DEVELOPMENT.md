@@ -33,7 +33,7 @@ here](https://docs.docker.com/docker-for-mac/kubernetes/).
 Luckily, deploying our spec file is much easier than setting up minikube! To build the local image:
 
 ```shell
-ko publish --local --tags "test123" --base-import-paths --platform "linux/amd64,linux/arm64" .
+VERSION=test123 ko publish --local --tags "test123" --base-import-paths --platform "linux/amd64,linux/arm64" .
 ```
 
 Verify that it published to your local docker images with:
