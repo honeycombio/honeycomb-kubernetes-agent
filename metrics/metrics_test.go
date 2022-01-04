@@ -1,14 +1,15 @@
 package metrics
 
 import (
+	"math"
+	"testing"
+	"time"
+
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
 	metrics_mock "github.com/honeycombio/honeycomb-kubernetes-agent/metrics/mock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	stats "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
-	"math"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -170,7 +171,8 @@ func TestCpuMetrics(t *testing.T) {
 
 	require.Equal(t, 2, len(metrics))
 
-	assert.Equal(t, 0.015338365, metrics[MeasureCpuUsage].GetValue(), "CPU Usage")
+	// assert.Equal(t, 0.015338365, metrics[MeasureCpuUsage].GetValue(), "CPU Usage")
+	assert.Equal(t, 365, metrics[MeasureCpuUsage].GetValue(), "CPU Usage") // this should fail
 	assert.InDelta(t, 0.000001, 7.6691825, metrics[MeasureCpuUtilization].GetValue(), "CPU Utilization")
 }
 
