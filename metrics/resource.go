@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/types"
-	stats "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
+	stats "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 )
 
 type Resource struct {

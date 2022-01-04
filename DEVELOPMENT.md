@@ -9,16 +9,10 @@ quickstart](https://s3.amazonaws.com/quickstart-reference/heptio/latest/doc/hept
 Just make sure to use a testing AWS account, or at least make sure that you don't
 interfere with an existing VPC setup.
 
-To build the agent image, run `make container`; to run unit tests and `go vet`,
-run `make test`.
+Docker images are built for multiple architectures using [ko](https://github.com/google/ko), which can also be used to build local test images.
 
 CI runs an additional end-to-end smoke test that sets up a Minikube cluster and
 sends events through it. You can find that in the `e2e-tests/` directory.
-
-### Bumping the version
-
-- Update `version.txt` with the version number - this will be injected at build time.
-- Update the version everywhere it is referenced in `example/quickstart.yaml`
 
 ### Working with Minikube
 
@@ -27,7 +21,7 @@ To test inside Minikube with a locally-built image:
 
 2. Make sure that you specify `imagePullPolicy: IfNotPresent` or `imagePullPolicy: Never` in the container spec.
 
-3. To make the local container image inside Minikube, run `make container`, then `docker save honeycombio/honeycomb-kubernetes-agent:$TAG | minikube ssh docker load`.
+3. To make the local container image inside Minikube, run `ko publish --local --tags "test123" --base-import-paths --platform "linux/amd64,linux/arm64" .`, then `docker save ko.local/honeycomb-kubernetes-agent:test123 | minikube ssh docker load`.
 
 (Alternative strategies for step 3 may be possible; see the [minikube docs](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md) for more details on building local images, and [this blog post](https://blog.hasura.io/sharing-a-local-registry-for-minikube-37c7240d0615) on sharing a local container registry.)
 
@@ -38,28 +32,18 @@ here](https://docs.docker.com/docker-for-mac/kubernetes/).
 
 Luckily, deploying our spec file is much easier than setting up minikube! To build the local image:
 
-```
- $ make container
-building: bin/amd64/honeycomb-kubernetes-agent
-Sending build context to Docker daemon  156.1MB
-...
-container: honeycombio/honeycomb-kubernetes-agent:1fb43a1-dirty
+```shell
+VERSION=test123 ko publish --local --tags "test123" --base-import-paths --platform "linux/amd64,linux/arm64" .
 ```
 
 Verify that it published to your local docker images with:
 ```
-$ docker images
-REPOSITORY                                               TAG                 IMAGE ID            CREATED             SIZE
-honeycombio/honeycomb-kubernetes-agent                   1fb43a1-dirty       a2b0e38e3a85        5 minutes ago       302MB
+$ docker images | grep kubernetes-agent
+REPOSITORY                                            TAG                 IMAGE ID            CREATED             SIZE
+ko.local/honeycomb-kubernetes-agent                   test123             a2b0e38e3a85        5 minutes ago       302MB
 ```
 
-#### If it failed to publish to your local docker repo, try building the container manually with:
-
-```
-docker build -t honeycomb-kubernetes-agent:{$TAG} -f .dockerfile-amd64 .
-```
-
-Now it's time to update the example spec file located in `examples/quickstart.yaml`, we need to add which image 
+Now it's time to update the example spec file located in `examples/quickstart.yaml`, we need to add which image,
 and it's _paramount_ to set `imagePullPolicy: IfNotPresent`. Setting it to `Always` causes kubectl to not pull from your
 local Docker repository.
 
@@ -74,12 +58,12 @@ local Docker repository.
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: honeycombio/honeycomb-kubernetes-agent:{$TAG}
+        image: ko.local/honeycomb-kubernetes-agent:test123
         imagePullPolicy: IfNotPresent 
 ```
 
 
-From here, we can create a deploy on your locally running Kubernetes cluster using kubectl:
+From here, we can create a deployment on your locally running Kubernetes cluster using kubectl:
 ```
  $ kubectl apply -f examples/quickstart.yaml
 serviceaccount "honeycomb-serviceaccount" created
@@ -211,36 +195,24 @@ honeycomb-agent-v1.1-8vdb9   0/1       ContainerCreating   0          3s
 
 ```bash
 # from the repo root
-$ make container
-building: bin/amd64/honeycomb-kubernetes-agent
-Sending build context to Docker daemon  196.4MB
-Step 1/5 : FROM golang:1.8-alpine
- ---> 4cb86d3661bf
-Step 2/5 : MAINTAINER Team Honeycomb <bees@honeycomb.io>
- ---> Using cache
- ---> c2d6551e3573
-Step 3/5 : ADD bin/amd64/honeycomb-kubernetes-agent /honeycomb-kubernetes-agent
- ---> 6ff387285b08
-Step 4/5 : USER root:root
- ---> Running in b8e0ef6f3468
-Removing intermediate container b8e0ef6f3468
- ---> 1d0609ade8fd
-Step 5/5 : ENTRYPOINT ["/honeycomb-kubernetes-agent"]
- ---> Running in 8606e25648b0
-Removing intermediate container 8606e25648b0
- ---> b6d13547c350
-Successfully built b6d13547c350
-Successfully tagged honeycombio/honeycomb-kubernetes-agent:5828ce8-dirty
-container: honeycombio/honeycomb-kubernetes-agent:5828ce8-dirty
+$ ko publish --local --tags "test123" --base-import-paths --platform "linux/amd64,linux/arm64" .
+2021/12/15 17:30:45 Using base gcr.io/distroless/static:nonroot for github.com/honeycombio/honeycomb-kubernetes-agent
+2021/12/15 17:30:46 Building github.com/honeycombio/honeycomb-kubernetes-agent for linux/amd64
+2021/12/15 17:30:48 Building github.com/honeycombio/honeycomb-kubernetes-agent for linux/arm64
+2021/12/15 17:30:51 Loading ko.local/honeycomb-kubernetes-agent:4ef8a78a3e0502b781a2280c57085597e341b88d6e977271260a1d99d3a995c4
+2021/12/15 17:30:52 Loaded ko.local/honeycomb-kubernetes-agent:4ef8a78a3e0502b781a2280c57085597e341b88d6e977271260a1d99d3a995c4
+2021/12/15 17:30:52 Adding tag test123
+2021/12/15 17:30:52 Added tag test123
+ko.local/honeycomb-kubernetes-agent:4ef8a78a3e0502b781a2280c57085597e341b88d6e977271260a1d99d3a995c4
 
 # now deploy it to your cluster
-$ docker save honeycombio/honeycomb-kubernetes-agent:5828ce8-dirty | pv | (eval $(minikube docker-env) && docker load)
+$ docker save ko.local/honeycomb-kubernetes-agent:test123 | pv | (eval $(minikube docker-env) && docker load)
 ```
 
 Update the quickstart.yaml with this development tag and redeploy:
 
 ```yaml
-image: honeycombio/honeycomb-kubernetes-agent:CHANGEMETODEVTAG
+image: ko.local/honeycomb-kubernetes-agent:test123
 ```
 
 ```bash

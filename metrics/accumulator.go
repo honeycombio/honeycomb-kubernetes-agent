@@ -1,10 +1,11 @@
 package metrics
 
 import (
-	"github.com/sirupsen/logrus"
 	"time"
 
-	stats "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
+	"github.com/sirupsen/logrus"
+
+	stats "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 )
 
 type MetricGroup string
