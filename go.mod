@@ -8,7 +8,7 @@ require (
 	github.com/honeycombio/dynsampler-go v0.2.1
 	github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8
 	github.com/honeycombio/honeytail v1.6.0
-	github.com/honeycombio/libhoney-go v1.15.6
+	github.com/honeycombio/libhoney-go v1.15.7
 	github.com/honeycombio/urlshaper v0.0.0-20170302202025-2baba9ae5b5f
 	github.com/hpcloud/tail v1.0.1-0.20170814160653-37f427138745
 	github.com/jessevdk/go-flags v1.5.0
