@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
-	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics/mock"
+	metrics_mock "github.com/honeycombio/honeycomb-kubernetes-agent/metrics/mock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	stats "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
@@ -166,12 +166,25 @@ func TestCpuMetrics(t *testing.T) {
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
-	metrics := p.CpuMetrics(summary.Pods[0].CPU, 0.2)
+	metrics := p.CpuMetrics(summary.Pods[0].CPU, 0.2) //JAMIETEST
 
 	require.Equal(t, 2, len(metrics))
 
 	assert.Equal(t, 0.015338365, metrics[MeasureCpuUsage].GetValue(), "CPU Usage")
 	assert.InDelta(t, 0.000001, 7.6691825, metrics[MeasureCpuUtilization].GetValue(), "CPU Utilization")
+}
+
+func TestCpuMetricsOptional(t *testing.T) {
+	summary, _ := createMockSourceAssets(true, false, nil)
+
+	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+
+	metrics := p.CpuMetrics(summary.Pods[1].CPU, 0) //JAMIETEST
+
+	require.Equal(t, 0, len(metrics))
+
+	assert.Equal(t, 0, metrics[MeasureCpuUsage].GetValue(), "CPU Usage")
+	assert.Equal(t, 0, metrics[MeasureCpuUtilization].GetValue(), "CPU Utilization")
 }
 
 func TestMemMetrics(t *testing.T) {
