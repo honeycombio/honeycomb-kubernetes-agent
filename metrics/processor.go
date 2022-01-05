@@ -124,7 +124,10 @@ func (p *Processor) UptimeMetrics(startTime time.Time) Metrics {
 func (p *Processor) CpuMetrics(s *stats.CPUStats, limit float64) Metrics {
 	// Convert nanoCores to seconds
 	var cpuUsage float64
-	nanoCores := s.UsageNanoCores
+	var nanoCores *uint64
+	if s != nil {
+		nanoCores = s.UsageNanoCores
+	}
 	if nanoCores != nil {
 		cpuUsage = float64(*nanoCores) / 1000000000
 	}

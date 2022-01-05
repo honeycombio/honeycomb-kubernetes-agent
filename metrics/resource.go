@@ -11,7 +11,7 @@ type Resource struct {
 	Type        string
 	Name        string
 	Labels      map[string]string
-	Timestamp   time.Time
+	Timestamp   time.Time `json:"time,omitempty"`
 	Status      map[string]interface{}
 	PodMetadata *PodMetadata
 }
@@ -21,12 +21,20 @@ func getNodeResource(s stats.NodeStats) *Resource {
 		LabelNodeName: s.NodeName,
 	}
 
-	return &Resource{
-		Type:      "node",
-		Name:      s.NodeName,
-		Labels:    labels,
-		Timestamp: s.CPU.Time.Time,
+	resource := &Resource{
+		Type:   "node",
+		Name:   s.NodeName,
+		Labels: labels,
 	}
+	if s.CPU != nil {
+		resource = &Resource{
+			Type:      "node",
+			Name:      s.NodeName,
+			Labels:    labels,
+			Timestamp: s.CPU.Time.Time,
+		}
+	}
+	return resource
 }
 
 func getPodResource(node *Resource, s stats.PodStats, metadata *Metadata) *Resource {
@@ -39,24 +47,34 @@ func getPodResource(node *Resource, s stats.PodStats, metadata *Metadata) *Resou
 	podMetadata, err := metadata.GetPodMetadataByUid(types.UID(s.PodRef.UID))
 	if err != nil {
 		return &Resource{
-			Type:      "pod",
-			Name:      s.PodRef.Name,
-			Labels:    labels,
-			Timestamp: s.CPU.Time.Time,
+			Type:   "pod",
+			Name:   s.PodRef.Name,
+			Labels: labels,
 		}
 	}
 
 	status := podMetadata.GetStatus()
 	addAdditionalLabels(labels, node.Labels, podMetadata)
 
-	return &Resource{
+	resource := &Resource{
 		Type:        "pod",
 		Name:        s.PodRef.Name,
 		Labels:      labels,
-		Timestamp:   s.CPU.Time.Time,
 		Status:      status,
 		PodMetadata: podMetadata,
 	}
+
+	if s.CPU != nil {
+		resource = &Resource{
+			Type:        "pod",
+			Name:        s.PodRef.Name,
+			Labels:      labels,
+			Timestamp:   s.CPU.Time.Time,
+			Status:      status,
+			PodMetadata: podMetadata,
+		}
+	}
+	return resource
 
 }
 
@@ -69,14 +87,24 @@ func getContainerResource(pod *Resource, s stats.ContainerStats) (*Resource, err
 
 	status := pod.PodMetadata.GetStatusForContainer(s.Name)
 
-	return &Resource{
+	resource := &Resource{
 		Type:        "container",
 		Name:        s.Name,
 		Labels:      labels,
-		Timestamp:   s.CPU.Time.Time,
 		Status:      status,
 		PodMetadata: pod.PodMetadata,
-	}, nil
+	}
+	if s.CPU != nil {
+		resource = &Resource{
+			Type:        "container",
+			Name:        s.Name,
+			Labels:      labels,
+			Timestamp:   s.CPU.Time.Time,
+			Status:      status,
+			PodMetadata: pod.PodMetadata,
+		}
+	}
+	return resource, nil
 }
 
 func getVolumeResource(pod *Resource, s stats.VolumeStats) *Resource {
