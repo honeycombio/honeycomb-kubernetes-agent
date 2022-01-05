@@ -18,17 +18,17 @@ jobs:
       - run: go install github.com/google/ko@latest
       - run: echo "VERSION=$(cat version.txt | tr -d '\n')" >> $BASH_ENV
       - run: ./build/build.sh
-      - run: ./build/test.sh
-      # - run: e2e-tests/test.sh
-      # - run:
-      #     name: "Deploy on tagged master push"
-      #     command: |
-      #       if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ -z "${CIRCLE_BRANCH}" ] && [ -n "${CIRCLE_TAG}" ]; then
-      #         echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin;
-      #         KO_DOCKER_REPO=honeycombio ./build/build.sh
-      #       else
-      #         echo "skipping push. CIRCLE_PULL_REQUEST=${CIRCLE_PULL_REQUEST}, CIRCLE_BRANCH=${CIRCLE_BRANCH}, CIRCLE_TAG=${CIRCLE_TAG}"
-      #       fi;
+      - run: ./build/test.sh .
+      - run: e2e-tests/test.sh
+      - run:
+          name: "Deploy on tagged master push"
+          command: |
+            if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ -z "${CIRCLE_BRANCH}" ] && [ -n "${CIRCLE_TAG}" ]; then
+              echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin;
+              KO_DOCKER_REPO=honeycombio ./build/build.sh
+            else
+              echo "skipping push. CIRCLE_PULL_REQUEST=${CIRCLE_PULL_REQUEST}, CIRCLE_BRANCH=${CIRCLE_BRANCH}, CIRCLE_TAG=${CIRCLE_TAG}"
+            fi;
 
   publish_github:
     docker:
