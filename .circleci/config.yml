@@ -18,7 +18,7 @@ jobs:
       - run: go install github.com/google/ko@latest
       - run: echo "VERSION=$(cat version.txt | tr -d '\n')" >> $BASH_ENV
       - run: ./build/build.sh
-      - run: ./build/test.sh
+      - run: ./build/test.sh .
       - run: e2e-tests/test.sh
       - run:
           name: "Deploy on tagged master push"
