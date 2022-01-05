@@ -11,7 +11,7 @@ type Resource struct {
 	Type        string
 	Name        string
 	Labels      map[string]string
-	Timestamp   time.Time `json:"time,omitempty"`
+	Timestamp   time.Time
 	Status      map[string]interface{}
 	PodMetadata *PodMetadata
 }
@@ -27,12 +27,7 @@ func getNodeResource(s stats.NodeStats) *Resource {
 		Labels: labels,
 	}
 	if s.CPU != nil {
-		resource = &Resource{
-			Type:      "node",
-			Name:      s.NodeName,
-			Labels:    labels,
-			Timestamp: s.CPU.Time.Time,
-		}
+		resource.Timestamp = s.CPU.Time.Time
 	}
 	return resource
 }
@@ -44,36 +39,27 @@ func getPodResource(node *Resource, s stats.PodStats, metadata *Metadata) *Resou
 		LabelPodName:       s.PodRef.Name,
 	}
 
+	resource := &Resource{
+		Type:   "pod",
+		Name:   s.PodRef.Name,
+		Labels: labels,
+	}
+
+	if s.CPU != nil {
+		resource.Timestamp = s.CPU.Time.Time
+	}
+
 	podMetadata, err := metadata.GetPodMetadataByUid(types.UID(s.PodRef.UID))
 	if err != nil {
-		return &Resource{
-			Type:   "pod",
-			Name:   s.PodRef.Name,
-			Labels: labels,
-		}
+		return resource
 	}
 
 	status := podMetadata.GetStatus()
 	addAdditionalLabels(labels, node.Labels, podMetadata)
 
-	resource := &Resource{
-		Type:        "pod",
-		Name:        s.PodRef.Name,
-		Labels:      labels,
-		Status:      status,
-		PodMetadata: podMetadata,
-	}
+	resource.Status = status
+	resource.PodMetadata = podMetadata
 
-	if s.CPU != nil {
-		resource = &Resource{
-			Type:        "pod",
-			Name:        s.PodRef.Name,
-			Labels:      labels,
-			Timestamp:   s.CPU.Time.Time,
-			Status:      status,
-			PodMetadata: podMetadata,
-		}
-	}
 	return resource
 
 }
@@ -95,14 +81,7 @@ func getContainerResource(pod *Resource, s stats.ContainerStats) (*Resource, err
 		PodMetadata: pod.PodMetadata,
 	}
 	if s.CPU != nil {
-		resource = &Resource{
-			Type:        "container",
-			Name:        s.Name,
-			Labels:      labels,
-			Timestamp:   s.CPU.Time.Time,
-			Status:      status,
-			PodMetadata: pod.PodMetadata,
-		}
+		resource.Timestamp = s.CPU.Time.Time
 	}
 	return resource, nil
 }
