@@ -172,7 +172,6 @@ func TestCpuMetrics(t *testing.T) {
 	require.Equal(t, 2, len(metrics))
 
 	assert.Equal(t, 0.015338365, metrics[MeasureCpuUsage].GetValue(), "CPU Usage")
-	// assert.Equal(t, 365, metrics[MeasureCpuUsage].GetValue(), "CPU Usage") // this should fail
 	assert.InDelta(t, 0.000001, 7.6691825, metrics[MeasureCpuUtilization].GetValue(), "CPU Utilization")
 }
 
@@ -183,10 +182,9 @@ func TestCpuMetricsOptional(t *testing.T) {
 
 	metrics := p.CpuMetrics(summary.Pods[1].CPU, 0) //JAMIETEST
 
-	require.Equal(t, 2, len(metrics))
-
-	assert.Equal(t, float64(0), metrics[MeasureCpuUsage].GetValue(), "CPU Usage")
-	assert.Equal(t, float64(0), metrics[MeasureCpuUtilization].GetValue(), "CPU Utilization")
+	require.Equal(t, 0, len(metrics))
+	assert.Empty(t, metrics[MeasureCpuUsage])
+	assert.Empty(t, metrics[MeasureCpuUtilization])
 }
 
 func TestMemMetrics(t *testing.T) {
