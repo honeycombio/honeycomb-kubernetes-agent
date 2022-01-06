@@ -48,12 +48,12 @@ workflows:
   build:
     jobs:
       - build_agent: *tag_filters
-      # - publish_github:
-      #     context: Honeycomb Secrets for Public Repos
-      #     requires:
-      #       - build_agent
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #       branches:
-      #         ignore: /.*/
+      - publish_github:
+          context: Honeycomb Secrets for Public Repos
+          requires:
+            - build_agent
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
