@@ -33,7 +33,7 @@ func (p *Processor) GenerateMetricsData(summary *stats.Summary, metadata *Metada
 		logger:                p.logger,
 	}
 
-	nodeResource := getNodeResource(summary.Node)
+	nodeResource := getNodeResource(summary.Node, metadata)
 	acc.nodeStats(nodeResource, summary.Node)
 
 	for _, podStats := range summary.Pods {

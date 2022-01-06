@@ -16,9 +16,18 @@ type Resource struct {
 	PodMetadata *PodMetadata
 }
 
-func getNodeResource(s stats.NodeStats) *Resource {
+func getNodeResource(s stats.NodeStats, metadata *Metadata) *Resource {
 	labels := map[string]string{
 		LabelNodeName: s.NodeName,
+	}
+
+	if metadata.IncludeNodeLabels {
+		nodeMetadata, err := metadata.GetNodeMetadataByName(s.NodeName)
+		if err == nil {
+            for k, v := range nodeMetadata.GetLabels() {
+                labels[PrefixLabel+k] = v
+            }
+        }
 	}
 
 	return &Resource{
