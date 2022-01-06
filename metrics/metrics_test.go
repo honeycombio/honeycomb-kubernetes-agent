@@ -167,7 +167,7 @@ func TestCpuMetrics(t *testing.T) {
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
-	metrics := p.CpuMetrics(summary.Pods[0].CPU, 0.2) //JAMIETEST
+	metrics := p.CpuMetrics(summary.Pods[0].CPU, 0.2)
 
 	require.Equal(t, 2, len(metrics))
 
@@ -180,7 +180,7 @@ func TestCpuMetricsOptional(t *testing.T) {
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
-	metrics := p.CpuMetrics(summary.Pods[1].CPU, 0) //JAMIETEST
+	metrics := p.CpuMetrics(summary.Pods[1].CPU, 0)
 
 	require.Equal(t, 0, len(metrics))
 	assert.Empty(t, metrics[MeasureCpuUsage])

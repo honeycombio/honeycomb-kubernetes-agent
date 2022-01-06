@@ -248,8 +248,7 @@
    "cpu": {
     "time": "2020-09-16T03:30:55Z",
     "usageNanoCores": 15338365,
-    "usageCoreNanoSeconds": 27569149307357,
-    "JAMIETEST": true
+    "usageCoreNanoSeconds": 27569149307357
    },
    "memory": {
     "time": "2020-09-16T03:30:55Z",
@@ -349,9 +348,8 @@
      }
     }
    ],
-   "JAMIETEST": {
-    "time": "2020-09-16T03:30:56Z",
-    "JAMIETEST": true
+   "test-empty-cpu": {
+    "time": "2020-09-16T03:30:56Z"
    },
    "memory": {
     "time": "2020-09-16T03:30:56Z",
