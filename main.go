@@ -207,6 +207,11 @@ func createLogTailers(config *config.Config) ([]*tailer.PathWatcher, []*podtaile
 func startMetricsService(config *config.MetricsConfig) error {
 	if config.Enabled {
 
+		kubeClient, err := newKubeClient()
+		if err != nil {
+			logrus.WithError(err).Fatal("Error instantiating kube client")
+		}
+
 		if config.Interval == 0 {
 			config.Interval = 10 * time.Second
 		}
@@ -227,7 +232,7 @@ func startMetricsService(config *config.MetricsConfig) error {
 
 		logger := logrus.StandardLogger()
 
-		svc, err := service.NewMetricsService(config, builder, logger)
+		svc, err := service.NewMetricsService(config, builder, logger, kubeClient)
 		if err != nil {
 			return err
 		}

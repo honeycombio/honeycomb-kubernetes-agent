@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"math"
 	"testing"
 	"time"
@@ -9,12 +11,13 @@ import (
 	metrics_mock "github.com/honeycombio/honeycomb-kubernetes-agent/metrics/mock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
 	stats "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 
 	"github.com/stretchr/testify/require"
 )
 
-func createMockSourceAssets(isSum bool, isMeta bool, omitLabels []OmitLabel) (*stats.Summary, *Metadata) {
+func createMockSourceAssets(isSum bool, isMeta bool, omitLabels []OmitLabel, includeNodeLabels bool) (*stats.Summary, *Metadata) {
 	rc := &metrics_mock.MockRestClient{}
 
 	var summary *stats.Summary
@@ -27,10 +30,18 @@ func createMockSourceAssets(isSum bool, isMeta bool, omitLabels []OmitLabel) (*s
 	if isMeta {
 		metadataProvider := kubelet.NewMetadataProvider(rc)
 		podsMetadata, _ := metadataProvider.Pods()
-		metadata = NewMetadata(podsMetadata, omitLabels, logrus.StandardLogger())
+		nodesMetadata := getMockNodesResponse()
+		metadata = NewMetadata(podsMetadata, &nodesMetadata, omitLabels, includeNodeLabels, logrus.StandardLogger())
 	}
 
 	return summary, metadata
+}
+
+func getMockNodesResponse() v1.NodeList {
+	var nodesMetadata v1.NodeList
+	mockResponse, _ := ioutil.ReadFile("../testdata/nodes.json")
+	json.Unmarshal(mockResponse, &nodesMetadata)
+	return nodesMetadata
 }
 
 func createMockAccumulator(metadata *Metadata, mg map[MetricGroup]bool) *MetricDataAccumulator {
@@ -74,7 +85,7 @@ func TestGetLabels(t *testing.T) {
 	_, md := createMockSourceAssets(false, true, []OmitLabel{
 		"controller-revision-hash",
 		"pod-template-generation",
-	})
+	}, false)
 	pmd, _ := md.GetPodMetadataByUid("5c69ffd4-73d1-47df-87d7-08ae860e75ae")
 
 	labels := pmd.GetLabels()
@@ -84,8 +95,24 @@ func TestGetLabels(t *testing.T) {
 	assert.Equal(t, "honeycomb", labels["app.kubernetes.io/name"])
 }
 
+func TestGetNodeLabels(t *testing.T) {
+
+	_, md := createMockSourceAssets(false, true, []OmitLabel{
+		"beta.kubernetes.io/arch",
+		"beta.kubernetes.io/instance-type",
+		"beta.kubernetes.io/os",
+	}, true)
+	nmd, _ := md.GetNodeMetadataByName("duckboat-01")
+
+	labels := nmd.GetLabels()
+
+	assert.Equal(t, 8, len(labels))
+
+	assert.Equal(t, "us-east-1", labels["topology.kubernetes.io/region"])
+}
+
 func TestGetCpuLimit(t *testing.T) {
-	_, md := createMockSourceAssets(false, true, nil)
+	_, md := createMockSourceAssets(false, true, nil, false)
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	limit := pmd.GetCpuLimit()
@@ -97,7 +124,7 @@ func TestGetCpuLimit(t *testing.T) {
 }
 
 func TestGetCpuLimitForContainer(t *testing.T) {
-	_, md := createMockSourceAssets(false, true, nil)
+	_, md := createMockSourceAssets(false, true, nil, false)
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	limit := pmd.GetCpuLimitForContainer("speaker")
@@ -105,7 +132,7 @@ func TestGetCpuLimitForContainer(t *testing.T) {
 }
 
 func TestGetMemoryLimit(t *testing.T) {
-	_, md := createMockSourceAssets(false, true, nil)
+	_, md := createMockSourceAssets(false, true, nil, false)
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	limit := pmd.GetMemoryLimit()
@@ -117,7 +144,7 @@ func TestGetMemoryLimit(t *testing.T) {
 }
 
 func TestGetMemoryLimitForContainer(t *testing.T) {
-	_, md := createMockSourceAssets(false, true, nil)
+	_, md := createMockSourceAssets(false, true, nil, false)
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	limit := pmd.GetMemoryLimitForContainer("speaker")
@@ -125,7 +152,7 @@ func TestGetMemoryLimitForContainer(t *testing.T) {
 }
 
 func TestGetStatus(t *testing.T) {
-	_, md := createMockSourceAssets(false, true, nil)
+	_, md := createMockSourceAssets(false, true, nil, false)
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	status := pmd.GetStatus()
@@ -133,7 +160,7 @@ func TestGetStatus(t *testing.T) {
 }
 
 func TestGetStatusForContainer(t *testing.T) {
-	_, md := createMockSourceAssets(false, true, nil)
+	_, md := createMockSourceAssets(false, true, nil, false)
 
 	pmd, _ := md.GetPodMetadataByUid("5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
 	status := pmd.GetStatusForContainer("speaker")
@@ -143,7 +170,7 @@ func TestGetStatusForContainer(t *testing.T) {
 }
 
 func TestGenerateMetricsData(t *testing.T) {
-	summary, metadata := createMockSourceAssets(true, true, nil)
+	summary, metadata := createMockSourceAssets(true, true, nil, false)
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
@@ -163,7 +190,7 @@ func TestGenerateMetricsData(t *testing.T) {
 }
 
 func TestCpuMetrics(t *testing.T) {
-	summary, _ := createMockSourceAssets(true, false, nil)
+	summary, _ := createMockSourceAssets(true, false, nil, false)
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
@@ -176,7 +203,7 @@ func TestCpuMetrics(t *testing.T) {
 }
 
 func TestCpuMetricsOptional(t *testing.T) {
-	summary, _ := createMockSourceAssets(true, false, nil)
+	summary, _ := createMockSourceAssets(true, false, nil, false)
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
@@ -188,7 +215,7 @@ func TestCpuMetricsOptional(t *testing.T) {
 }
 
 func TestMemMetrics(t *testing.T) {
-	summary, _ := createMockSourceAssets(true, false, nil)
+	summary, _ := createMockSourceAssets(true, false, nil, false)
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
@@ -202,7 +229,7 @@ func TestMemMetrics(t *testing.T) {
 }
 
 func TestNetworkMetrics(t *testing.T) {
-	summary, _ := createMockSourceAssets(true, false, nil)
+	summary, _ := createMockSourceAssets(true, false, nil, false)
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
@@ -215,7 +242,7 @@ func TestNetworkMetrics(t *testing.T) {
 }
 
 func TestVolumeMetrics(t *testing.T) {
-	summary, _ := createMockSourceAssets(true, false, nil)
+	summary, _ := createMockSourceAssets(true, false, nil, false)
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
 
@@ -229,10 +256,10 @@ func TestVolumeMetrics(t *testing.T) {
 }
 
 func TestCounterMetrics(t *testing.T) {
-	summary, metadata := createMockSourceAssets(true, true, nil)
+	summary, metadata := createMockSourceAssets(true, true, nil, false)
 
 	podStats := getPodStatsByUID(summary.Pods, "5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
-	node := getNodeResource(summary.Node)
+	node := getNodeResource(summary.Node, metadata)
 	pod := getPodResource(node, podStats, metadata)
 
 	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
@@ -254,10 +281,10 @@ func TestCounterMetrics(t *testing.T) {
 }
 
 func TestExpiredCounterMetrics(t *testing.T) {
-	summary, metadata := createMockSourceAssets(true, true, nil)
+	summary, metadata := createMockSourceAssets(true, true, nil, false)
 
 	podStats := getPodStatsByUID(summary.Pods, "5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
-	node := getNodeResource(summary.Node)
+	node := getNodeResource(summary.Node, metadata)
 	pod := getPodResource(node, podStats, metadata)
 
 	// short expiration time to allow test to run faster
@@ -283,28 +310,39 @@ func TestExpiredCounterMetrics(t *testing.T) {
 }
 
 func TestNodeStats(t *testing.T) {
-	summary, metadata := createMockSourceAssets(true, true, nil)
+	// with includeNodeLabels
+	summary, metadata := createMockSourceAssets(true, true, nil, true)
 	acc := createMockAccumulator(metadata, ValidMetricGroups)
 
-	node := getNodeResource(summary.Node)
+	node := getNodeResource(summary.Node, metadata)
 
 	acc.nodeStats(node, summary.Node)
 	data := acc.Data[0]
-
 	assert.Equal(t, "duckboat-01", data.Resource.Name)
 	assert.Equal(t, 0, len(data.Resource.Status))
-	assert.Equal(t, 1, len(data.Resource.Labels))
+	assert.Equal(t, 9, len(data.Resource.Labels))
+	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
 	assert.Equal(t, 17, len(data.Metrics))
 	assert.Equal(t, float64(388954406)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
+	// without includeNodeLabels
+	summary, metadata = createMockSourceAssets(true, true, nil, false)
+	acc = createMockAccumulator(metadata, ValidMetricGroups)
+
+	node = getNodeResource(summary.Node, metadata)
+
+	acc.nodeStats(node, summary.Node)
+	data = acc.Data[0]
+	assert.Equal(t, "duckboat-01", data.Resource.Name)
+	assert.Equal(t, 1, len(data.Resource.Labels))
 }
 
 func TestPodStats(t *testing.T) {
-	summary, metadata := createMockSourceAssets(true, true, nil)
+	summary, metadata := createMockSourceAssets(true, true, nil, true)
 	acc := createMockAccumulator(metadata, ValidMetricGroups)
 
 	podStats := getPodStatsByUID(summary.Pods, "5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
-	node := getNodeResource(summary.Node)
+	node := getNodeResource(summary.Node, metadata)
 	pod := getPodResource(node, podStats, metadata)
 
 	acc.podStats(pod, podStats)
@@ -312,20 +350,21 @@ func TestPodStats(t *testing.T) {
 
 	assert.Equal(t, "speaker-cpxhz", data.Resource.Name)
 	assert.Equal(t, 4, len(data.Resource.Status))
-	assert.Equal(t, 8, len(data.Resource.Labels))
+	assert.Equal(t, 16, len(data.Resource.Labels))
 	assert.Equal(t, "metallb", data.Resource.Labels[PrefixLabel+"app"])
 	assert.Equal(t, "metallb-system", data.Resource.Labels[LabelNamespaceName])
+	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
 	assert.Equal(t, 17, len(data.Metrics))
 	assert.Equal(t, float64(7919180)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
 }
 
 func TestContainerStats(t *testing.T) {
-	summary, metadata := createMockSourceAssets(true, true, nil)
+	summary, metadata := createMockSourceAssets(true, true, nil, true)
 	acc := createMockAccumulator(metadata, ValidMetricGroups)
 
 	podStats := getPodStatsByUID(summary.Pods, "5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
-	node := getNodeResource(summary.Node)
+	node := getNodeResource(summary.Node, metadata)
 	pod := getPodResource(node, podStats, metadata)
 
 	acc.containerStats(pod, podStats.Containers[0])
@@ -334,20 +373,21 @@ func TestContainerStats(t *testing.T) {
 	assert.Equal(t, "speaker", data.Resource.Name)
 	assert.Equal(t, 4, len(data.Resource.Status))
 	assert.Equal(t, "running", data.Resource.Status[StatusState])
-	assert.Equal(t, 9, len(data.Resource.Labels))
+	assert.Equal(t, 17, len(data.Resource.Labels))
 	assert.Equal(t, "metallb", data.Resource.Labels[PrefixLabel+"app"])
 	assert.Equal(t, "metallb-system", data.Resource.Labels[LabelNamespaceName])
+	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
 	assert.Equal(t, 13, len(data.Metrics))
 	assert.Equal(t, float64(13107067)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
 }
 
 func TestVolumeStats(t *testing.T) {
-	summary, metadata := createMockSourceAssets(true, true, nil)
+	summary, metadata := createMockSourceAssets(true, true, nil, true)
 	acc := createMockAccumulator(metadata, ValidMetricGroups)
 
 	podStats := getPodStatsByUID(summary.Pods, "5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
-	node := getNodeResource(summary.Node)
+	node := getNodeResource(summary.Node, metadata)
 	pod := getPodResource(node, podStats, metadata)
 
 	acc.volumeStats(pod, podStats.VolumeStats[0])
@@ -355,9 +395,10 @@ func TestVolumeStats(t *testing.T) {
 
 	assert.Equal(t, "speaker-token-kpzds", data.Resource.Name)
 	assert.Equal(t, 0, len(data.Resource.Status))
-	assert.Equal(t, 9, len(data.Resource.Labels))
+	assert.Equal(t, 17, len(data.Resource.Labels))
 	assert.Equal(t, "metallb", data.Resource.Labels[PrefixLabel+"app"])
 	assert.Equal(t, "metallb-system", data.Resource.Labels[LabelNamespaceName])
+	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
 	assert.Equal(t, 6, len(data.Metrics))
 
 }

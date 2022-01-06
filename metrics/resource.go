@@ -16,7 +16,7 @@ type Resource struct {
 	PodMetadata *PodMetadata
 }
 
-func getNodeResource(s stats.NodeStats) *Resource {
+func getNodeResource(s stats.NodeStats, metadata *Metadata) *Resource {
 	labels := map[string]string{
 		LabelNodeName: s.NodeName,
 	}
@@ -29,6 +29,15 @@ func getNodeResource(s stats.NodeStats) *Resource {
 	if s.CPU != nil {
 		resource.Timestamp = s.CPU.Time.Time
 	}
+	if metadata.IncludeNodeLabels {
+		nodeMetadata, err := metadata.GetNodeMetadataByName(s.NodeName)
+		if err == nil {
+			for k, v := range nodeMetadata.GetLabels() {
+				labels[PrefixLabel+k] = v
+			}
+		}
+	}
+
 	return resource
 }
 

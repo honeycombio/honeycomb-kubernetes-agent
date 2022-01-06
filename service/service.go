@@ -5,14 +5,16 @@ package service
 
 import (
 	"errors"
+	"os"
+	"time"
+
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/interval"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
-	"os"
-	"time"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 var defaultOmitLabels []metrics.OmitLabel
@@ -31,16 +33,18 @@ type Service struct {
 	options    Options
 	builder    *libhoney.Builder
 	logger     *logrus.Logger
+	client     *corev1.CoreV1Client
 }
 
 type Options struct {
 	Interval              time.Duration
 	ClusterName           string
 	OmitLabels            []metrics.OmitLabel
+	IncludeNodeLabels     bool
 	MetricGroupsToCollect map[metrics.MetricGroup]bool
 }
 
-func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, logger *logrus.Logger) (*Service, error) {
+func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, logger *logrus.Logger, client *corev1.CoreV1Client) (*Service, error) {
 
 	if cfg.Endpoint == "" {
 		// Not all Managed K8s offerings allow the nodename to be DNS reachable, try by IP if available.
@@ -70,6 +74,7 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, log
 		Interval:              cfg.Interval,
 		ClusterName:           cfg.ClusterName,
 		OmitLabels:            cfg.OmitLabels,
+		IncludeNodeLabels:     cfg.IncludeNodeLabels,
 		MetricGroupsToCollect: mg,
 	}
 
@@ -79,6 +84,7 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, log
 		options:    *opt,
 		builder:    builder,
 		logger:     logger,
+		client:     client,
 	}, nil
 }
 
@@ -125,11 +131,12 @@ func (s *Service) Start() error {
 		"interval":     s.options.Interval,
 		"clusterName":  s.options.ClusterName,
 		"omitLabels":   s.options.OmitLabels,
+		"includeNodeLabels": s.options.IncludeNodeLabels,
 		"metricGroups": s.options.MetricGroupsToCollect,
 	}).Info("Creating Metrics Service Runner...")
 
 	// setup primary interval runner for metrics service
-	runnable := newRunnable(s.restClient, s.builder, s.options, s.logger)
+	runnable := newRunnable(s.restClient, s.builder, s.options, s.logger, s.client)
 	s.runner = interval.NewRunner("k8s-stats", s.options.Interval, runnable)
 	s.logger.Debug("Metrics Service Runner created")
 

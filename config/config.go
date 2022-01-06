@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 	"io/ioutil"
 	"time"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -49,6 +50,9 @@ type MetricsConfig struct {
 	// Labels to omit from becoming fields in Honeycomb
 	// By default `controller-revision-hash` is omitted
 	OmitLabels []metrics.OmitLabel `yaml:"omitLabels"`
+	// Include node metadata such as 'node.kubernetes.io/instance-type' or
+	// 'topology.kubernetes.io/region'
+	IncludeNodeLabels bool `yaml:"includeNodeLabels"`
 	// MetricGroupsToCollect provides a list of metrics groups to collect metrics from.
 	// "container", "pod", "node" and "volume" are the only valid groups.
 	MetricGroups     []metrics.MetricGroup  `yaml:"metricGroups"`
