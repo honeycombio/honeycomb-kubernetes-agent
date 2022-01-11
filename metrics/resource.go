@@ -20,22 +20,25 @@ func getNodeResource(s stats.NodeStats, metadata *Metadata) *Resource {
 	labels := map[string]string{
 		LabelNodeName: s.NodeName,
 	}
-
 	if metadata.IncludeNodeLabels {
 		nodeMetadata, err := metadata.GetNodeMetadataByName(s.NodeName)
 		if err == nil {
-            for k, v := range nodeMetadata.GetLabels() {
-                labels[PrefixLabel+k] = v
-            }
-        }
+			for k, v := range nodeMetadata.GetLabels() {
+				labels[PrefixLabel+k] = v
+			}
+		}
+	}
+	resource := &Resource{
+		Type:   "node",
+		Name:   s.NodeName,
+		Labels: labels,
 	}
 
-	return &Resource{
-		Type:      "node",
-		Name:      s.NodeName,
-		Labels:    labels,
-		Timestamp: s.CPU.Time.Time,
+	if s.CPU != nil {
+		resource.Timestamp = s.CPU.Time.Time
 	}
+
+	return resource
 }
 
 func getPodResource(node *Resource, s stats.PodStats, metadata *Metadata) *Resource {
@@ -45,27 +48,28 @@ func getPodResource(node *Resource, s stats.PodStats, metadata *Metadata) *Resou
 		LabelPodName:       s.PodRef.Name,
 	}
 
+	resource := &Resource{
+		Type:   "pod",
+		Name:   s.PodRef.Name,
+		Labels: labels,
+	}
+
+	if s.CPU != nil {
+		resource.Timestamp = s.CPU.Time.Time
+	}
+
 	podMetadata, err := metadata.GetPodMetadataByUid(types.UID(s.PodRef.UID))
 	if err != nil {
-		return &Resource{
-			Type:      "pod",
-			Name:      s.PodRef.Name,
-			Labels:    labels,
-			Timestamp: s.CPU.Time.Time,
-		}
+		return resource
 	}
 
 	status := podMetadata.GetStatus()
 	addAdditionalLabels(labels, node.Labels, podMetadata)
 
-	return &Resource{
-		Type:        "pod",
-		Name:        s.PodRef.Name,
-		Labels:      labels,
-		Timestamp:   s.CPU.Time.Time,
-		Status:      status,
-		PodMetadata: podMetadata,
-	}
+	resource.Status = status
+	resource.PodMetadata = podMetadata
+
+	return resource
 
 }
 
@@ -78,14 +82,17 @@ func getContainerResource(pod *Resource, s stats.ContainerStats) (*Resource, err
 
 	status := pod.PodMetadata.GetStatusForContainer(s.Name)
 
-	return &Resource{
+	resource := &Resource{
 		Type:        "container",
 		Name:        s.Name,
 		Labels:      labels,
-		Timestamp:   s.CPU.Time.Time,
 		Status:      status,
 		PodMetadata: pod.PodMetadata,
-	}, nil
+	}
+	if s.CPU != nil {
+		resource.Timestamp = s.CPU.Time.Time
+	}
+	return resource, nil
 }
 
 func getVolumeResource(pod *Resource, s stats.VolumeStats) *Resource {

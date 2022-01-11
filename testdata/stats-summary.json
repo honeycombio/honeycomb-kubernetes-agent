@@ -348,10 +348,8 @@
      }
     }
    ],
-   "cpu": {
-    "time": "2020-09-16T03:30:56Z",
-    "usageNanoCores": 476961,
-    "usageCoreNanoSeconds": 656759728006
+   "test-empty-cpu": {
+    "time": "2020-09-16T03:30:56Z"
    },
    "memory": {
     "time": "2020-09-16T03:30:56Z",

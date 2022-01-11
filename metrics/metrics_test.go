@@ -202,6 +202,18 @@ func TestCpuMetrics(t *testing.T) {
 	assert.InDelta(t, 0.000001, 7.6691825, metrics[MeasureCpuUtilization].GetValue(), "CPU Utilization")
 }
 
+func TestCpuMetricsOptional(t *testing.T) {
+	summary, _ := createMockSourceAssets(true, false, nil, false)
+
+	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+
+	metrics := p.CpuMetrics(summary.Pods[1].CPU, 0)
+
+	require.Equal(t, 0, len(metrics))
+	assert.Empty(t, metrics[MeasureCpuUsage])
+	assert.Empty(t, metrics[MeasureCpuUtilization])
+}
+
 func TestMemMetrics(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
