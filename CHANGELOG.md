@@ -1,5 +1,25 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.3.0 2022-01-12
+
+### Added
+
+- add node metadata to metrics events (#200) | [@asdvalenzuela](https://github.com/asdvalenzuela)
+
+### Fixed
+
+- fix: check for existence of optional CPU stats to prevent exceptions (#206) | [@JamieDanielson](https://github.com/JamieDanielson)
+
+### Maintenance
+
+- gh: add re-triage workflow (#203) | [@vreynolds](https://github.com/vreynolds)
+- maint: update releasing notes for ci workflow and helm chart update (#205) | [JamieDanielson](https://github.com/JamieDanielson)
+- Bump github.com/mitchellh/mapstructure from 1.4.2 to 1.4.3 (#208) | [dependabot](https://github.com/dependabot)
+- Update dependabot label (#210) | [@vreynolds](https://github.com/vreynolds)
+- switch to supported versions of k8s libraries (#211) | [@vreynolds](https://github.com/vreynolds)
+- Bump github.com/honeycombio/libhoney-go from 1.15.6 to 1.15.7 (#212) | [dependabot](https://github.com/dependabot)
+- test script needs directory (#214) | [JamieDanielson](https://github.com/JamieDanielson)
+
 ## 2.2.1 2021-12-23
 
 ### Fixes
