@@ -47,6 +47,7 @@ func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, 
 		includeNodeLabels:     opt.IncludeNodeLabels,
 		metricGroupsToCollect: opt.MetricGroupsToCollect,
 		logger:                logger,
+		apiClient:             client,
 	}
 }
 
