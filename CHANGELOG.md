@@ -1,5 +1,11 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.3.1 2022-01-21
+
+### Fixed
+
+- fix nil pointer deref when includeNodeLabels is enabled (#218) | [@asdvalenzuela](https://github.com/asdvalenzuela)
+
 ## 2.3.0 2022-01-12
 
 ### Added
