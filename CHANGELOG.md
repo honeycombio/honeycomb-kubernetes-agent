@@ -1,5 +1,11 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.3.2 2022-02-09
+
+### Maintenance
+
+- Bump github.com/honeycombio/libhoney-go from 1.15.7 to 1.15.8 (#223) | [dependabot](https://github.com/dependabot)
+
 ## 2.3.1 2022-01-21
 
 ### Fixed
