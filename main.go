@@ -230,9 +230,7 @@ func startMetricsService(config *config.MetricsConfig) error {
 			builder.AddField(k, v)
 		}
 
-		logger := logrus.StandardLogger()
-
-		svc, err := service.NewMetricsService(config, builder, logger, kubeClient)
+		svc, err := service.NewMetricsService(config, builder, kubeClient)
 		if err != nil {
 			return err
 		}
