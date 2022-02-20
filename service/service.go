@@ -12,7 +12,6 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/interval"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
-	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
@@ -31,20 +30,20 @@ type Service struct {
 	restClient kubelet.RestClient
 	runner     *interval.Runner
 	options    Options
-	builder    *libhoney.Builder
-	logger     *logrus.Logger
 	client     *corev1.CoreV1Client
 }
 
 type Options struct {
+	Dataset               string
 	Interval              time.Duration
 	ClusterName           string
 	OmitLabels            []metrics.OmitLabel
+	AdditionalFields      map[string]interface{}
 	IncludeNodeLabels     bool
 	MetricGroupsToCollect map[metrics.MetricGroup]bool
 }
 
-func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, logger *logrus.Logger, client *corev1.CoreV1Client) (*Service, error) {
+func NewMetricsService(cfg *config.MetricsConfig, client *corev1.CoreV1Client) (*Service, error) {
 
 	if cfg.Endpoint == "" {
 		// Not all Managed K8s offerings allow the nodename to be DNS reachable, try by IP if available.
@@ -55,7 +54,7 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, log
 		}
 	}
 
-	rc, err := createRestClient(cfg, logger)
+	rc, err := createRestClient(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +70,11 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, log
 	}
 
 	opt := &Options{
+		Dataset:               cfg.Dataset,
 		Interval:              cfg.Interval,
 		ClusterName:           cfg.ClusterName,
 		OmitLabels:            cfg.OmitLabels,
+		AdditionalFields:      cfg.AdditionalFields,
 		IncludeNodeLabels:     cfg.IncludeNodeLabels,
 		MetricGroupsToCollect: mg,
 	}
@@ -82,29 +83,27 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, log
 		config:     cfg,
 		restClient: rc,
 		options:    *opt,
-		builder:    builder,
-		logger:     logger,
 		client:     client,
 	}, nil
 }
 
-func createRestClient(cfg *config.MetricsConfig, logger *logrus.Logger) (kubelet.RestClient, error) {
-	logger.WithFields(logrus.Fields{
+func createRestClient(cfg *config.MetricsConfig) (kubelet.RestClient, error) {
+	logrus.WithFields(logrus.Fields{
 		"endpoint": cfg.Endpoint,
 	}).Debug("Creating REST Client...")
 
 	clientProvider, err := kubelet.NewClientProvider(cfg.Endpoint)
 	if err != nil {
-		logger.Error("Could not create Client Provider: ", err)
+		logrus.Error("Could not create Client Provider: ", err)
 		return nil, err
 	}
 	client, err := clientProvider.BuildClient()
 	if err != nil {
-		logger.Error("Could not create Client: ", err)
+		logrus.Error("Could not create Client: ", err)
 		return nil, err
 	}
 	rest := kubelet.NewRestClient(client)
-	logger.Debug("REST Client created")
+	logrus.Debug("REST Client created")
 	return rest, nil
 }
 
@@ -127,23 +126,23 @@ func getMapFromSlice(collect []metrics.MetricGroup) (map[metrics.MetricGroup]boo
 
 func (s *Service) Start() error {
 
-	s.logger.WithFields(logrus.Fields{
-		"interval":     s.options.Interval,
-		"clusterName":  s.options.ClusterName,
-		"omitLabels":   s.options.OmitLabels,
+	logrus.WithFields(logrus.Fields{
+		"interval":          s.options.Interval,
+		"clusterName":       s.options.ClusterName,
+		"omitLabels":        s.options.OmitLabels,
 		"includeNodeLabels": s.options.IncludeNodeLabels,
-		"metricGroups": s.options.MetricGroupsToCollect,
+		"metricGroups":      s.options.MetricGroupsToCollect,
 	}).Info("Creating Metrics Service Runner...")
 
 	// setup primary interval runner for metrics service
-	runnable := newRunnable(s.restClient, s.builder, s.options, s.logger, s.client)
+	runnable := newRunnable(s.restClient, s.options, s.client)
 	s.runner = interval.NewRunner("k8s-stats", s.options.Interval, runnable)
-	s.logger.Debug("Metrics Service Runner created")
+	logrus.Debug("Metrics Service Runner created")
 
 	// start metrics service in go routine
 	go func() {
 		if err := s.runner.Start(); err != nil {
-			s.logger.WithError(err).Error("Failed to start Metrics Service")
+			logrus.WithError(err).Error("Failed to start Metrics Service")
 		}
 	}()
 	return nil

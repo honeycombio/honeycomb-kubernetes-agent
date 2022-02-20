@@ -5,10 +5,11 @@ package service
 
 import (
 	"context"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"time"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
-	"github.com/honeycombio/libhoney-go"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/sirupsen/logrus"
 
 	v1 "k8s.io/api/core/v1"
@@ -25,41 +26,43 @@ type runnable struct {
 	statsProvider     *kubelet.StatsProvider
 	metadataProvider  *kubelet.MetadataProvider
 	metricsProvider   *metrics.Processor
+	dataset           string
 	interval          time.Duration
 	k8sClusterName    string
 	restClient        kubelet.RestClient
-	builder           *libhoney.Builder
 	omitLabels        []metrics.OmitLabel
+	additionalFields  map[string]interface{}
 	includeNodeLabels bool
 
 	metricGroupsToCollect map[metrics.MetricGroup]bool
-	logger                *logrus.Logger
+	transmitter           *transmission.HoneycombTransmitter
 	apiClient             corev1.NodesGetter
 }
 
-func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, logger *logrus.Logger, client *corev1.CoreV1Client) *runnable {
+func newRunnable(rc kubelet.RestClient, opt Options, client *corev1.CoreV1Client) *runnable {
 	return &runnable{
+		dataset:               opt.Dataset,
 		interval:              opt.Interval,
 		k8sClusterName:        opt.ClusterName,
 		restClient:            rc,
-		builder:               builder,
 		omitLabels:            opt.OmitLabels,
+		additionalFields:      opt.AdditionalFields,
 		includeNodeLabels:     opt.IncludeNodeLabels,
 		metricGroupsToCollect: opt.MetricGroupsToCollect,
-		logger:                logger,
+		transmitter:           &transmission.HoneycombTransmitter{},
 		apiClient:             client,
 	}
 }
 
 // Sets up the kubelet connection at startup time.
 func (r *runnable) Setup() error {
-	r.logger.Info("Creating Metrics Service Providers...")
+	logrus.Info("Creating Metrics Service Providers...")
 
 	r.statsProvider = kubelet.NewStatsProvider(r.restClient)
 	r.metadataProvider = kubelet.NewMetadataProvider(r.restClient)
-	r.metricsProvider = metrics.NewMetricsProcessor(r.interval, r.logger)
+	r.metricsProvider = metrics.NewMetricsProcessor(r.interval)
 
-	r.logger.Debug("Metrics Service Providers created")
+	logrus.Debug("Metrics Service Providers created")
 	return nil
 }
 
@@ -71,7 +74,7 @@ func (r *runnable) Run() error {
 		logrus.WithError(err).Error("Could not retrieve stats")
 		return nil
 	}
-	r.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"podCount": len(summary.Pods),
 	}).Debug("Retrieved Stats")
 
@@ -79,10 +82,10 @@ func (r *runnable) Run() error {
 	var podsMetadata *v1.PodList
 	podsMetadata, err = r.metadataProvider.Pods()
 	if err != nil {
-		r.logger.WithError(err).Error("Could not retrieve pod metadata")
+		logrus.WithError(err).Error("Could not retrieve metadata")
 		return nil
 	}
-	r.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"podCount": len(podsMetadata.Items),
 	}).Debug("Retrieved Pod Metadata")
 
@@ -91,44 +94,37 @@ func (r *runnable) Run() error {
 	if r.includeNodeLabels {
 		nodesMetadata, err = r.apiClient.Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			r.logger.WithError(err).Error("Could not retrieve node metadata")
+			logrus.WithError(err).Error("Could not retrieve node metadata")
 			return nil
 		}
-		r.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"nodeCount": len(nodesMetadata.Items),
 		}).Debug("Retrieved Node Metadata")
 	}
 
 	// Get resource metrics
-	metadata := metrics.NewMetadata(podsMetadata, nodesMetadata, r.omitLabels, r.includeNodeLabels, r.logger)
+	metadata := metrics.NewMetadata(podsMetadata, nodesMetadata, r.omitLabels, r.includeNodeLabels)
 	resourceMetrics := r.metricsProvider.GenerateMetricsData(summary, metadata, r.metricGroupsToCollect)
-	r.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"resourceCount": len(resourceMetrics),
 	}).Debug("Processing Metrics Data...")
 
 	// iterate over resource metrics data
 	for _, rm := range resourceMetrics {
 
-		// create event from Resource meta
-		ev, err := r.createEventFromResource(rm.Resource)
-		if err != nil {
-			r.logger.WithFields(logrus.Fields{
-				"resourceType": rm.Resource.Type,
-				"resourceName": rm.Resource.Name,
-			}).WithError(err).Error("Could not create event for resource")
-			continue
-		}
-
-		r.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"resourceType": rm.Resource.Type,
 			"resourceName": rm.Resource.Name,
 		}).Trace("Creating event for resource")
+
+		// create event from Resource meta
+		ev := r.createEventFromResource(rm.Resource)
 
 		pre := metrics.PrefixMetrics
 
 		// loop through all metrics to add them to resource event
 		for k, v := range rm.Metrics {
-			r.logger.WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"resourceType": rm.Resource.Type,
 				"resourceName": rm.Resource.Name,
 				"metricName":   k,
@@ -143,49 +139,46 @@ func (r *runnable) Run() error {
 			}
 
 			// add metric to resource event
-			ev.AddField(pre+k, val)
+			ev.Data[pre+k] = val
 		}
 
-		r.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"resourceType": rm.Resource.Type,
 			"resourceName": rm.Resource.Name,
 			"metricCount":  len(rm.Metrics),
-		}).Debug("Event Data: ", ev.Fields())
+		}).Trace("Event Data: ", ev.Data)
 
 		// send resource event to Honeycomb
-		if err = ev.Send(); err != nil {
-			r.logger.WithFields(logrus.Fields{
-				"resourceType": rm.Resource.Type,
-				"resourceName": rm.Resource.Name,
-				"metricCount":  len(rm.Metrics),
-			}).WithError(err).Error("Error sending event to honeycomb")
-		}
+		r.transmitter.Send(ev)
 	}
 
 	return nil
 }
 
-func (r *runnable) createEventFromResource(res *metrics.Resource) (*libhoney.Event, error) {
-	ev := r.builder.NewEvent()
+func (r *runnable) createEventFromResource(res *metrics.Resource) *event.Event {
 
 	// add basic attributes to each resource event
-	_ = ev.Add(map[string]string{
+	data := map[string]interface{}{
 		metrics.PrefixMetrics + metrics.MetricSourceName: res.Name,
 		metrics.PrefixMetrics + metrics.MetricSourceType: res.Type,
 		metrics.KubernetesResourceType:                   res.Type,
 		metrics.PrefixCluster + "name":                   r.k8sClusterName,
-	})
-	ev.Timestamp = res.Timestamp
-
-	// add all labels to event
-	if err := ev.Add(res.Labels); err != nil {
-		return nil, err
 	}
 
-	// add status attributes as fields in event
+	// add all additional fields
+	for k, v := range r.additionalFields {
+		data[k] = v
+	}
+
+	// add all labels to event
+	for k, v := range res.Labels {
+		data[k] = v
+	}
+
+	// add status details to event
 	if res.Status != nil {
-		if err := ev.Add(res.Status); err != nil {
-			return nil, err
+		for k, v := range res.Status {
+			data[k] = v
 		}
 
 		// Check if resource restarted
@@ -199,12 +192,18 @@ func (r *runnable) createEventFromResource(res *metrics.Resource) (*libhoney.Eve
 				delta := r.metricsProvider.GetCounterDelta(res, "restarts", m)
 				if delta > 0 {
 					// resource had a restart since last collection
-					ev.AddField(metrics.StatusRestart, true)
+					data[metrics.StatusRestart] = true
 				}
-				ev.AddField(metrics.StatusRestartDelta, delta)
+				data[metrics.StatusRestartDelta] = delta
 			}
 		}
 	}
 
-	return ev, nil
+	ev := &event.Event{
+		Data:      data,
+		Dataset:   r.dataset,
+		Timestamp: res.Timestamp,
+	}
+
+	return ev
 }

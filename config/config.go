@@ -13,13 +13,15 @@ type Config struct {
 	APIKey  string `yaml:"apiKey"`
 	APIHost string `yaml:"apiHost"`
 	// Deprecated: use APIKey instead.
-	WriteKey         string `yaml:"writekey"`
-	Watchers         []*WatcherConfig
-	Verbosity        string
-	LegacyLogPaths   bool                   `yaml:"legacyLogPaths"`
-	SplitLogging     bool                   `yaml:"splitLogging"`
-	AdditionalFields map[string]interface{} `yaml:"additionalFields"`
-	Metrics          *MetricsConfig
+	WriteKey          string        `yaml:"writekey"`
+	RetryBufferSize   int           `yaml:"retryBufferSize"`
+	RetryBufferExpire time.Duration `yaml:"retryBufferExpire"`
+	Watchers          []*WatcherConfig
+	Verbosity         string
+	LegacyLogPaths    bool                   `yaml:"legacyLogPaths"`
+	SplitLogging      bool                   `yaml:"splitLogging"`
+	AdditionalFields  map[string]interface{} `yaml:"additionalFields"`
+	Metrics           *MetricsConfig
 }
 
 type WatcherConfig struct {
