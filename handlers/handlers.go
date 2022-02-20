@@ -114,6 +114,6 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 			return
 		}
 	}
-	logrus.WithField("parsed", event).Debug("Sending line")
+	logrus.WithField("parsed", event).Trace("Sending line")
 	h.transmitter.Send(event)
 }

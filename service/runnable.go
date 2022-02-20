@@ -82,7 +82,7 @@ func (r *runnable) Run() error {
 	var podsMetadata *v1.PodList
 	podsMetadata, err = r.metadataProvider.Pods()
 	if err != nil {
-		logrus.WithError(err).Error("Could not retrieve metadata")
+		logrus.WithError(err).Error("Could not retrieve pod metadata")
 		return nil
 	}
 	logrus.WithFields(logrus.Fields{

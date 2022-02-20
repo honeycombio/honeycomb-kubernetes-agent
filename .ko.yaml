@@ -6,4 +6,4 @@ builds:
   - id: honeycomb-kubernetes-agent
     main: .
     ldflags:
-      - -X honeycomb-kubernetes-agent/version.VERSION={{.Env.VERSION}}
+      - -X github.com/honeycombio/honeycomb-kubernetes-agent/version.VERSION={{.Env.VERSION}}

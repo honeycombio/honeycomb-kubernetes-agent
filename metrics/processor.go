@@ -1,8 +1,6 @@
 package metrics
 
 import (
-	"github.com/sirupsen/logrus"
-
 	"time"
 
 	stats "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
@@ -10,15 +8,13 @@ import (
 
 type Processor struct {
 	counterCache *Cache
-	logger       *logrus.Logger
 }
 
-func NewMetricsProcessor(fetchInterval time.Duration, logger *logrus.Logger) *Processor {
+func NewMetricsProcessor(fetchInterval time.Duration) *Processor {
 	timeout := fetchInterval * (5 + 1)
 	cache := NewCache(timeout)
 	return &Processor{
 		counterCache: cache,
-		logger:       logger,
 	}
 
 }
@@ -30,7 +26,6 @@ func (p *Processor) GenerateMetricsData(summary *stats.Summary, metadata *Metada
 		metricGroupsToCollect: metricGroupsToCollect,
 		mp:                    p,
 		time:                  time.Now(),
-		logger:                p.logger,
 	}
 
 	nodeResource := getNodeResource(summary.Node, metadata)
