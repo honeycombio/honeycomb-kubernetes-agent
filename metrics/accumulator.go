@@ -30,13 +30,12 @@ type MetricDataAccumulator struct {
 	metadata              *Metadata
 	metricGroupsToCollect map[MetricGroup]bool
 	time                  time.Time
-	logger                *logrus.Logger
 }
 
 func (a *MetricDataAccumulator) nodeStats(nodeResource *Resource, s stats.NodeStats) {
-	a.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"name": nodeResource.Name,
-	}).Debug("nodeStats")
+	}).Trace("nodeStats")
 
 	if !a.metricGroupsToCollect[NodeMetricGroup] {
 		return
@@ -53,9 +52,9 @@ func (a *MetricDataAccumulator) nodeStats(nodeResource *Resource, s stats.NodeSt
 }
 
 func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats) {
-	a.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"name": podResource.Name,
-	}).Debug("podStats")
+	}).Trace("podStats")
 
 	if !a.metricGroupsToCollect[PodMetricGroup] {
 		return
@@ -72,10 +71,10 @@ func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats
 }
 
 func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.ContainerStats) {
-	a.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"podName": podResource.Name,
 		"name":    s.Name,
-	}).Debug("containerStats")
+	}).Trace("containerStats")
 
 	if !a.metricGroupsToCollect[ContainerMetricGroup] {
 		return
@@ -88,7 +87,7 @@ func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.Co
 	resource, err := getContainerResource(podResource, s)
 
 	if err != nil {
-		a.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"pod":       podResource.Labels[LabelPodName],
 			"container": podResource.Labels[LabelContainerName],
 		}).Warn("failed to fetch container metrics")
@@ -105,10 +104,10 @@ func (a *MetricDataAccumulator) containerStats(podResource *Resource, s stats.Co
 }
 
 func (a *MetricDataAccumulator) volumeStats(podResource *Resource, s stats.VolumeStats) {
-	a.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"podName": podResource.Name,
 		"name":    s.Name,
-	}).Debug("volumeStats")
+	}).Trace("volumeStats")
 
 	if !a.metricGroupsToCollect[VolumeMetricGroup] {
 		return

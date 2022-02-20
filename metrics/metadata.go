@@ -16,16 +16,14 @@ type Metadata struct {
 	NodesMetadata     *v1.NodeList
 	OmitLabels        []OmitLabel
 	IncludeNodeLabels bool
-	logger            *logrus.Logger
 }
 
-func NewMetadata(podsMetadata *v1.PodList, nodesMetadata *v1.NodeList, omitLabels []OmitLabel, includeNodeLabels bool, logger *logrus.Logger) *Metadata {
+func NewMetadata(podsMetadata *v1.PodList, nodesMetadata *v1.NodeList, omitLabels []OmitLabel, includeNodeLabels bool) *Metadata {
 	return &Metadata{
 		PodsMetadata:      podsMetadata,
 		NodesMetadata:     nodesMetadata,
 		OmitLabels:        omitLabels,
 		IncludeNodeLabels: includeNodeLabels,
-		logger:            logger,
 	}
 }
 
@@ -36,7 +34,7 @@ func (m *Metadata) GetNodeMetadataByName(name string) (*NodeMetadata, error) {
 		}
 	}
 
-	m.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"nodeName": name,
 	}).Error("Metadata: Node not found")
 	return &NodeMetadata{}, errors.New("node not found")
@@ -49,7 +47,7 @@ func (m *Metadata) GetPodMetadataByUid(uid types.UID) (*PodMetadata, error) {
 		}
 	}
 
-	m.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"podUid": uid,
 	}).Error("Metadata: Pod not found")
 	return &PodMetadata{}, errors.New("pod not found")
@@ -173,7 +171,7 @@ func (p *PodMetadata) GetStatusForContainer(name string) map[string]interface{} 
 		}
 	}
 	if s.ContainerID == "" {
-		p.Metadata.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"podName":       p.Pod.Name,
 			"containerName": name,
 		}).Error("Metadata: Container not found")
