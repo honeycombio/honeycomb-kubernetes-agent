@@ -46,6 +46,8 @@ metadata:
 data:
   config.yaml: |
     apiHost: https://api.honeycomb.io/
+    retryBufferSize: 1000
+    retryBufferExpire: 10s
     watchers:
       - dataset: kubernetes-logs
         labelSelector: "component=kube-apiserver,tier=control-plane"
@@ -77,8 +79,8 @@ data:
       metricGroups:
       - node
       - pod
-
-# Daemonset
+      
+      # Daemonset
 ---
 apiVersion: apps/v1
 kind: DaemonSet
