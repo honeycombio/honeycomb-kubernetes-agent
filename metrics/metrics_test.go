@@ -229,7 +229,7 @@ func TestMemMetrics(t *testing.T) {
 func TestMemMetricsOptional(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	metrics := p.MemMetrics(summary.Pods[1].Memory, 0)
 
