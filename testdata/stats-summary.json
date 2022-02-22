@@ -351,14 +351,7 @@
    "test-empty-cpu": {
     "time": "2020-09-16T03:30:56Z"
    },
-   "memory": {
-    "time": "2020-09-16T03:30:56Z",
-    "usageBytes": 9392128,
-    "workingSetBytes": 4403200,
-    "rssBytes": 2867200,
-    "pageFaults": 0,
-    "majorPageFaults": 0
-   },
+   "test-empty-memory": {},
    "network": {
     "time": "2020-09-16T03:30:54Z",
     "name": "eth0",

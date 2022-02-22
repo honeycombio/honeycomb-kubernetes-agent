@@ -228,6 +228,20 @@ func TestMemMetrics(t *testing.T) {
 	assert.Equal(t, float64(23191552), metrics[MeasureMemoryRSS].GetValue(), "Memory RSS")
 }
 
+func TestMemMetricsOptional(t *testing.T) {
+	summary, _ := createMockSourceAssets(true, false, nil, false)
+
+	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+
+	metrics := p.MemMetrics(summary.Pods[1].Memory, 0)
+
+	require.Equal(t, 0, len(metrics))
+
+	assert.Empty(t, metrics[MeasureMemoryUsage])
+	assert.Empty(t, metrics[MeasureMemoryUtilization])
+	assert.Empty(t, metrics[MeasureMemoryRSS])
+}
+
 func TestNetworkMetrics(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 

@@ -146,6 +146,10 @@ func (p *Processor) CpuMetrics(s *stats.CPUStats, limit float64) Metrics {
 }
 
 func (p *Processor) MemMetrics(s *stats.MemoryStats, limit float64) Metrics {
+	// MemoryStats are optional
+	if s == nil {
+		return Metrics{}
+	}
 	// if resource limits defined get utilization
 	var utilization float64
 	if limit > 0 {
