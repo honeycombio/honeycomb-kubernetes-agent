@@ -33,11 +33,10 @@ type runnable struct {
 	includeNodeLabels bool
 
 	metricGroupsToCollect map[metrics.MetricGroup]bool
-	logger                *logrus.Logger
 	apiClient             corev1.NodesGetter
 }
 
-func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, logger *logrus.Logger, client *corev1.CoreV1Client) *runnable {
+func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, client *corev1.CoreV1Client) *runnable {
 	return &runnable{
 		interval:              opt.Interval,
 		k8sClusterName:        opt.ClusterName,
@@ -46,20 +45,19 @@ func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, 
 		omitLabels:            opt.OmitLabels,
 		includeNodeLabels:     opt.IncludeNodeLabels,
 		metricGroupsToCollect: opt.MetricGroupsToCollect,
-		logger:                logger,
 		apiClient:             client,
 	}
 }
 
 // Sets up the kubelet connection at startup time.
 func (r *runnable) Setup() error {
-	r.logger.Info("Creating Metrics Service Providers...")
+	logrus.Info("Creating Metrics Service Providers...")
 
 	r.statsProvider = kubelet.NewStatsProvider(r.restClient)
 	r.metadataProvider = kubelet.NewMetadataProvider(r.restClient)
-	r.metricsProvider = metrics.NewMetricsProcessor(r.interval, r.logger)
+	r.metricsProvider = metrics.NewMetricsProcessor(r.interval)
 
-	r.logger.Debug("Metrics Service Providers created")
+	logrus.Debug("Metrics Service Providers created")
 	return nil
 }
 
@@ -71,7 +69,7 @@ func (r *runnable) Run() error {
 		logrus.WithError(err).Error("Could not retrieve stats")
 		return nil
 	}
-	r.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"podCount": len(summary.Pods),
 	}).Debug("Retrieved Stats")
 
@@ -79,10 +77,10 @@ func (r *runnable) Run() error {
 	var podsMetadata *v1.PodList
 	podsMetadata, err = r.metadataProvider.Pods()
 	if err != nil {
-		r.logger.WithError(err).Error("Could not retrieve pod metadata")
+		logrus.WithError(err).Error("Could not retrieve pod metadata")
 		return nil
 	}
-	r.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"podCount": len(podsMetadata.Items),
 	}).Debug("Retrieved Pod Metadata")
 
@@ -91,18 +89,18 @@ func (r *runnable) Run() error {
 	if r.includeNodeLabels {
 		nodesMetadata, err = r.apiClient.Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			r.logger.WithError(err).Error("Could not retrieve node metadata")
+			logrus.WithError(err).Error("Could not retrieve node metadata")
 			return nil
 		}
-		r.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"nodeCount": len(nodesMetadata.Items),
 		}).Debug("Retrieved Node Metadata")
 	}
 
 	// Get resource metrics
-	metadata := metrics.NewMetadata(podsMetadata, nodesMetadata, r.omitLabels, r.includeNodeLabels, r.logger)
+	metadata := metrics.NewMetadata(podsMetadata, nodesMetadata, r.omitLabels, r.includeNodeLabels)
 	resourceMetrics := r.metricsProvider.GenerateMetricsData(summary, metadata, r.metricGroupsToCollect)
-	r.logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"resourceCount": len(resourceMetrics),
 	}).Debug("Processing Metrics Data...")
 
@@ -112,14 +110,14 @@ func (r *runnable) Run() error {
 		// create event from Resource meta
 		ev, err := r.createEventFromResource(rm.Resource)
 		if err != nil {
-			r.logger.WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"resourceType": rm.Resource.Type,
 				"resourceName": rm.Resource.Name,
 			}).WithError(err).Error("Could not create event for resource")
 			continue
 		}
 
-		r.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"resourceType": rm.Resource.Type,
 			"resourceName": rm.Resource.Name,
 		}).Trace("Creating event for resource")
@@ -128,7 +126,7 @@ func (r *runnable) Run() error {
 
 		// loop through all metrics to add them to resource event
 		for k, v := range rm.Metrics {
-			r.logger.WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"resourceType": rm.Resource.Type,
 				"resourceName": rm.Resource.Name,
 				"metricName":   k,
@@ -146,7 +144,7 @@ func (r *runnable) Run() error {
 			ev.AddField(pre+k, val)
 		}
 
-		r.logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"resourceType": rm.Resource.Type,
 			"resourceName": rm.Resource.Name,
 			"metricCount":  len(rm.Metrics),
@@ -154,7 +152,7 @@ func (r *runnable) Run() error {
 
 		// send resource event to Honeycomb
 		if err = ev.Send(); err != nil {
-			r.logger.WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"resourceType": rm.Resource.Type,
 				"resourceName": rm.Resource.Name,
 				"metricCount":  len(rm.Metrics),

@@ -9,7 +9,6 @@ import (
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
 	metrics_mock "github.com/honeycombio/honeycomb-kubernetes-agent/metrics/mock"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	stats "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
@@ -31,7 +30,7 @@ func createMockSourceAssets(isSum bool, isMeta bool, omitLabels []OmitLabel, inc
 		metadataProvider := kubelet.NewMetadataProvider(rc)
 		podsMetadata, _ := metadataProvider.Pods()
 		nodesMetadata := getMockNodesResponse()
-		metadata = NewMetadata(podsMetadata, &nodesMetadata, omitLabels, includeNodeLabels, logrus.StandardLogger())
+		metadata = NewMetadata(podsMetadata, &nodesMetadata, omitLabels, includeNodeLabels)
 	}
 
 	return summary, metadata
@@ -46,14 +45,13 @@ func getMockNodesResponse() v1.NodeList {
 
 func createMockAccumulator(metadata *Metadata, mg map[MetricGroup]bool) *MetricDataAccumulator {
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	return &MetricDataAccumulator{
 		metadata:              metadata,
 		metricGroupsToCollect: mg,
 		mp:                    p,
 		time:                  time.Now(),
-		logger:                logrus.StandardLogger(),
 	}
 }
 
@@ -172,7 +170,7 @@ func TestGetStatusForContainer(t *testing.T) {
 func TestGenerateMetricsData(t *testing.T) {
 	summary, metadata := createMockSourceAssets(true, true, nil, false)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	assert.Equal(t, 42, len(p.GenerateMetricsData(summary, metadata, map[MetricGroup]bool{
 		"node":      true,
@@ -192,7 +190,7 @@ func TestGenerateMetricsData(t *testing.T) {
 func TestCpuMetrics(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	metrics := p.CpuMetrics(summary.Pods[0].CPU, 0.2)
 
@@ -205,7 +203,7 @@ func TestCpuMetrics(t *testing.T) {
 func TestCpuMetricsOptional(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	metrics := p.CpuMetrics(summary.Pods[1].CPU, 0)
 
@@ -217,7 +215,7 @@ func TestCpuMetricsOptional(t *testing.T) {
 func TestMemMetrics(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	metrics := p.MemMetrics(summary.Pods[0].Memory, 2147483648)
 
@@ -231,7 +229,7 @@ func TestMemMetrics(t *testing.T) {
 func TestNetworkMetrics(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	metrics := p.NetworkMetrics(summary.Pods[0].Network)
 
@@ -244,7 +242,7 @@ func TestNetworkMetrics(t *testing.T) {
 func TestVolumeMetrics(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	metrics := p.VolumeMetrics(summary.Pods[0].VolumeStats[0])
 
@@ -262,7 +260,7 @@ func TestCounterMetrics(t *testing.T) {
 	node := getNodeResource(summary.Node, metadata)
 	pod := getPodResource(node, podStats, metadata)
 
-	p := NewMetricsProcessor(10*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(10 * time.Second)
 
 	metrics := p.GenerateMetricsData(summary, metadata, map[MetricGroup]bool{"pod": true})
 
@@ -288,7 +286,7 @@ func TestExpiredCounterMetrics(t *testing.T) {
 	pod := getPodResource(node, podStats, metadata)
 
 	// short expiration time to allow test to run faster
-	p := NewMetricsProcessor(1*time.Second, logrus.StandardLogger())
+	p := NewMetricsProcessor(1 * time.Second)
 
 	metrics := p.GenerateMetricsData(summary, metadata, map[MetricGroup]bool{"pod": true})
 

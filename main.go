@@ -42,16 +42,11 @@ type CmdLineOptions struct {
 	Validate   bool   `long:"validate" description:"Validate configuration and exit"`
 }
 
-var (
-	VERSION string
-)
-
 func init() {
 	// set the version string to our desired format
 	// version.VERSION is the importPath.name ld flag specified by build.sh
 	if version.VERSION == "" {
 		version.VERSION = "dev"
-
 	}
 	// init libhoney user agent properly
 	libhoney.UserAgentAddition = fmt.Sprintf("kubernetes/" + version.VERSION)
@@ -81,8 +76,14 @@ func main() {
 		logrus.Info("Configured split logging. trace, debug, info, and warn levels will now go to stdout")
 	}
 
-	if cfg.Verbosity == "debug" {
-		logrus.SetLevel(logrus.DebugLevel)
+	if cfg.Verbosity != "" {
+		level, err := logrus.ParseLevel(cfg.Verbosity)
+		if err == nil {
+			logrus.WithFields(logrus.Fields{
+				"newLevel": level.String(),
+			}).Info("Setting log verbosity")
+			logrus.SetLevel(level)
+		}
 	}
 
 	// Read write key from environment if not specified in config file.
@@ -230,9 +231,7 @@ func startMetricsService(config *config.MetricsConfig) error {
 			builder.AddField(k, v)
 		}
 
-		logger := logrus.StandardLogger()
-
-		svc, err := service.NewMetricsService(config, builder, logger, kubeClient)
+		svc, err := service.NewMetricsService(config, builder, kubeClient)
 		if err != nil {
 			return err
 		}
