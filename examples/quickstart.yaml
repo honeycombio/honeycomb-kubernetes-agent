@@ -77,8 +77,8 @@ data:
       metricGroups:
       - node
       - pod
-      
-      # Daemonset
+
+# Daemonset
 ---
 apiVersion: apps/v1
 kind: DaemonSet
