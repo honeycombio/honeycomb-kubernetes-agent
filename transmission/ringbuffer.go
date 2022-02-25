@@ -67,10 +67,9 @@ func (r *RingBuffer) Add(key uint64, ev *event.Event) {
 	// check if we have an existing event at this position
 	oldKey := r.itemOrder[r.position]
 	if oldKey != 0 {
-		if _, ok := r.items[oldKey]; ok {
-			// event exists, remove it from the items map
-			delete(r.items, oldKey)
-		}
+		// If the key at the current position is associated with an event
+		// in the buffer, remove it. Otherwise, this delete is a NOOP.
+		delete(r.items, oldKey)
 	}
 
 	// add event to map and order array
@@ -124,13 +123,9 @@ func (r *RingBuffer) startCleanupTimer() {
 	if duration < time.Second {
 		duration = time.Second
 	}
-	ticker := time.Tick(duration)
 	go (func() {
-		for {
-			select {
-			case <-ticker:
-				r.cleanup()
-			}
+		for range time.Tick(duration) {
+			r.cleanup()
 		}
 	})()
 }

@@ -51,10 +51,10 @@ func TestRingOverflow(t *testing.T) {
 		rb.Add(i, ev)
 	}
 
-	ev, ok := rb.Get(5)
+	_, ok := rb.Get(5)
 	assert.Equal(t, ok, false, "Event found when it should of been pushed out")
 
-	ev, ok = rb.Get(105)
+	ev, ok := rb.Get(105)
 	assert.Equal(t, ok, true, "Event not found")
 	assert.Equal(t, uint64(105), ev.Data["item"], "Event data incorrect")
 }
@@ -82,10 +82,10 @@ func TestExpire(t *testing.T) {
 		rb.Add(i, ev)
 	}
 
-	ev, ok := rb.Get(5)
+	_, ok := rb.Get(5)
 	assert.Equal(t, ok, false, "Event found when it should expired")
 
-	ev, ok = rb.Get(15)
+	ev, ok := rb.Get(15)
 	assert.Equal(t, ok, true, "Event not found")
 	assert.Equal(t, uint64(15), ev.Data["item"], "Event data incorrect")
 }
