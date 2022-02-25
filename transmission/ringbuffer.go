@@ -1,10 +1,11 @@
 package transmission
 
 import (
-	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
-	"github.com/sirupsen/logrus"
 	"sync"
 	"time"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
+	"github.com/sirupsen/logrus"
 )
 
 type BufferEvent struct {

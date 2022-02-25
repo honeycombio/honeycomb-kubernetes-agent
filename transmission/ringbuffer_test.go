@@ -1,10 +1,11 @@
 package transmission
 
 import (
-	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGet(t *testing.T) {

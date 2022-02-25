@@ -1,12 +1,13 @@
 package transmission
 
 import (
-	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
-	"github.com/honeycombio/libhoney-go"
-	"github.com/sirupsen/logrus"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
+	"github.com/honeycombio/libhoney-go"
+	"github.com/sirupsen/logrus"
 )
 
 const truncatedLineMax = 1000

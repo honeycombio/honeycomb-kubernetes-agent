@@ -5,8 +5,9 @@ package service
 
 import (
 	"context"
-	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"time"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
