@@ -21,12 +21,12 @@ func TestGet(t *testing.T) {
 	}
 
 	ev, ok := rb.Get(5)
-	assert.Equal(t, ok, true, "Event not found")
-	assert.Equal(t, uint64(5), ev.Data["item"], "Event data incorrect")
+	assert.Equal(t, ok, true, "Expected event wasn't found in the buffer")
+	assert.Equal(t, uint64(5), ev.Data["item"], "Event found didn't match expected data")
 
 	ev, ok = rb.Get(8)
-	assert.Equal(t, ok, true, "Event not found")
-	assert.Equal(t, uint64(8), ev.Data["item"], "Event data incorrect")
+	assert.Equal(t, ok, true, "Expected event wasn't found in the buffer")
+	assert.Equal(t, uint64(8), ev.Data["item"], "Event found didn't match expected data")
 
 }
 
@@ -52,15 +52,15 @@ func TestRingOverflow(t *testing.T) {
 	}
 
 	_, ok := rb.Get(5)
-	assert.Equal(t, ok, false, "Event found when it should of been pushed out")
+	assert.Equal(t, ok, false, "Found an event on the ring that should have been evicted by the size limit")
 
 	ev, ok := rb.Get(105)
-	assert.Equal(t, ok, true, "Event not found")
-	assert.Equal(t, uint64(105), ev.Data["item"], "Event data incorrect")
+	assert.Equal(t, ok, true, "Expected event wasn't found in the buffer")
+	assert.Equal(t, uint64(105), ev.Data["item"], "Event found didn't match expected data")
 }
 
 func TestExpire(t *testing.T) {
-	rb := NewRingBuffer(100, 1)
+	rb := NewRingBuffer(100, 1*time.Second)
 
 	for i := uint64(0); i < 10; i++ {
 		ev := &event.Event{
@@ -83,9 +83,9 @@ func TestExpire(t *testing.T) {
 	}
 
 	_, ok := rb.Get(5)
-	assert.Equal(t, ok, false, "Event found when it should expired")
+	assert.Equal(t, ok, false, "Found an event on the ring that should have expired")
 
 	ev, ok := rb.Get(15)
-	assert.Equal(t, ok, true, "Event not found")
-	assert.Equal(t, uint64(15), ev.Data["item"], "Event data incorrect")
+	assert.Equal(t, ok, true, "Expected unexpired event wasn't found")
+	assert.Equal(t, uint64(15), ev.Data["item"], "Event found didn't match expected data")
 }
