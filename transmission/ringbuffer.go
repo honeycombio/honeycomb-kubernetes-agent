@@ -30,6 +30,10 @@ type RingBuffer struct {
 	ttl       time.Duration
 }
 
+func (r *RingBuffer) enabled() bool {
+	return r.size > 0
+}
+
 func NewRingBuffer(size int, duration time.Duration) *RingBuffer {
 	logrus.WithFields(logrus.Fields{
 		"size":    size,
@@ -48,10 +52,6 @@ func NewRingBuffer(size int, duration time.Duration) *RingBuffer {
 	}
 
 	return r
-}
-
-func (r *RingBuffer) enabled() bool {
-	return r.size > 0
 }
 
 // Add an event to ring buffer
