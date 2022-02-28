@@ -43,17 +43,21 @@ func NewRingBuffer(size int, duration time.Duration) *RingBuffer {
 		ttl:       duration,
 	}
 
-	if r.size > 0 && r.ttl > 0 {
+	if r.enabled() && r.ttl > 0 {
 		r.startCleanupTimer()
 	}
 
 	return r
 }
 
+func (r *RingBuffer) enabled() bool {
+	return r.size > 0
+}
+
 // Add an event to ring buffer
 func (r *RingBuffer) Add(key uint64, ev *event.Event) {
 	// fast return if disabled
-	if r.size == 0 {
+	if !r.enabled() {
 		return
 	}
 
@@ -87,7 +91,7 @@ func (r *RingBuffer) Add(key uint64, ev *event.Event) {
 // Get an event from the buffer's map
 func (r *RingBuffer) Get(key uint64) (*event.Event, bool) {
 	// fast return if disabled
-	if r.size == 0 {
+	if !r.enabled() {
 		return nil, false
 	}
 
