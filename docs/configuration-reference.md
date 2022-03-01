@@ -328,13 +328,15 @@ additionalFields:
 You can enable retrying to send events to Honeycomb by setting this option.
 The default size is 0 which means retry is not enabled.
 The recommendation when first enabling retry is to set this buffer size to 1000 which provides some buffer for temporary Honeycomb API ingest errors with only a modest increase in memory consumption by the agent.
+The retry buffer is a ring buffer, which will contain no more than the maximum size of events, removing the oldest one when new events are added to a filled buffer.
 Note: there is no flushing of the events in the retry buffer on process shutdown.
 
 ### retryBufferExpire
 
-When enabling retry, you may opt to expire events out of the retry buffer.
-The default expiration is 0 which means events will live on the retry buffer for the lifetime of the running agent process.
-If you wish to expire events from the buffer, set this to the number of seconds an individual event may be considered for retry before removed from the buffer unsent.
+When enabling retry, it is recommended to expire events out of the retry buffer to minimize memory impact.
+The default expiration is 0 which means events will live on the retry buffer until forced out from new events being added.
+To expire events from the buffer, set this to the time duration that marks an event for removal from the buffer.
+This should be set with the appropriate time suffix (e.g., `10s`, `1m`, etc.).
 
 ## Sample configurations
 
