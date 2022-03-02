@@ -1,5 +1,22 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.4.0 2022-03-02
+
+### Added
+
+- Unify logging, fix log verbosity (#229) | [@puckpuck](https://github.com/puckpuck)
+
+### Fixed
+
+- Return early on empty MemoryStats (#230) | [@JamieDanielson](https://github.com/JamieDanielson)
+- Fix broken test from logrus change (#231) | [@JamieDanielson](https://github.com/JamieDanielson)
+
+### Maintenance
+
+- Bump k8s.io/kubelet from 0.23.1 to 0.23.3 (#224)
+- Bump github.com/honeycombio/honeytail from 1.6.0 to 1.6.1 (#221)
+- Bump k8s.io/client-go from 0.23.1 to 0.23.3 (#220)
+
 ## 2.3.2 2022-02-09
 
 ### Maintenance
