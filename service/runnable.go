@@ -7,8 +7,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
+
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
-	"github.com/honeycombio/libhoney-go"
+	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/sirupsen/logrus"
 
 	v1 "k8s.io/api/core/v1"
@@ -25,26 +27,30 @@ type runnable struct {
 	statsProvider     *kubelet.StatsProvider
 	metadataProvider  *kubelet.MetadataProvider
 	metricsProvider   *metrics.Processor
+	dataset           string
 	interval          time.Duration
 	k8sClusterName    string
 	restClient        kubelet.RestClient
-	builder           *libhoney.Builder
 	omitLabels        []metrics.OmitLabel
+	additionalFields  map[string]interface{}
 	includeNodeLabels bool
 
 	metricGroupsToCollect map[metrics.MetricGroup]bool
+	transmitter           *transmission.HoneycombTransmitter
 	apiClient             corev1.NodesGetter
 }
 
-func newRunnable(rc kubelet.RestClient, builder *libhoney.Builder, opt Options, client *corev1.CoreV1Client) *runnable {
+func newRunnable(rc kubelet.RestClient, opt Options, client *corev1.CoreV1Client) *runnable {
 	return &runnable{
+		dataset:               opt.Dataset,
 		interval:              opt.Interval,
 		k8sClusterName:        opt.ClusterName,
 		restClient:            rc,
-		builder:               builder,
 		omitLabels:            opt.OmitLabels,
+		additionalFields:      opt.AdditionalFields,
 		includeNodeLabels:     opt.IncludeNodeLabels,
 		metricGroupsToCollect: opt.MetricGroupsToCollect,
+		transmitter:           &transmission.HoneycombTransmitter{},
 		apiClient:             client,
 	}
 }
@@ -107,20 +113,13 @@ func (r *runnable) Run() error {
 	// iterate over resource metrics data
 	for _, rm := range resourceMetrics {
 
-		// create event from Resource meta
-		ev, err := r.createEventFromResource(rm.Resource)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"resourceType": rm.Resource.Type,
-				"resourceName": rm.Resource.Name,
-			}).WithError(err).Error("Could not create event for resource")
-			continue
-		}
-
 		logrus.WithFields(logrus.Fields{
 			"resourceType": rm.Resource.Type,
 			"resourceName": rm.Resource.Name,
 		}).Trace("Creating event for resource")
+
+		// create event from Resource meta
+		ev := r.createEventFromResource(rm.Resource)
 
 		pre := metrics.PrefixMetrics
 
@@ -141,49 +140,46 @@ func (r *runnable) Run() error {
 			}
 
 			// add metric to resource event
-			ev.AddField(pre+k, val)
+			ev.Data[pre+k] = val
 		}
 
 		logrus.WithFields(logrus.Fields{
 			"resourceType": rm.Resource.Type,
 			"resourceName": rm.Resource.Name,
 			"metricCount":  len(rm.Metrics),
-		}).Debug("Event Data: ", ev.Fields())
+		}).Trace("Event Data: ", ev.Data)
 
 		// send resource event to Honeycomb
-		if err = ev.Send(); err != nil {
-			logrus.WithFields(logrus.Fields{
-				"resourceType": rm.Resource.Type,
-				"resourceName": rm.Resource.Name,
-				"metricCount":  len(rm.Metrics),
-			}).WithError(err).Error("Error sending event to honeycomb")
-		}
+		r.transmitter.Send(ev)
 	}
 
 	return nil
 }
 
-func (r *runnable) createEventFromResource(res *metrics.Resource) (*libhoney.Event, error) {
-	ev := r.builder.NewEvent()
+func (r *runnable) createEventFromResource(res *metrics.Resource) *event.Event {
 
 	// add basic attributes to each resource event
-	_ = ev.Add(map[string]string{
+	data := map[string]interface{}{
 		metrics.PrefixMetrics + metrics.MetricSourceName: res.Name,
 		metrics.PrefixMetrics + metrics.MetricSourceType: res.Type,
 		metrics.KubernetesResourceType:                   res.Type,
 		metrics.PrefixCluster + "name":                   r.k8sClusterName,
-	})
-	ev.Timestamp = res.Timestamp
-
-	// add all labels to event
-	if err := ev.Add(res.Labels); err != nil {
-		return nil, err
 	}
 
-	// add status attributes as fields in event
+	// add all additional fields
+	for k, v := range r.additionalFields {
+		data[k] = v
+	}
+
+	// add all labels to event
+	for k, v := range res.Labels {
+		data[k] = v
+	}
+
+	// add status details to event
 	if res.Status != nil {
-		if err := ev.Add(res.Status); err != nil {
-			return nil, err
+		for k, v := range res.Status {
+			data[k] = v
 		}
 
 		// Check if resource restarted
@@ -197,12 +193,18 @@ func (r *runnable) createEventFromResource(res *metrics.Resource) (*libhoney.Eve
 				delta := r.metricsProvider.GetCounterDelta(res, "restarts", m)
 				if delta > 0 {
 					// resource had a restart since last collection
-					ev.AddField(metrics.StatusRestart, true)
+					data[metrics.StatusRestart] = true
 				}
-				ev.AddField(metrics.StatusRestartDelta, delta)
+				data[metrics.StatusRestartDelta] = delta
 			}
 		}
 	}
 
-	return ev, nil
+	ev := &event.Event{
+		Data:      data,
+		Dataset:   r.dataset,
+		Timestamp: res.Timestamp,
+	}
+
+	return ev
 }

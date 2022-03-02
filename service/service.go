@@ -12,7 +12,6 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/interval"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/kubelet"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
-	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
@@ -31,19 +30,20 @@ type Service struct {
 	restClient kubelet.RestClient
 	runner     *interval.Runner
 	options    Options
-	builder    *libhoney.Builder
 	client     *corev1.CoreV1Client
 }
 
 type Options struct {
+	Dataset               string
 	Interval              time.Duration
 	ClusterName           string
 	OmitLabels            []metrics.OmitLabel
+	AdditionalFields      map[string]interface{}
 	IncludeNodeLabels     bool
 	MetricGroupsToCollect map[metrics.MetricGroup]bool
 }
 
-func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, client *corev1.CoreV1Client) (*Service, error) {
+func NewMetricsService(cfg *config.MetricsConfig, client *corev1.CoreV1Client) (*Service, error) {
 
 	if cfg.Endpoint == "" {
 		// Not all Managed K8s offerings allow the nodename to be DNS reachable, try by IP if available.
@@ -70,9 +70,11 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, cli
 	}
 
 	opt := &Options{
+		Dataset:               cfg.Dataset,
 		Interval:              cfg.Interval,
 		ClusterName:           cfg.ClusterName,
 		OmitLabels:            cfg.OmitLabels,
+		AdditionalFields:      cfg.AdditionalFields,
 		IncludeNodeLabels:     cfg.IncludeNodeLabels,
 		MetricGroupsToCollect: mg,
 	}
@@ -81,7 +83,6 @@ func NewMetricsService(cfg *config.MetricsConfig, builder *libhoney.Builder, cli
 		config:     cfg,
 		restClient: rc,
 		options:    *opt,
-		builder:    builder,
 		client:     client,
 	}, nil
 }
@@ -134,7 +135,7 @@ func (s *Service) Start() error {
 	}).Info("Creating Metrics Service Runner...")
 
 	// setup primary interval runner for metrics service
-	runnable := newRunnable(s.restClient, s.builder, s.options, s.client)
+	runnable := newRunnable(s.restClient, s.options, s.client)
 	s.runner = interval.NewRunner("k8s-stats", s.options.Interval, runnable)
 	logrus.Debug("Metrics Service Runner created")
 

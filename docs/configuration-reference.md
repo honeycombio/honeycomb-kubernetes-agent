@@ -323,6 +323,22 @@ additionalFields:
   owner: me@example.com
 ```
 
+### retryBufferSize
+
+You can enable retrying to send events to Honeycomb by setting this option.
+The default size is 0 which means retry is not enabled.
+The recommendation when first enabling retry is to set this buffer size to 1000 which provides some buffer for temporary Honeycomb API ingest errors with only a modest increase in memory consumption by the agent.
+The retry buffer is a ring buffer, which will contain no more than the maximum size of events, removing the oldest one when new events are added to a filled buffer.
+Note: there is no flushing of the events in the retry buffer on process shutdown.
+
+### retryBufferExpire
+
+When enabling retry, it is recommended to expire events out of the retry buffer to minimize memory impact.
+The default expiration is 0 which means events will remain in the retry buffer until forced out from new events being added.
+With a short expiration time, events that failed to send may expire before being retried.
+To expire events from the buffer, set this to the time duration that marks an event for removal from the buffer.
+This should be set with the appropriate time suffix (e.g., `10s`, `1m`, etc.).
+
 ## Sample configurations
 
 Here are some example configurations for the Honeycomb agent.
@@ -397,7 +413,7 @@ Here are some example configurations for the Honeycomb agent.
         parser: json
         dataset: frontend
     ```
-    
+
 * Process all logs except for those with a given field set to a certain value:
 
     ```
@@ -412,5 +428,5 @@ Here are some example configurations for the Honeycomb agent.
           - drop_event:
               field: level
               values:
-                - debug       
+                - debug
     ```

@@ -17,7 +17,7 @@ import (
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/unwrappers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/version"
-	libhoney "github.com/honeycombio/libhoney-go"
+	"github.com/honeycombio/libhoney-go"
 	flag "github.com/jessevdk/go-flags"
 	"github.com/sirupsen/logrus"
 
@@ -103,7 +103,7 @@ func main() {
 		}
 	}
 
-	err = transmission.InitLibhoney(apiKey, cfg.APIHost)
+	err = transmission.InitLibhoney(apiKey, cfg.APIHost, cfg.RetryBufferSize, cfg.RetryBufferExpire)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error initializing Honeycomb transmission")
 	}
@@ -182,7 +182,7 @@ func createLogTailers(config *config.Config) ([]*tailer.PathWatcher, []*podtaile
 				logrus.WithError(err).Error("Error setting up watcher")
 				continue
 			}
-			// Even though we have a static path, NewPathWatcher expects a function
+			// Even though we have a static path, NewPathWatcher expects a function,
 			// so we build one that just returns the path
 			patternFunc := func() (string, error) { return path, nil }
 			t := tailer.NewPathWatcher(patternFunc, nil, handlerFactory, stateRecorder)
@@ -224,14 +224,8 @@ func startMetricsService(config *config.MetricsConfig) error {
 		if config.Dataset == "" {
 			config.Dataset = "kubernetes-metrics"
 		}
-		builder := libhoney.NewBuilder()
-		builder.Dataset = config.Dataset
 
-		for k, v := range config.AdditionalFields {
-			builder.AddField(k, v)
-		}
-
-		svc, err := service.NewMetricsService(config, builder, kubeClient)
+		svc, err := service.NewMetricsService(config, kubeClient)
 		if err != nil {
 			return err
 		}
@@ -244,7 +238,7 @@ func startMetricsService(config *config.MetricsConfig) error {
 }
 
 func newKubeClient() (*corev1.CoreV1Client, error) {
-	// Get clientset to query API server.
+	// Get client to query API server.
 	kubeClientConfig, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
