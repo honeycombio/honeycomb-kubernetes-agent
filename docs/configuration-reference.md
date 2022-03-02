@@ -334,7 +334,8 @@ Note: there is no flushing of the events in the retry buffer on process shutdown
 ### retryBufferExpire
 
 When enabling retry, it is recommended to expire events out of the retry buffer to minimize memory impact.
-The default expiration is 0 which means events will live on the retry buffer until forced out from new events being added.
+The default expiration is 0 which means events will remain in the retry buffer until forced out from new events being added.
+With a short expiration time, events that failed to send may expire before being retried.
 To expire events from the buffer, set this to the time duration that marks an event for removal from the buffer.
 This should be set with the appropriate time suffix (e.g., `10s`, `1m`, etc.).
 

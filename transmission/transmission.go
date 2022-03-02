@@ -131,7 +131,7 @@ func readResponses() {
 						"error":        resp.Err,
 						"status":       resp.StatusCode,
 						"responseBody": string(resp.Body),
-					}).Error("Failed to send event to Honeycomb. Will retry.")
+					}).Debug("Failed to send event to Honeycomb. Will retry.")
 
 					// Resend event
 					ht := &HoneycombTransmitter{}
