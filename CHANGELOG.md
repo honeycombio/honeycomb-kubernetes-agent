@@ -4,7 +4,7 @@
 
 ### Added
 
-- Implements retry logic for sending events (#232 ) | [@puckpuck](https://github.com/puckpuck)
+- Implements retry logic for sending events (#232) | [@puckpuck](https://github.com/puckpuck)
 - Unify logging, fix log verbosity (#229) | [@puckpuck](https://github.com/puckpuck)
 
 ### Fixed
