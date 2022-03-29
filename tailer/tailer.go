@@ -12,7 +12,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 // Tailer tails a single file, passing each line off to the handler.
@@ -204,7 +204,7 @@ func (p *PathWatcher) check() {
 			if p.filter != nil && !p.filter(file) {
 				logrus.WithFields(logrus.Fields{
 					"file": file,
-				}).Warn("File filtered out of tailing list based on containerName")
+				}).Warn("File filtered out of tailing list")
 				continue
 			}
 			handler := p.handlerFactory.New(file)

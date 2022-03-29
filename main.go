@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/honeycombio/honeycomb-kubernetes-agent/service"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/honeycombio/honeycomb-kubernetes-agent/service"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
