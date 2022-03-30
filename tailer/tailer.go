@@ -4,6 +4,7 @@ package tailer
 
 import (
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -169,6 +170,22 @@ func (p *PathWatcher) Stop() {
 	}
 }
 
+// This emulates filepath.Glob's behavior using doublestar,
+// which means that it now supports /**/ names in its paths.
+func doublestarGlob(pat string) ([]string, error) {
+	base, pattern := doublestar.SplitPattern(pat)
+	fsys := os.DirFS(base)
+	files, err := doublestar.Glob(fsys, pattern)
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	for _, f := range files {
+		result = append(result, filepath.Join(base, f))
+	}
+	return result, nil
+}
+
 func (p *PathWatcher) check() {
 	// Have we figured out the pattern yet? If not, run our pattern function
 	if p.savedPattern == "" {
@@ -186,7 +203,7 @@ func (p *PathWatcher) check() {
 			"log pattern": pt,
 		}).Info("Log pattern")
 	}
-	files, err := doublestar.Glob(os.DirFS("/"), p.savedPattern)
+	files, err := doublestarGlob(p.savedPattern)
 	if err != nil {
 		logrus.WithError(err).Error("Error globbing files")
 	}
