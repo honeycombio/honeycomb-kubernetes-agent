@@ -165,6 +165,7 @@ func TestTailingWithoutStateRecorder(t *testing.T) {
 	handler := &mockLineHandler{}
 
 	logFile, err := ioutil.TempFile("/tmp", "honeycomb-log-test")
+	assert.NoError(t, err)
 	logFile.Write([]byte("line1\n"))
 	logFile.Sync()
 	tailer := NewTailer(logFile.Name(), handler, stateRecorder)

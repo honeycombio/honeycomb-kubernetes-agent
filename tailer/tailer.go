@@ -3,16 +3,15 @@
 package tailer
 
 import (
-	"path/filepath"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/hpcloud/tail"
 
 	"github.com/sirupsen/logrus"
-
-	v1 "k8s.io/api/core/v1"
 )
 
 // Tailer tails a single file, passing each line off to the handler.
@@ -123,7 +122,6 @@ type PathWatcher struct {
 	handlerFactory handlers.LineHandlerFactory
 	stateRecorder  StateRecorder
 	checkInterval  time.Duration
-	pod            *v1.Pod
 
 	stop         chan bool
 	savedPattern string
@@ -188,7 +186,7 @@ func (p *PathWatcher) check() {
 			"log pattern": pt,
 		}).Info("Log pattern")
 	}
-	files, err := filepath.Glob(p.savedPattern)
+	files, err := doublestar.Glob(os.DirFS("/"), p.savedPattern)
 	if err != nil {
 		logrus.WithError(err).Error("Error globbing files")
 	}
