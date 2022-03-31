@@ -24,7 +24,6 @@ const (
 	MeasureCpuUtilization        = "cpu.utilization"
 	MeasureMemoryAvailable       = "memory.available"
 	MeasureMemoryUsage           = "memory.usage"
-	MeasureMemoryUtilization     = "memory.utilization"
 	MeasureMemoryRSS             = "memory.rss"
 	MeasureMemoryWorkingSet      = "memory.working_set"
 	MeasureMemoryPageFaults      = "memory.page_faults"

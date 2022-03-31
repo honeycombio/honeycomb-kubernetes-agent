@@ -222,7 +222,6 @@ func TestMemMetrics(t *testing.T) {
 	require.Equal(t, 7, len(metrics))
 
 	assert.Equal(t, float64(2143281152), metrics[MeasureMemoryUsage].GetValue(), "Memory Usage")
-	assert.InDelta(t, 0.000001, 99.804300603, metrics[MeasureMemoryUtilization].GetValue(), "Memory Utilization")
 	assert.Equal(t, float64(23191552), metrics[MeasureMemoryRSS].GetValue(), "Memory RSS")
 }
 
@@ -236,7 +235,6 @@ func TestMemMetricsOptional(t *testing.T) {
 	require.Equal(t, 0, len(metrics))
 
 	assert.Empty(t, metrics[MeasureMemoryUsage])
-	assert.Empty(t, metrics[MeasureMemoryUtilization])
 	assert.Empty(t, metrics[MeasureMemoryRSS])
 }
 
