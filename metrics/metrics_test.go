@@ -219,7 +219,7 @@ func TestMemMetrics(t *testing.T) {
 
 	metrics := p.MemMetrics(summary.Pods[0].Memory, 2147483648)
 
-	require.Equal(t, 7, len(metrics))
+	require.Equal(t, 6, len(metrics))
 
 	assert.Equal(t, float64(2143281152), metrics[MeasureMemoryUsage].GetValue(), "Memory Usage")
 	assert.Equal(t, float64(23191552), metrics[MeasureMemoryRSS].GetValue(), "Memory RSS")
@@ -332,7 +332,7 @@ func TestNodeStats(t *testing.T) {
 	assert.Equal(t, 0, len(data.Resource.Status))
 	assert.Equal(t, 9, len(data.Resource.Labels))
 	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
-	assert.Equal(t, 17, len(data.Metrics))
+	assert.Equal(t, 16, len(data.Metrics))
 	assert.Equal(t, float64(388954406)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
 	// without includeNodeLabels
@@ -364,7 +364,7 @@ func TestPodStats(t *testing.T) {
 	assert.Equal(t, "metallb", data.Resource.Labels[PrefixLabel+"app"])
 	assert.Equal(t, "metallb-system", data.Resource.Labels[LabelNamespaceName])
 	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
-	assert.Equal(t, 17, len(data.Metrics))
+	assert.Equal(t, 16, len(data.Metrics))
 	assert.Equal(t, float64(7919180)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
 }
@@ -387,7 +387,7 @@ func TestContainerStats(t *testing.T) {
 	assert.Equal(t, "metallb", data.Resource.Labels[PrefixLabel+"app"])
 	assert.Equal(t, "metallb-system", data.Resource.Labels[LabelNamespaceName])
 	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
-	assert.Equal(t, 13, len(data.Metrics))
+	assert.Equal(t, 12, len(data.Metrics))
 	assert.Equal(t, float64(13107067)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
 }
