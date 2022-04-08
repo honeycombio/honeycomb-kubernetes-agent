@@ -34,6 +34,7 @@ type WatcherConfig struct {
 	// string means "select all pods".
 	LabelSelector *string  `yaml:"labelSelector"`
 	FilePaths     []string `yaml:"paths"`
+	ExcludePaths  []string `yaml:"exclude"`
 	ContainerName string   `yaml:"containerName"`
 	Processors    []map[string]map[string]interface{}
 }

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 // test patterns after https://github.com/kubernetes/kubernetes/pull/74441
@@ -130,7 +130,7 @@ func TestDetermineFilterFuncLegacyLogs(t *testing.T) {
 		return ok
 	}
 
-	f := determineFilterFunc(pod, "/var/log", "wibble", true)
+	f := determineFilterFunc(pod, "/var/log", "wibble", true, nil)
 	// functions should have same output
 	assert.Equal(
 		t,
@@ -160,7 +160,7 @@ func TestDetermineFilterFunc(t *testing.T) {
 		return ok
 	}
 
-	f := determineFilterFunc(pod, "/var/log", "wibble", false)
+	f := determineFilterFunc(pod, "/var/log", "wibble", false, nil)
 	assert.Equal(
 		t,
 		expected("/var/log/pods/123456/wibble_0.log"),
@@ -192,7 +192,7 @@ func TestDetermineFilterFuncK8S1Dot10(t *testing.T) {
 		return ok
 	}
 
-	f := determineFilterFunc(pod, "/var/log", "wibble", false)
+	f := determineFilterFunc(pod, "/var/log", "wibble", false, nil)
 	assert.Equal(
 		t,
 		expected("/var/log/pods/123456/wibble/0.log"),
@@ -236,7 +236,7 @@ func TestDetermineFilterFuncK8S74441(t *testing.T) {
 	_, err = os.Create(file2)
 	assert.Nil(t, err)
 
-	f := determineFilterFunc(pod, basePath, "container1", false)
+	f := determineFilterFunc(pod, basePath, "container1", false, nil)
 
 	assert.Equal(
 		t,
@@ -249,4 +249,57 @@ func TestDetermineFilterFuncK8S74441(t *testing.T) {
 		f(file2),
 		false,
 	)
+}
+
+func TestDetermineFilterFuncExclude(t *testing.T) {
+	t.Parallel()
+	pod := &v1.Pod{}
+	pod.Namespace = "asdf"
+	pod.Name = "foo"
+	pod.UID = "123456"
+	podDirName := fmt.Sprintf("%s_%s_%s", pod.Namespace, pod.Name, pod.UID)
+
+	basePath, err := ioutil.TempDir("", "")
+	assert.Nil(t, err)
+	defer os.RemoveAll(basePath)
+
+	err = os.Mkdir(filepath.Join(basePath, "pods"), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(basePath, "pods", podDirName), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(basePath, "pods", podDirName, "container1"), 0777)
+	assert.Nil(t, err)
+	err = os.Mkdir(filepath.Join(basePath, "pods", podDirName, "container2"), 0777)
+	assert.Nil(t, err)
+
+	tests := []struct {
+		path string
+		name string
+		want bool
+	}{
+		{"container1", "0.log", true},
+		{"container1", "1.log.exclude1only", false},
+		{"container1", "1.log.excludeAlways", false},
+		{"container2", "0.log", true},
+		{"container2", "0.log.excludeAlways", false},
+		{"container2", "1.log", true},
+		{"container2", "1.log.exclude1only", true},
+		{"container2", "1.log.excludeAlways", false},
+	}
+
+	f := determineFilterFunc(pod, basePath, "", false, []string{"**/*.excludeAlways", "**/container1/*.exclude1only"})
+
+	for _, tc := range tests {
+		t.Run(filepath.Join(tc.path, tc.name), func(t *testing.T) {
+			file1 := filepath.Join(basePath, "pods", podDirName, tc.path, tc.name)
+			_, err = os.Create(file1)
+			assert.Nil(t, err)
+
+			assert.Equal(
+				t,
+				tc.want,
+				f(file1),
+			)
+		})
+	}
 }

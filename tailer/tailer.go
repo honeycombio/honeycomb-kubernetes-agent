@@ -3,16 +3,16 @@
 package tailer
 
 import (
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/hpcloud/tail"
 
 	"github.com/sirupsen/logrus"
-
-	"k8s.io/api/core/v1"
 )
 
 // Tailer tails a single file, passing each line off to the handler.
@@ -123,7 +123,6 @@ type PathWatcher struct {
 	handlerFactory handlers.LineHandlerFactory
 	stateRecorder  StateRecorder
 	checkInterval  time.Duration
-	pod            *v1.Pod
 
 	stop         chan bool
 	savedPattern string
@@ -171,6 +170,22 @@ func (p *PathWatcher) Stop() {
 	}
 }
 
+// This emulates filepath.Glob's behavior using doublestar,
+// which means that it now supports /**/ names in its paths.
+func doublestarGlob(pat string) ([]string, error) {
+	base, pattern := doublestar.SplitPattern(pat)
+	fsys := os.DirFS(base)
+	files, err := doublestar.Glob(fsys, pattern)
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	for _, f := range files {
+		result = append(result, filepath.Join(base, f))
+	}
+	return result, nil
+}
+
 func (p *PathWatcher) check() {
 	// Have we figured out the pattern yet? If not, run our pattern function
 	if p.savedPattern == "" {
@@ -188,7 +203,7 @@ func (p *PathWatcher) check() {
 			"log pattern": pt,
 		}).Info("Log pattern")
 	}
-	files, err := filepath.Glob(p.savedPattern)
+	files, err := doublestarGlob(p.savedPattern)
 	if err != nil {
 		logrus.WithError(err).Error("Error globbing files")
 	}
@@ -204,7 +219,7 @@ func (p *PathWatcher) check() {
 			if p.filter != nil && !p.filter(file) {
 				logrus.WithFields(logrus.Fields{
 					"file": file,
-				}).Warn("File filtered out of tailing list based on containerName")
+				}).Warn("File filtered out of tailing list")
 				continue
 			}
 			handler := p.handlerFactory.New(file)

@@ -10,9 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/config"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/handlers"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
@@ -292,12 +293,39 @@ func determineLogPattern(pod *v1.Pod, basePath string, legacyLogPaths bool) (str
 	return "", fmt.Errorf("Could not find specified log path for pod %s", pod.UID)
 }
 
-func determineFilterFunc(pod *v1.Pod, basePath string, containerName string, legacyLogPaths bool) func(fileName string) bool {
+func determineFilterFunc(pod *v1.Pod, basePath string, containerName string, legacyLogPaths bool, excludePaths []string) func(fileName string) bool {
+	// this is an exclude function that conforms to the filter specs -- it returns true
+	// if the file should be *included*. By default, it's nil (which is treated as true)
+	var exclusionFilter func(string) bool
+	if len(excludePaths) > 0 {
+		excludes := make([]string, 0)
+		for _, exclude := range excludePaths {
+			// don't try to evaluate patterns that we can't even parse
+			if doublestar.ValidatePattern(exclude) {
+				excludes = append(excludes, exclude)
+				logrus.WithField("exclude", exclude).Debug("Excluding path")
+			}
+		}
+		exclusionFilter = func(fileName string) bool {
+			// check if we should exclude this path
+			for _, exclude := range excludes {
+				shouldExclude, _ := doublestar.Match(exclude, fileName)
+				if shouldExclude {
+					return false // false means exclude
+				}
+			}
+			return true
+		}
+	}
 
 	if containerName == "" {
-		logrus.Debug("No container name specified, no filter function needed")
-		return nil
+		if len(excludePaths) == 0 {
+			logrus.Debug("No container name or exclude paths specified, no filter function needed")
+			return nil
+		}
+		return exclusionFilter
 	}
+
 	if legacyLogPaths {
 		re := fmt.Sprintf(
 			"^%s/containers/%s_%s_%s-.+\\.log",
@@ -311,6 +339,11 @@ func determineFilterFunc(pod *v1.Pod, basePath string, containerName string, leg
 		}).Debug("Container filter function")
 
 		return func(fileName string) bool {
+			// first check if we should exclude this path
+			// If exclusionFilter says no, we're going to say no.
+			if exclusionFilter != nil && !exclusionFilter(fileName) {
+				return false
+			}
 			ok, _ := regexp.Match(re, []byte(fileName))
 			return ok
 		}
@@ -336,15 +369,21 @@ func determineFilterFunc(pod *v1.Pod, basePath string, containerName string, leg
 	}).Debug("Container filter function")
 
 	return func(fileName string) bool {
-		ok, _ := regexp.Match(re1, []byte(fileName))
+		// first check if we should exclude this path
+		// If exclusionFilter says no, we're going to say no.
+		if exclusionFilter != nil && !exclusionFilter(fileName) {
+			return false
+		}
+		// now check our patterns -- if any of them succeeds, we're good
+		ok, _ := regexp.MatchString(re1, fileName)
 		if ok {
 			return ok
 		}
-		ok, _ = regexp.Match(re2, []byte(fileName))
+		ok, _ = regexp.MatchString(re2, fileName)
 		if ok {
 			return ok
 		}
-		ok, _ = regexp.Match(re3, []byte(fileName))
+		ok, _ = regexp.MatchString(re3, fileName)
 		return ok
 	}
 }
@@ -358,7 +397,7 @@ func (pt *PodSetTailer) watcherForPod(pod *v1.Pod, containerName string, podWatc
 
 	// only watch logs for containers matching the given name, if
 	// one is specified
-	filterFunc := determineFilterFunc(pod, logsBasePath, containerName, pt.legacyLogPaths)
+	filterFunc := determineFilterFunc(pod, logsBasePath, containerName, pt.legacyLogPaths, pt.config.ExcludePaths)
 
 	additionalProcessors := []processors.Processor{
 		&processors.KubernetesMetadataProcessor{
