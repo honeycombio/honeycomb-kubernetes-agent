@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -150,8 +151,9 @@ func TestPathWatching(t *testing.T) {
 	time.Sleep(time.Second)
 	watcher.Stop()
 
-	assert.Equal(t, len(handlerFactory.handlers), 2)
-	for _, h := range handlerFactory.handlers {
+	assert.Equal(t, 2, len(handlerFactory.handlers))
+	for k, h := range handlerFactory.handlers {
+		fmt.Println(k)
 		assert.Equal(t, 2, len(h.lines))
 	}
 	assert.Equal(t, len(watcher.tailers), 0)
@@ -165,9 +167,30 @@ func TestTailingWithoutStateRecorder(t *testing.T) {
 	handler := &mockLineHandler{}
 
 	logFile, err := ioutil.TempFile("/tmp", "honeycomb-log-test")
+	assert.NoError(t, err)
 	logFile.Write([]byte("line1\n"))
 	logFile.Sync()
 	tailer := NewTailer(logFile.Name(), handler, stateRecorder)
 	tailer.Run()
 	tailer.Stop()
+}
+
+func TestGlobbing(t *testing.T) {
+	paths := []string{
+		"/var/log/*",
+		"*",
+		".",
+	}
+
+	for _, p := range paths {
+		t.Run(p, func(t *testing.T) {
+			oldfiles, err := filepath.Glob(p)
+			assert.NoError(t, err)
+
+			newfiles, err := doublestarGlob(p)
+			assert.NoError(t, err)
+
+			assert.Equal(t, oldfiles, newfiles)
+		})
+	}
 }

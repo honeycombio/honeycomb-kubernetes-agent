@@ -1,5 +1,18 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.5.0 2022-04-08
+
+### Added
+
+- Add exclude capability for certain logging paths (#241) | [@kentquirk](https://github.com/kentquirk)
+
+### Maintenance
+
+- Update memory.utilization memory counter to use memory.workingset (#242) | [@MikeGoldsmith](https://github.com/MikeGoldsmith)
+- Bump k8s.io/kubelet from 0.23.3 to 0.23.5 (#244)
+- Bump github.com/stretchr/testify from 1.7.0 to 1.7.1 (#245)
+- Bump k8s.io/api from 0.23.3 to 0.23.5 (#246)
+
 ## 2.4.0 2022-03-02
 
 ### Added
