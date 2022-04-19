@@ -118,7 +118,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
-        image: honeycombio/honeycomb-kubernetes-agent:2.5.0
+        image: honeycombio/honeycomb-kubernetes-agent:2.5.1
         imagePullPolicy: IfNotPresent
         name: honeycomb-agent
         resources:

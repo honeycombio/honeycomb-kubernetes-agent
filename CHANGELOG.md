@@ -1,5 +1,9 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.5.1 2022-04-08
+
+- Update to Go 1.18; fixes openSSL CVE (#237) | [@MikeGoldsmith](https://github.com/MikeGoldsmith)
+
 ## 2.5.0 2022-04-08
 
 ### Added
