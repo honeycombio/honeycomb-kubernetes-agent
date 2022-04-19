@@ -10,7 +10,7 @@ tag_filters: &tag_filters
 jobs:
   build_agent:
     docker:
-      - image: cimg/go:1.17
+      - image: cimg/go:1.18
     # needed to build docker images, attach mount points, etc
     steps:
       - setup_remote_docker
@@ -40,7 +40,7 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             echo "about to publish to tag ${CIRCLE_TAG}"
-            ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} 
+            ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG}
 
 # Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
 workflows:
