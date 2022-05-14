@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/honeycombio/dynsampler-go v0.2.1
 	github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8
-	github.com/honeycombio/honeytail v1.6.1
+	github.com/honeycombio/honeytail v1.6.2
 	github.com/honeycombio/libhoney-go v1.15.8
 	github.com/honeycombio/urlshaper v0.0.0-20170302202025-2baba9ae5b5f
 	github.com/hpcloud/tail v1.0.1-0.20170814160653-37f427138745
@@ -39,7 +39,7 @@ require (
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/compress v1.15.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
