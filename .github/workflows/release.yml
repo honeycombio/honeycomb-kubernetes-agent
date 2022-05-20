@@ -13,9 +13,9 @@ jobs:
           repo: github.com/honeycombio/helm-charts
           title: ${{ steps.date.outputs.today }}
           body: |
-            ## Bump Refinery
+            ## Bump Kubernetes Agent
 
-            Update Refinery to latest version
+            Update Kubernetes Agent to latest version
 
           labels: |
             type: dependencies
