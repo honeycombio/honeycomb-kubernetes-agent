@@ -345,7 +345,7 @@ func TestNodeStats(t *testing.T) {
 	assert.Equal(t, 0, len(data.Resource.Status))
 	assert.Equal(t, 9, len(data.Resource.Labels))
 	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
-	assert.Equal(t, 17, len(data.Metrics))
+	assert.Equal(t, 16, len(data.Metrics))
 	assert.Equal(t, float64(388954406)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
 	// without includeNodeLabels
