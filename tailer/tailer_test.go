@@ -154,7 +154,7 @@ func TestPathWatching(t *testing.T) {
 	assert.Equal(t, 2, len(handlerFactory.handlers))
 	for k, h := range handlerFactory.handlers {
 		fmt.Println(k)
-		assert.Equal(t, 2, len(h.lines))
+		assert.Equal(t, 1, len(h.lines))
 	}
 	assert.Equal(t, len(watcher.tailers), 0)
 }
