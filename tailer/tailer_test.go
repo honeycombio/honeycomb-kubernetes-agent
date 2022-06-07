@@ -138,18 +138,18 @@ func TestPathWatching(t *testing.T) {
 	}
 
 	// The PathWatcher only checks once a second, so we should sleep for slightly longer than that.
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	for _, l := range loggers {
 		l.Rotate()
 		l.Write()
 	}
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	for _, l := range loggers {
 		l.Rotate()
 	}
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 	watcher.Stop()
 
 	assert.Equal(t, 2, len(handlerFactory.handlers))
