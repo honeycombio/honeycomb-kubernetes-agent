@@ -128,16 +128,17 @@ func (p *Processor) CpuMetrics(s *stats.CPUStats, limit float64) Metrics {
 		cpuUsage = float64(*nanoCores) / 1000000000
 	}
 
-	// if resource limits defined, get utilization
-	var cpuUtilization float64
-	if limit > 0 {
-		cpuUtilization = (cpuUsage / limit) * 100
+	metrics := Metrics{
+		MeasureCpuUsage: &Metric{Type: MetricTypeFloat, FloatValue: &cpuUsage},
 	}
 
-	return Metrics{
-		MeasureCpuUsage:       &Metric{Type: MetricTypeFloat, FloatValue: &cpuUsage},
-		MeasureCpuUtilization: &Metric{Type: MetricTypeFloat, FloatValue: &cpuUtilization},
+	// if resource limits defined, get utilization
+	if limit > 0 {
+		util := (cpuUsage / limit) * 100
+		metrics[MeasureCpuUtilization] = &Metric{Type: MetricTypeFloat, FloatValue: &util}
 	}
+
+	return metrics
 }
 
 func (p *Processor) MemMetrics(s *stats.MemoryStats, limit float64) Metrics {

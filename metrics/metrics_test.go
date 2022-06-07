@@ -200,6 +200,17 @@ func TestCpuMetrics(t *testing.T) {
 	assert.InDelta(t, 0.000001, 7.6691825, metrics[MeasureCpuUtilization].GetValue(), "CPU Utilization")
 }
 
+func TestCpuMetricsWithoutLimit(t *testing.T) {
+	summary, _ := createMockSourceAssets(true, false, nil, false)
+
+	p := NewMetricsProcessor(10 * time.Second)
+	metrics := p.CpuMetrics(summary.Pods[0].CPU, 0)
+
+	assert.Equal(t, 1, len(metrics))
+	assert.Equal(t, 0.015338365, metrics[MeasureCpuUsage].GetValue(), "CPU Usage")
+	assert.Nil(t, metrics[MeasureCpuUtilization])
+}
+
 func TestCpuMetricsOptional(t *testing.T) {
 	summary, _ := createMockSourceAssets(true, false, nil, false)
 
@@ -334,7 +345,7 @@ func TestNodeStats(t *testing.T) {
 	assert.Equal(t, 0, len(data.Resource.Status))
 	assert.Equal(t, 9, len(data.Resource.Labels))
 	assert.Equal(t, "us-east-1", data.Resource.Labels[PrefixLabel+"topology.kubernetes.io/region"])
-	assert.Equal(t, 17, len(data.Metrics))
+	assert.Equal(t, 16, len(data.Metrics))
 	assert.Equal(t, float64(388954406)/1000000000, data.Metrics[MeasureCpuUsage].GetValue())
 
 	// without includeNodeLabels
