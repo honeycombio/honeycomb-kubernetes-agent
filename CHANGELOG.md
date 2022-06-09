@@ -1,6 +1,21 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.5.2 2022-06-09
+
+### Fixes
+
+- Only return cpu.utilization if a limit was provided (#262) | [@MikeGoldsmith](https://github.com/MikeGoldsmith)
+
+### Maintenance
+
+- Deflake flaky tests (#264) | [@kentquirk](https://github.com/kentquirk)
+- Create helm-chart issue on release (#255) | [@MikeGoldsmith](https://github.com/MikeGoldsmith)
+- Update codeowners to only be telemetry team (#256) | [@MikeGoldsmith](https://github.com/MikeGoldsmith)
+- Bump github.com/honeycombio/honeytail from 1.6.1 to 1.6.2 (#253)
+
 ## 2.5.1 2022-04-08
+
+### Maintenance
 
 - Update to Go 1.18; fixes openSSL CVE (#237) | [@MikeGoldsmith](https://github.com/MikeGoldsmith)
 
