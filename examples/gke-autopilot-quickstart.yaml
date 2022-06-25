@@ -143,6 +143,18 @@ spec:
             path: config.yaml
           name: honeycomb-agent-config
         name: config
-      - hostPath:
-          path: "/var/log"
-        name: varlog
+      - name: varlog
+        persistentVolumeClaim:
+          claimName: honeycomb-agent-varlog
+# PersistentVolumeClaim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: honeycomb-agent-varlog
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
