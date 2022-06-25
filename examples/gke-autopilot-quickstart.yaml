@@ -1,0 +1,148 @@
+# Service account for the agent
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: honeycomb-serviceaccount
+  namespace: honeycomb
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: honeycomb-serviceaccount
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: honeycomb-serviceaccount
+subjects:
+- kind: ServiceAccount
+  name: honeycomb-serviceaccount
+  namespace: honeycomb
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: honeycomb-serviceaccount
+  namespace: honeycomb
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - nodes/stats
+      - nodes/proxy
+    verbs:
+      - list
+      - watch
+      - get
+
+# ConfigMap specifying which logs the agent should watch
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: honeycomb-agent-config
+  namespace: honeycomb
+data:
+  config.yaml: |
+    apiHost: https://api.honeycomb.io/
+    watchers:
+      - dataset: kubernetes-logs
+        labelSelector: "component=kube-apiserver,tier=control-plane"
+        namespace: kube-system
+        parser: glog
+      - dataset: kubernetes-logs
+        labelSelector: "component=kube-scheduler,tier=control-plane"
+        namespace: kube-system
+        parser: glog
+      - dataset: kubernetes-logs
+        labelSelector: "component=kube-controller-manager,tier=control-plane"
+        namespace: kube-system
+        parser: glog
+      - dataset: kubernetes-logs
+        labelSelector: "k8s-app=kube-proxy"
+        namespace: kube-system
+        parser: glog
+      - dataset: kubernetes-logs
+        labelSelector: "k8s-app=kube-dns"
+        namespace: kube-system
+        parser: glog
+    verbosity: info
+    splitLogging: false
+
+    metrics:
+      clusterName: k8s-cluster
+      dataset: kubernetes-metrics
+      enabled: true
+      metricGroups:
+      - node
+      - pod
+
+# Daemonset
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: honeycomb-agent
+  name: honeycomb-agent
+  namespace: honeycomb
+spec:
+  selector:
+    matchLabels:
+      app: honeycomb-agent
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: honeycomb-agent
+    spec:
+      tolerations:
+        - operator: Exists
+          effect: NoSchedule
+      containers:
+      - env:
+        - name: HONEYCOMB_APIKEY
+          valueFrom:
+            secretKeyRef:
+              key: api-key
+              name: honeycomb
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        image: honeycombio/honeycomb-kubernetes-agent:2.5.2
+        imagePullPolicy: IfNotPresent
+        name: honeycomb-agent
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: "/etc/honeycomb"
+          name: config
+          readOnly: false
+        - mountPath: "/var/log"
+          name: varlog
+          readOnly: true
+      serviceAccountName: honeycomb-serviceaccount
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          items:
+          - key: config.yaml
+            path: config.yaml
+          name: honeycomb-agent-config
+        name: config
+      - hostPath:
+          path: "/var/log"
+        name: varlog
