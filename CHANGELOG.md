@@ -2,7 +2,7 @@
 
 ## 2.5.3 2022-07-25
 
-- fixed openSSL CVE (#276) | [@pkanal](https://github.com/pkanal)
+- fixed openSSL CVE | [@pkanal](https://github.com/pkanal)
 
 ## 2.5.2 2022-06-09
 
