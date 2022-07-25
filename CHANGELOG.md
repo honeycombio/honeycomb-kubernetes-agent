@@ -1,5 +1,9 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.5.3 2022-07-25
+
+- fixed openSSL CVE | [@pkanal](https://github.com/pkanal)
+
 ## 2.5.2 2022-06-09
 
 ### Fixes
