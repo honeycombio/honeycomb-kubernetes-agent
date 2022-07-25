@@ -15,9 +15,9 @@ roleRef:
   kind: ClusterRole
   name: honeycomb-serviceaccount
 subjects:
-- kind: ServiceAccount
-  name: honeycomb-serviceaccount
-  namespace: honeycomb
+  - kind: ServiceAccount
+    name: honeycomb-serviceaccount
+    namespace: honeycomb
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -78,6 +78,7 @@ data:
       - node
       - pod
 
+
 # Daemonset
 ---
 apiVersion: apps/v1
@@ -104,51 +105,51 @@ spec:
         - operator: Exists
           effect: NoSchedule
       containers:
-      - env:
-        - name: HONEYCOMB_APIKEY
-          valueFrom:
-            secretKeyRef:
-              key: api-key
-              name: honeycomb
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: NODE_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-        image: honeycombio/honeycomb-kubernetes-agent:2.5.2
-        imagePullPolicy: IfNotPresent
-        name: honeycomb-agent
-        resources:
-          limits:
-            memory: 200Mi
-          requests:
-            cpu: 100m
-            memory: 200Mi
-        volumeMounts:
-        - mountPath: "/etc/honeycomb"
-          name: config
-          readOnly: false
-        - mountPath: "/var/log"
-          name: varlog
-          readOnly: false
-        - mountPath: "/var/lib/docker/containers"
-          name: varlibdockercontainers
-          readOnly: true
+        - env:
+            - name: HONEYCOMB_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: honeycomb
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          image: honeycombio/honeycomb-kubernetes-agent:2.5.3
+          imagePullPolicy: IfNotPresent
+          name: honeycomb-agent
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          volumeMounts:
+            - mountPath: "/etc/honeycomb"
+              name: config
+              readOnly: false
+            - mountPath: "/var/log"
+              name: varlog
+              readOnly: false
+            - mountPath: "/var/lib/docker/containers"
+              name: varlibdockercontainers
+              readOnly: true
       serviceAccountName: honeycomb-serviceaccount
       terminationGracePeriodSeconds: 30
       volumes:
-      - configMap:
-          items:
-          - key: config.yaml
-            path: config.yaml
-          name: honeycomb-agent-config
-        name: config
-      - hostPath:
-          path: "/var/log"
-        name: varlog
-      - hostPath:
-          path: "/var/lib/docker/containers"
-        name: varlibdockercontainers
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: honeycomb-agent-config
+          name: config
+        - hostPath:
+            path: "/var/log"
+          name: varlog
+        - hostPath:
+            path: "/var/lib/docker/containers"
+          name: varlibdockercontainers
