@@ -26,6 +26,7 @@ func (p *Processor) GenerateMetricsData(summary *stats.Summary, metadata *Metada
 		metricGroupsToCollect: metricGroupsToCollect,
 		mp:                    p,
 		time:                  time.Now(),
+		Data:                  make(map[string]*ResourceMetrics),
 	}
 
 	nodeResource := getNodeResource(summary.Node, metadata)
@@ -47,7 +48,12 @@ func (p *Processor) GenerateMetricsData(summary *stats.Summary, metadata *Metada
 		}
 	}
 
-	return acc.Data
+	// return flat array of metrics
+	metrics := make([]*ResourceMetrics, len(acc.Data))
+	for _, metric := range acc.Data {
+		metrics = append(metrics, metric)
+	}
+	return metrics
 }
 
 func (p *Processor) GetCounterDelta(res *Resource, name string, newMetric *Metric) float64 {

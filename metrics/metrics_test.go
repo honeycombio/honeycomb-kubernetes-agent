@@ -52,6 +52,7 @@ func createMockAccumulator(metadata *Metadata, mg map[MetricGroup]bool) *MetricD
 		metricGroupsToCollect: mg,
 		mp:                    p,
 		time:                  time.Now(),
+		Data:                  make(map[string]*ResourceMetrics),
 	}
 }
 
@@ -340,7 +341,7 @@ func TestNodeStats(t *testing.T) {
 	node := getNodeResource(summary.Node, metadata)
 
 	acc.nodeStats(node, summary.Node)
-	data := acc.Data[0]
+	data := acc.Data[node.Name]
 	assert.Equal(t, "duckboat-01", data.Resource.Name)
 	assert.Equal(t, 0, len(data.Resource.Status))
 	assert.Equal(t, 9, len(data.Resource.Labels))
@@ -355,7 +356,7 @@ func TestNodeStats(t *testing.T) {
 	node = getNodeResource(summary.Node, metadata)
 
 	acc.nodeStats(node, summary.Node)
-	data = acc.Data[0]
+	data = acc.Data[node.Name]
 	assert.Equal(t, "duckboat-01", data.Resource.Name)
 	assert.Equal(t, 1, len(data.Resource.Labels))
 }
@@ -369,7 +370,7 @@ func TestPodStats(t *testing.T) {
 	pod := getPodResource(node, podStats, metadata)
 
 	acc.podStats(pod, podStats)
-	data := acc.Data[0]
+	data := acc.Data[pod.Name]
 
 	assert.Equal(t, "speaker-cpxhz", data.Resource.Name)
 	assert.Equal(t, 4, len(data.Resource.Status))
@@ -391,7 +392,7 @@ func TestContainerStats(t *testing.T) {
 	pod := getPodResource(node, podStats, metadata)
 
 	acc.containerStats(pod, podStats.Containers[0])
-	data := acc.Data[0]
+	data := acc.Data[pod.Name]
 
 	assert.Equal(t, "speaker", data.Resource.Name)
 	assert.Equal(t, 4, len(data.Resource.Status))
@@ -414,7 +415,7 @@ func TestVolumeStats(t *testing.T) {
 	pod := getPodResource(node, podStats, metadata)
 
 	acc.volumeStats(pod, podStats.VolumeStats[0])
-	data := acc.Data[0]
+	data := acc.Data[pod.Name]
 
 	assert.Equal(t, "speaker-token-kpzds", data.Resource.Name)
 	assert.Equal(t, 0, len(data.Resource.Status))

@@ -25,7 +25,7 @@ var ValidMetricGroups = map[MetricGroup]bool{
 }
 
 type MetricDataAccumulator struct {
-	Data                  []*ResourceMetrics
+	Data                  map[string]*ResourceMetrics
 	mp                    *Processor
 	metadata              *Metadata
 	metricGroupsToCollect map[MetricGroup]bool
@@ -122,15 +122,26 @@ func (a *MetricDataAccumulator) volumeStats(podResource *Resource, s stats.Volum
 }
 
 func (a *MetricDataAccumulator) accumulate(r *Resource, m ...Metrics) {
-	retMetrics := make(Metrics)
+	podName := r.Name
 
-	for _, metrics := range m {
-		for k, v := range metrics {
-			retMetrics[k] = v
+	// check if pod name already exists
+	var resourceMetrics *ResourceMetrics
+	if rm, ok := a.Data[podName]; ok {
+		// use existing entry from map
+		resourceMetrics = rm
+	} else {
+		// create new entry and add to map
+		resourceMetrics = &ResourceMetrics{
+			Resource: r,
+			Metrics:  make(Metrics),
+		}
+		a.Data[podName] = resourceMetrics
+	}
+
+	// add metrics to resourceMetrics
+	for _, metric := range m {
+		for k, v := range metric {
+			resourceMetrics.Metrics[k] = v
 		}
 	}
-	a.Data = append(a.Data, &ResourceMetrics{
-		Resource: r,
-		Metrics:  retMetrics,
-	})
 }
