@@ -5,14 +5,14 @@ import (
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/k8sagent"
-	"k8s.io/api/core/v1"
+	api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 type KubernetesMetadataProcessor struct {
 	PodGetter   k8sagent.PodWatcher
 	UID         types.UID
-	lastPodData *v1.Pod
+	lastPodData *api.Pod
 }
 
 func (k *KubernetesMetadataProcessor) Init(options map[string]interface{}) error {
@@ -36,9 +36,8 @@ func (k *KubernetesMetadataProcessor) Process(ev *event.Event) bool {
 	return true
 }
 
-func extractMetadataFromPod(pod *v1.Pod, containerName string) map[string]interface{} {
+func extractMetadataFromPod(pod *api.Pod, containerName string) map[string]interface{} {
 	ret := make(map[string]interface{})
-	pod.GetClusterName()
 	ret["pod.labels"] = pod.Labels
 	ret["pod.name"] = pod.Name
 	ret["pod.namespace"] = pod.Namespace
