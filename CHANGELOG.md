@@ -1,5 +1,14 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.5.4 2022-09-27
+
+### Maintenance
+
+- Remove puckpuck from dependabot reviewers (#283) | [@puckpuck](https://github.com/puckpuck)
+- Bump github.com/bmatcuk/doublestar/v4 from 4.0.2 to 4.2.0 (#291)
+- Bump dependencies (#286)
+- Bump github.com/mitchellh/mapstructure from 1.4.3 to 1.5.0 (#254)
+
 ## 2.5.3 2022-07-25
 
 - fixed openSSL CVE | [@pkanal](https://github.com/pkanal)
