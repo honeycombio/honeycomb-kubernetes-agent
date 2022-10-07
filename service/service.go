@@ -38,6 +38,7 @@ type Options struct {
 	Interval              time.Duration
 	ClusterName           string
 	OmitLabels            []metrics.OmitLabel
+	OmitNameSpaces        []string
 	AdditionalFields      map[string]interface{}
 	IncludeNodeLabels     bool
 	MetricGroupsToCollect map[metrics.MetricGroup]bool
@@ -74,6 +75,7 @@ func NewMetricsService(cfg *config.MetricsConfig, client *corev1.CoreV1Client) (
 		Interval:              cfg.Interval,
 		ClusterName:           cfg.ClusterName,
 		OmitLabels:            cfg.OmitLabels,
+		OmitNameSpaces:        cfg.OmitNameSpaces,
 		AdditionalFields:      cfg.AdditionalFields,
 		IncludeNodeLabels:     cfg.IncludeNodeLabels,
 		MetricGroupsToCollect: mg,

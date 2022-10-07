@@ -52,7 +52,8 @@ type MetricsConfig struct {
 	ClusterName string `yaml:"clusterName"`
 	// Labels to omit from becoming fields in Honeycomb
 	// By default `controller-revision-hash` is omitted
-	OmitLabels []metrics.OmitLabel `yaml:"omitLabels"`
+	OmitLabels     []metrics.OmitLabel `yaml:"omitLabels"`
+	OmitNameSpaces []string            `yaml:"omitNameSpaces"`
 	// Include node metadata such as 'node.kubernetes.io/instance-type' or
 	// 'topology.kubernetes.io/region'
 	IncludeNodeLabels bool `yaml:"includeNodeLabels"`

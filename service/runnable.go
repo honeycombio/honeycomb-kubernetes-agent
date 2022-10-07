@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/event"
-
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 	"github.com/honeycombio/honeycomb-kubernetes-agent/transmission"
 	"github.com/sirupsen/logrus"
@@ -24,14 +23,16 @@ import (
 var _ interval.Runnable = (*runnable)(nil)
 
 type runnable struct {
-	statsProvider     *kubelet.StatsProvider
-	metadataProvider  *kubelet.MetadataProvider
-	metricsProvider   *metrics.Processor
-	dataset           string
-	interval          time.Duration
-	k8sClusterName    string
+	statsProvider    *kubelet.StatsProvider
+	metadataProvider *kubelet.MetadataProvider
+	metricsProvider  *metrics.Processor
+	dataset          string
+	interval         time.Duration
+	k8sClusterName   string
+
 	restClient        kubelet.RestClient
 	omitLabels        []metrics.OmitLabel
+	omitNameSpaces    []string
 	additionalFields  map[string]interface{}
 	includeNodeLabels bool
 
@@ -47,6 +48,7 @@ func newRunnable(rc kubelet.RestClient, opt Options, client *corev1.CoreV1Client
 		k8sClusterName:        opt.ClusterName,
 		restClient:            rc,
 		omitLabels:            opt.OmitLabels,
+		omitNameSpaces:        opt.OmitNameSpaces,
 		additionalFields:      opt.AdditionalFields,
 		includeNodeLabels:     opt.IncludeNodeLabels,
 		metricGroupsToCollect: opt.MetricGroupsToCollect,
@@ -112,45 +114,53 @@ func (r *runnable) Run() error {
 
 	// iterate over resource metrics data
 	for _, rm := range resourceMetrics {
-
-		logrus.WithFields(logrus.Fields{
-			"resourceType": rm.Resource.Type,
-			"resourceName": rm.Resource.Name,
-		}).Trace("Creating event for resource")
-
-		// create event from Resource meta
-		ev := r.createEventFromResource(rm.Resource)
-
-		pre := metrics.PrefixMetrics
-
-		// loop through all metrics to add them to resource event
-		for k, v := range rm.Metrics {
+		keep := true
+		for _, o := range r.omitNameSpaces {
+			if o == rm.Resource.Labels[metrics.LabelNamespaceName] {
+				keep = false
+				break
+			}
+		}
+		if keep {
 			logrus.WithFields(logrus.Fields{
 				"resourceType": rm.Resource.Type,
 				"resourceName": rm.Resource.Name,
-				"metricName":   k,
-			}).Trace("Metric to event field")
+			}).Trace("Creating event for resource")
 
-			// check if metric is a counter
-			var val float64
-			if v.IsCounter {
-				val = r.metricsProvider.GetCounterRate(rm.Resource, k, v)
-			} else {
-				val = v.GetValue()
+			// create event from Resource meta
+			ev := r.createEventFromResource(rm.Resource)
+
+			pre := metrics.PrefixMetrics
+
+			// loop through all metrics to add them to resource event
+			for k, v := range rm.Metrics {
+				logrus.WithFields(logrus.Fields{
+					"resourceType": rm.Resource.Type,
+					"resourceName": rm.Resource.Name,
+					"metricName":   k,
+				}).Trace("Metric to event field")
+
+				// check if metric is a counter
+				var val float64
+				if v.IsCounter {
+					val = r.metricsProvider.GetCounterRate(rm.Resource, k, v)
+				} else {
+					val = v.GetValue()
+				}
+
+				// add metric to resource event
+				ev.Data[pre+k] = val
 			}
 
-			// add metric to resource event
-			ev.Data[pre+k] = val
+			logrus.WithFields(logrus.Fields{
+				"resourceType": rm.Resource.Type,
+				"resourceName": rm.Resource.Name,
+				"metricCount":  len(rm.Metrics),
+			}).Trace("Event Data: ", ev.Data)
+
+			// send resource event to Honeycomb
+			r.transmitter.Send(ev)
 		}
-
-		logrus.WithFields(logrus.Fields{
-			"resourceType": rm.Resource.Type,
-			"resourceName": rm.Resource.Name,
-			"metricCount":  len(rm.Metrics),
-		}).Trace("Event Data: ", ev.Data)
-
-		// send resource event to Honeycomb
-		r.transmitter.Send(ev)
 	}
 
 	return nil
