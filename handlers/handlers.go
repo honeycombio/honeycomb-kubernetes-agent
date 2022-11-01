@@ -63,8 +63,14 @@ func NewLineHandlerFactoryFromConfig(
 		}
 		ret.processors = append(ret.processors, processor)
 	}
-	ret.processors = append(ret.processors, extraProcessors...)
-
+	for _, ep := range extraProcessors {
+		if _, ok := ep.(*processors.KubernetesMetadataProcessor); ok {
+			// put the K8s metadata processor first in line (see #296)
+			ret.processors = append([]processors.Processor{ep}, ret.processors...)
+		} else {
+			ret.processors = append(ret.processors, ep)
+		}
+	}
 	return ret, nil
 }
 
