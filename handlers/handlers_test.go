@@ -767,3 +767,30 @@ func TestKubernetesMetadata(t *testing.T) {
 	assert.Equal(t, mt.events[0].Data["kubernetes.container.image"], "containerImage")
 	assert.Equal(t, mt.events[0].Data["kubernetes.pod.UID"], "examplePodUID")
 }
+
+func TestKubernetesMetadataGoesFirst(t *testing.T) {
+	mt := &MockTransmitter{}
+	cfg := &config.WatcherConfig{
+		Dataset: "kubernetestest",
+		Parser:  &config.ParserConfig{Name: "json"},
+		Processors: []map[string]map[string]interface{}{
+			{
+				"drop_field": {"field": "kubernetes.pod.UID"},
+			},
+		},
+	}
+	k8sProcessor := &processors.KubernetesMetadataProcessor{
+		UID:       types.UID("examplePodUID"),
+		PodGetter: &mockPodGetter{},
+	}
+	hf, err := NewLineHandlerFactoryFromConfig(cfg, &unwrappers.RawLogUnwrapper{}, mt, k8sProcessor)
+	assert.NoError(t, err)
+
+	handler := hf.New("/var/log/pods/examplePodUID/container/0.log")
+	handler.Handle(`{"field": "a"}`)
+	assert.Equal(t, len(mt.events), 1)
+
+	assert.Equal(t, "container", mt.events[0].Data["kubernetes.container.name"])
+	assert.Equal(t, "containerImage", mt.events[0].Data["kubernetes.container.image"])
+	assert.Nil(t, mt.events[0].Data["kubernetes.pod.UID"]) // this field exists in the source but should be dropped
+}
