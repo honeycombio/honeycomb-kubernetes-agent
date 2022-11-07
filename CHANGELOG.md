@@ -1,5 +1,18 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.5.5 2022-11-7
+
+### Fixes
+
+- Put the k8s metadata processor first (#302) | @kentquirk
+
+### Maintenance
+
+- Bump github.com/honeycombio/libhoney-go from 1.17.0 to 1.18.0 (#300)
+- Bump k8s.io/kubelet from 0.25.2 to 0.25.3 (#299)
+- Bump github.com/stretchr/testify from 1.8.0 to 1.8.1 (#298)
+- Bump github.com/bmatcuk/doublestar/v4 from 4.2.0 to 4.3.0 (#297)
+
 ## 2.5.4 2022-09-27
 
 ### Maintenance
