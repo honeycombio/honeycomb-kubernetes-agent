@@ -10,7 +10,7 @@ import (
 func TestSamplerCanBuildsKeysWithInts(t *testing.T) {
 	key := makeDynSampleKey(&event.Event{
 		Data: map[string]interface{}{
-			"status": "200",
+			"status": 200,
 		},
 	}, []string { "status"})
 	assert.Equal(t, "200", key)
