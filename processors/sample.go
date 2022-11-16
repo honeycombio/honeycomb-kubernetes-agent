@@ -88,10 +88,11 @@ func makeDynSampleKey(ev *event.Event, keys []string) string {
 			switch val := val.(type) {
 			case bool:
 				key[i] = strconv.FormatBool(val)
+			case int:
+				key[i] = strconv.Itoa(val)
 			case int64:
 				key[i] = strconv.FormatInt(val, 10)
 			case float64:
-
 				key[i] = strconv.FormatFloat(val, 'E', -1, 64)
 			case string:
 				key[i] = val
