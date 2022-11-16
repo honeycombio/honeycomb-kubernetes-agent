@@ -1,10 +1,16 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.5.6 2022-11-16
+
+### Fixes
+
+- Add support for building sample keys from integer fields (#304) | [@puckpuck](https://github.com/puckpuck)
+
 ## 2.5.5 2022-11-7
 
 ### Fixes
 
-- Put the k8s metadata processor first (#302) | @kentquirk
+- Put the k8s metadata processor first (#302) | [@kentquirk](https://github.com/kentquirk)
 
 ### Maintenance
 
