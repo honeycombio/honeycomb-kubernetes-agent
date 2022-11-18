@@ -127,6 +127,7 @@ type | `"static"` or `"dynamic"` | How events should be sampled.
 rate | integer | The rate at which to sample events. Specifying a sample rate of 20 will cause one in 20 events to be sent.
 keys | list of strings | The list of field keys to use when doing dynamic sampling.
 windowSize | int | How often to refresh estimated sample rates when doing dynamic sampling, in seconds. Defaults to 30 seconds.
+minEventsPerSec | int | Whenever the number of events per second being processed falls below this value for a time window (see windowSize), sampling will be disabled for the next time window (all events will be sent with a sample rate of 1).
 
 ### drop_field
 
