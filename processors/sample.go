@@ -25,10 +25,11 @@ type Sampler struct {
 }
 
 type samplerConfig struct {
-	Type       SampleType
-	Rate       uint
-	Keys       []string
-	WindowSize int
+	Type            SampleType
+	Rate            uint
+	Keys            []string
+	WindowSize      int
+	MinEventsPerSec int
 }
 
 func (s *Sampler) Init(options map[string]interface{}) error {
@@ -48,6 +49,8 @@ func (s *Sampler) Init(options map[string]interface{}) error {
 		// Default to 30 seconds if not otherwise specified
 		config.WindowSize = 30
 	}
+	// MinEventsPerSec is defaulted to 50 by the sampler itself, if the value
+	// specified in our config is 0 or missing.
 
 	s.config = config
 
@@ -55,9 +58,10 @@ func (s *Sampler) Init(options map[string]interface{}) error {
 		s.dynsampler = &dynsampler.AvgSampleWithMin{
 			GoalSampleRate:    int(config.Rate),
 			ClearFrequencySec: config.WindowSize,
+			MinEventsPerSec:   config.MinEventsPerSec,
 		}
 		if err := s.dynsampler.Start(); err != nil {
-			return fmt.Errorf("Error starting dynamic sampler: %v", err)
+			return fmt.Errorf("error starting dynamic sampler: %v", err)
 		}
 	}
 	return nil
