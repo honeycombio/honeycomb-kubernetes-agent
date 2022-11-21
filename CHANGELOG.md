@@ -1,5 +1,11 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.6.0 2022-11-21
+
+### Added
+
+- Add MinEventsPerSec to config (#308) | [@kentquirk](https://github.com/kentquirk)
+
 ## 2.5.6 2022-11-16
 
 ### Fixes
