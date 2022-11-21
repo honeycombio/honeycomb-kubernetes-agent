@@ -1,6 +1,6 @@
 # Honeycomb Kubernetes Agent Changelog
 
-## 2.6.0
+## 2.6.0 2022-11-21
 
 ### Added
 
