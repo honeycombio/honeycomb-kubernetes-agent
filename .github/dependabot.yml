@@ -14,3 +14,6 @@ updates:
     reviewers:
       - "honeycombio/telemetry-team"
       - "lizthegrey"
+    commit-message:
+      prefix: "maint"
+      include: "scope"
