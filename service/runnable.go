@@ -106,7 +106,7 @@ func (r *runnable) Run() error {
 	}
 
 	// Get resource metrics
-	metadata := metrics.NewMetadata(podsMetadata, nodesMetadata, r.omitLabels, r.includeNodeLabels)
+	metadata := metrics.NewMetadata(podsMetadata, nodesMetadata, r.omitLabels, r.includeNodeLabels, r.includeNodeInfo)
 	resourceMetrics := r.metricsProvider.GenerateMetricsData(summary, metadata, r.metricGroupsToCollect)
 	logrus.WithFields(logrus.Fields{
 		"resourceCount": len(resourceMetrics),

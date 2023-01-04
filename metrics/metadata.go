@@ -19,12 +19,13 @@ type Metadata struct {
 	IncludeNodeInfo   bool
 }
 
-func NewMetadata(podsMetadata *v1.PodList, nodesMetadata *v1.NodeList, omitLabels []OmitLabel, includeNodeLabels bool) *Metadata {
+func NewMetadata(podsMetadata *v1.PodList, nodesMetadata *v1.NodeList, omitLabels []OmitLabel, includeNodeLabels bool, includeNodeInfo bool) *Metadata {
 	return &Metadata{
 		PodsMetadata:      podsMetadata,
 		NodesMetadata:     nodesMetadata,
 		OmitLabels:        omitLabels,
 		IncludeNodeLabels: includeNodeLabels,
+		IncludeNodeInfo:   includeNodeInfo,
 	}
 }
 
