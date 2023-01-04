@@ -20,11 +20,18 @@ func getNodeResource(s stats.NodeStats, metadata *Metadata) *Resource {
 	labels := map[string]string{
 		LabelNodeName: s.NodeName,
 	}
-	if metadata.IncludeNodeLabels {
+	if metadata.IncludeNodeLabels || metadata.IncludeNodeInfo {
 		nodeMetadata, err := metadata.GetNodeMetadataByName(s.NodeName)
 		if err == nil {
-			for k, v := range nodeMetadata.GetLabels() {
-				labels[PrefixLabel+k] = v
+			if metadata.IncludeNodeLabels {
+				for k, v := range nodeMetadata.GetLabels() {
+					labels[PrefixLabel+k] = v
+				}
+			}
+			if metadata.IncludeNodeInfo {
+				for k, v := range nodeMetadata.GetNodeInfo() {
+					labels[PrefixNodeInfo+k] = v
+				}
 			}
 		}
 	}

@@ -40,6 +40,7 @@ type Options struct {
 	OmitLabels            []metrics.OmitLabel
 	AdditionalFields      map[string]interface{}
 	IncludeNodeLabels     bool
+	IncludeNodeInfo       bool
 	MetricGroupsToCollect map[metrics.MetricGroup]bool
 }
 
@@ -76,6 +77,7 @@ func NewMetricsService(cfg *config.MetricsConfig, client *corev1.CoreV1Client) (
 		OmitLabels:            cfg.OmitLabels,
 		AdditionalFields:      cfg.AdditionalFields,
 		IncludeNodeLabels:     cfg.IncludeNodeLabels,
+		IncludeNodeInfo:       cfg.IncludeNodeInfo,
 		MetricGroupsToCollect: mg,
 	}
 
@@ -131,6 +133,7 @@ func (s *Service) Start() error {
 		"clusterName":       s.options.ClusterName,
 		"omitLabels":        s.options.OmitLabels,
 		"includeNodeLabels": s.options.IncludeNodeLabels,
+		"includeNodeInfo":   s.options.IncludeNodeInfo,
 		"metricGroups":      s.options.MetricGroupsToCollect,
 	}).Info("Creating Metrics Service Runner...")
 

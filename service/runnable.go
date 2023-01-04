@@ -34,6 +34,7 @@ type runnable struct {
 	omitLabels        []metrics.OmitLabel
 	additionalFields  map[string]interface{}
 	includeNodeLabels bool
+	includeNodeInfo   bool
 
 	metricGroupsToCollect map[metrics.MetricGroup]bool
 	transmitter           *transmission.HoneycombTransmitter
@@ -49,6 +50,7 @@ func newRunnable(rc kubelet.RestClient, opt Options, client *corev1.CoreV1Client
 		omitLabels:            opt.OmitLabels,
 		additionalFields:      opt.AdditionalFields,
 		includeNodeLabels:     opt.IncludeNodeLabels,
+		includeNodeInfo:       opt.IncludeNodeInfo,
 		metricGroupsToCollect: opt.MetricGroupsToCollect,
 		transmitter:           &transmission.HoneycombTransmitter{},
 		apiClient:             client,
@@ -92,7 +94,7 @@ func (r *runnable) Run() error {
 
 	var nodesMetadata *v1.NodeList
 	// fetch metadata for all nodes
-	if r.includeNodeLabels {
+	if r.includeNodeLabels || r.includeNodeInfo {
 		nodesMetadata, err = r.apiClient.Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			logrus.WithError(err).Error("Could not retrieve node metadata")

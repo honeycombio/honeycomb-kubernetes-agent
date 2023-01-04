@@ -49,6 +49,7 @@ const (
 	PrefixLabel     = "label."
 	PrefixCluster   = PrefixK8s + "cluster."
 	PrefixNode      = PrefixK8s + "node."
+	PrefixNodeInfo  = PrefixNode + "nodeinfo."
 	PrefixNamespace = PrefixK8s + "namespace."
 	PrefixPod       = PrefixK8s + "pod."
 	PrefixContainer = PrefixK8s + "container."
