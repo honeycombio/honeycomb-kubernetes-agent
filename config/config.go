@@ -57,7 +57,7 @@ type MetricsConfig struct {
 	// 'topology.kubernetes.io/region'
 	IncludeNodeLabels bool `yaml:"includeNodeLabels"`
 	// Include node info such as kubelet version and kernel version.
-	IncludeNodeInfo bool `yamo:"includeNodeInfo"`
+	IncludeNodeInfo bool `yaml:"includeNodeInfo"`
 	// MetricGroupsToCollect provides a list of metrics groups to collect metrics from.
 	// "container", "pod", "node" and "volume" are the only valid groups.
 	MetricGroups     []metrics.MetricGroup  `yaml:"metricGroups"`
