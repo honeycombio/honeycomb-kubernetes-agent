@@ -26,7 +26,6 @@ unset GOARCH
 export KO_DOCKER_REPO=${KO_DOCKER_REPO:-ko.local}
 # shellcheck disable=SC2086
 ko publish \
-  # --tags "head,${VERSION}" \
   --tags "${VERSION}" \
   --base-import-paths \
   --platform "${PLATFORM}" \
