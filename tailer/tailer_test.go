@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -118,7 +119,7 @@ func TestPathWatching(t *testing.T) {
 
 	watcher := NewPathWatcher(
 		func() (string, error) { return fmt.Sprintf("%s/*", dir), nil },
-		nil,
+		func(s string) bool { return !strings.HasSuffix(s, ".gz") },
 		handlerFactory,
 		stateRecorder,
 	)
@@ -136,6 +137,8 @@ func TestPathWatching(t *testing.T) {
 		err := loggers[i].Write()
 		assert.NoError(t, err)
 	}
+	gzfile, err := ioutil.TempFile(dir, "honeycomb-log-test-gzfile-*.gz")
+	assert.NoError(t, err)
 
 	// The PathWatcher only checks once a second, so we should sleep for slightly longer than that.
 	time.Sleep(2000 * time.Millisecond)
@@ -159,6 +162,11 @@ func TestPathWatching(t *testing.T) {
 		assert.Equal(t, 2, len(h.lines))
 	}
 	assert.Equal(t, len(watcher.tailers), 0)
+
+	// Test that we checked for this filename and added it to the filteredOut list
+	// (we can't test the logging because it's a global logrus)
+	_, foundFilename := watcher.filteredOut[gzfile.Name()]
+	assert.True(t, foundFilename)
 }
 
 func TestTailingWithoutStateRecorder(t *testing.T) {
