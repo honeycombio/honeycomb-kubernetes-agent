@@ -123,6 +123,7 @@ type PathWatcher struct {
 	handlerFactory handlers.LineHandlerFactory
 	stateRecorder  StateRecorder
 	checkInterval  time.Duration
+	filteredOut    map[string]struct{}
 
 	stop         chan bool
 	savedPattern string
@@ -142,6 +143,7 @@ func NewPathWatcher(
 		stateRecorder:  stateRecorder,
 		checkInterval:  time.Second, // TODO make configurable
 		stop:           make(chan bool),
+		filteredOut:    make(map[string]struct{}),
 	}
 
 	return p
@@ -217,9 +219,12 @@ func (p *PathWatcher) check() {
 		_, ok := p.tailers[file]
 		if !ok {
 			if p.filter != nil && !p.filter(file) {
-				logrus.WithFields(logrus.Fields{
-					"file": file,
-				}).Warn("File filtered out of tailing list")
+				if _, alreadyLogged := p.filteredOut[file]; !alreadyLogged {
+					logrus.WithFields(logrus.Fields{
+						"file": file,
+					}).Warn("File filtered out of tailing list")
+					p.filteredOut[file] = struct{}{}
+				}
 				continue
 			}
 			handler := p.handlerFactory.New(file)
