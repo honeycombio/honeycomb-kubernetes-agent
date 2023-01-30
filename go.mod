@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/bmatcuk/doublestar/v4 v4.3.0
 	github.com/boltdb/bolt v1.3.1
+	github.com/go-playground/validator/v10 v10.11.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/honeycombio/dynsampler-go v0.2.1
 	github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8
@@ -17,9 +18,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
-	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/stretchr/testify v1.8.1
-	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.25.3
 	k8s.io/apimachinery v0.25.3
@@ -40,6 +39,8 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
@@ -50,18 +51,21 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
+	golang.org/x/crypto v0.5.0 // indirect
+	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/term v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
