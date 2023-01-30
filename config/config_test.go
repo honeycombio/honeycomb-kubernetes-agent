@@ -15,7 +15,7 @@ func TestParsing(t *testing.T) {
 		{"basic.yaml", true},
 		{"parser_with_options.yaml", true},
 		{"unknown_parsers.yaml", false},
-		{"labelselector-and-paths.yaml", true},
+		{"labelselector-and-paths.yaml", false},
 		{"paths-only.yaml", true},
 	}
 	for _, tc := range testFiles {

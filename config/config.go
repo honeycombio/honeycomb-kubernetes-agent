@@ -1,12 +1,12 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"time"
 
 	"github.com/honeycombio/honeycomb-kubernetes-agent/metrics"
 
-	"github.com/go-playground/validator/v10"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -34,7 +34,7 @@ type WatcherConfig struct {
 	// Maybe we need a better API? But k8s is pretty insistent that empty
 	// string means "select all pods".
 	LabelSelector *string  `yaml:"labelSelector"`
-	FilePaths     []string `yaml:"paths" validate:"excluded_with=LabelSelector"`
+	FilePaths     []string `yaml:"paths"`
 	ExcludePaths  []string `yaml:"exclude"`
 	ContainerName string   `yaml:"containerName"`
 	Processors    []map[string]map[string]interface{}
@@ -93,11 +93,9 @@ func ReadFromFile(filePath string) (*Config, error) {
 		return nil, err
 	}
 
-	v := validator.New()
 	for _, watcher := range config.Watchers {
-		err = v.Struct(watcher)
-		if err != nil {
-			return nil, err
+		if watcher.FilePaths != nil && watcher.LabelSelector != nil {
+			return nil, fmt.Errorf("cannot configure both labelSelector and paths")
 		}
 	}
 
