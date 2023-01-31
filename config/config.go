@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -91,5 +92,12 @@ func ReadFromFile(filePath string) (*Config, error) {
 	if err = yaml.Unmarshal(contents, config); err != nil {
 		return nil, err
 	}
+
+	for _, watcher := range config.Watchers {
+		if watcher.FilePaths != nil && watcher.LabelSelector != nil {
+			return nil, fmt.Errorf("cannot configure both labelSelector and paths")
+		}
+	}
+
 	return config, nil
 }

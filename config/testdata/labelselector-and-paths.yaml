@@ -1,0 +1,6 @@
+---
+apiHost: https://api.honeycomb.io
+writekey: "asdf"
+watchers:
+- labelSelector: app=nginx
+  paths: ["/var/log/pods/nginx*/*/*"]

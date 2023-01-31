@@ -1,0 +1,5 @@
+---
+apiHost: https://api.honeycomb.io
+writekey: "asdf"
+watchers:
+- paths: ["test"]
