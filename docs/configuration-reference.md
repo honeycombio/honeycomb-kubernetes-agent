@@ -19,13 +19,13 @@ watchers:
 Each block in the `watchers` list describes a set of pods whose logs you want
 to handle in a specific way, and has the following keys:
 
-key | required? | type | description
-:--|:--|:--|:--
-labelSelector | yes* | string | A Kubernetes [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) identifying the set of pods to watch.
-parser | yes | string | Describes how this watcher should parse events.
-dataset | yes | string | The dataset that this watcher should send events to.
-containerName | no | string | If you only want to consume logs from one container in a multi-container pod, the name of the container to watch.
-processors | no | list | A list of [processors](#processors) to apply to events after they're parsed
+| key           | required? | type   | description                                                                                                                                                    |
+|---------------|-----------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| labelSelector | yes*      | string | A Kubernetes [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) identifying the set of pods to watch. |
+| parser        | yes       | string | Describes how this watcher should parse events.                                                                                                                |
+| dataset       | yes       | string | The dataset that this watcher should send events to.                                                                                                           |
+| containerName | no        | string | If you only want to consume logs from one container in a multi-container pod, the name of the container to watch.                                              |
+| processors    | no        | list   | A list of [processors](#processors) to apply to events after they're parsed                                                                                    |
 
 ### Validating a configuration file
 To check a configuration file without needing to deploy it into the cluster,
@@ -121,13 +121,13 @@ The `sample` processor will only send a subset of events to Honeycomb. Honeycomb
 
 **Options:**
 
-key | type | description
-:--|:--|:--
-type | `"static"` or `"dynamic"` | How events should be sampled.
-rate | integer | The rate at which to sample events. Specifying a sample rate of 20 will cause one in 20 events to be sent.
-keys | list of strings | The list of field keys to use when doing dynamic sampling.
-windowSize | int | How often to refresh estimated sample rates when doing dynamic sampling, in seconds. Defaults to 30 seconds.
-minEventsPerSec | int | Whenever the number of events per second being processed falls below this value for a time window (see windowSize), sampling will be disabled for the next time window (all events will be sent with a sample rate of 1). Default value is set by the sampling library to 50, and setting minEventsPerSec to 0 will use the default. To set the minimum possible value, use 1.
+| key             | type                      | description                                                                                                                                                                                                                                                                                                                                                                    |
+|-----------------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| type            | `"static"` or `"dynamic"` | How events should be sampled.                                                                                                                                                                                                                                                                                                                                                  |
+| rate            | integer                   | The rate at which to sample events. Specifying a sample rate of 20 will cause one in 20 events to be sent.                                                                                                                                                                                                                                                                     |
+| keys            | list of strings           | The list of field keys to use when doing dynamic sampling.                                                                                                                                                                                                                                                                                                                     |
+| windowSize      | int                       | How often to refresh estimated sample rates when doing dynamic sampling, in seconds. Defaults to 30 seconds.                                                                                                                                                                                                                                                                   |
+| minEventsPerSec | int                       | Whenever the number of events per second being processed falls below this value for a time window (see windowSize), sampling will be disabled for the next time window (all events will be sent with a sample rate of 1). Default value is set by the sampling library to 50, and setting minEventsPerSec to 0 will use the default. To set the minimum possible value, use 1. |
 
 ### drop_field
 
@@ -135,9 +135,9 @@ The `drop_field` processor will remove the specified field from all events befor
 
 **Options:**
 
-key | value | description
-:--|:--|:--
-field | string | The name of the field to drop.
+| key   | value  | description                    |
+|-------|--------|--------------------------------|
+| field | string | The name of the field to drop. |
 
 ### scrub_field
 
@@ -145,9 +145,9 @@ The `scrub_field` processor will replace the specified field with a one-way hash
 
 **Options:**
 
-key | value | description
-:--|:--|:--
-field | string | The name of the field to scrub.
+| key   | value  | description                     |
+|-------|--------|---------------------------------|
+| field | string | The name of the field to scrub. |
 
 **Example:**
 
@@ -169,10 +169,10 @@ Events that do not have a `field` matching this configuration will be kept.
 
 **Options:**
 
-key | value | description
-:--|:--|:--
-field | string | The name of the event field to match against the deny list
-values | list  | The set of field values that cause this processor to drop an event
+| key    | value  | description                                                        |                                                          
+|--------|--------|--------------------------------------------------------------------|
+ | field  | string | The name of the event field to match against the deny list         |           
+| values | list   | The set of field values that cause this processor to drop an event |   
 
 ### keep_event
 
@@ -185,10 +185,11 @@ Events that do not have a `field` matching the configuration will be kept to
 avoid accidental data loss.
 
 **Options:**
-key | value | description
-:--|:--|:--
-field | string | The name of the field to match against the allow list
-values | list  | The set of field values that cause this processor to keep an event
+
+| key    | value  | description                                                        |
+|--------|--------|--------------------------------------------------------------------|
+| field  | string | The name of the field to match against the allow list              |              
+ | values | list   | The set of field values that cause this processor to keep an event | 
 
 
 ### route_event
@@ -200,17 +201,18 @@ wish to track a common identifier between systems.
 
 
 **Options:**
-key | value | description
-:--|:--|:--
-field | string | The name of the event field to base routing on
-routes | list | A list of routing configurations
+
+| key    | value  | description                                    |
+|--------|--------|------------------------------------------------|
+| field  | string | The name of the event field to base routing on |
+| routes | list   | A list of routing configurations               |
 
 **Routes:**
 
-key | value | description
-:--|:--|:--
-value   | string | Route if the event field is exactly this value
-dataset | string | The dataset to route to
+| key     | value  | description                                    |
+|---------|--------|------------------------------------------------|
+| value   | string | Route if the event field is exactly this value |
+ | dataset | string | The dataset to route to                        |
 
 
 Example configuration
@@ -236,11 +238,10 @@ The `rename_field` processor will rename the specified field in all events, if i
 
 **Options:**
 
-key | type | description
-:--|:--|:--
-original | string | Name of field to be renamed. Required.
-new | string | The new field name to use. Required.
-
+| key      | type   | description                            |
+|----------|--------|----------------------------------------|
+| original | string | Name of field to be renamed. Required. |
+ | new      | string | The new field name to use. Required.   |
 
 ### timefield
 The `timefield` processor will replace the default timestamp in an event with
@@ -248,10 +249,10 @@ one extracted from a specific field in the event.
 
 **Options:**
 
-key | value | description
-:--|:--|:--
-field | string | The name of the field containing the timestamp
-format | string | The format of the timestamp found in timefield, in strftime or [Golang](https://golang.org/pkg/time/#pkg-constants) format
+| key    | value  | description                                                                                                                |
+|--------|--------|----------------------------------------------------------------------------------------------------------------------------|
+| field  | string | The name of the field containing the timestamp                                                                             |
+ | format | string | The format of the timestamp found in timefield, in strftime or [Golang](https://golang.org/pkg/time/#pkg-constants) format |
 
 _Note_: This processor isn't generally necessary when collecting pod logs. The
 agent will automatically use the timestamp recorded by the Docker json-log
@@ -264,12 +265,12 @@ The `request_shape` processor will take a field representing an HTTP request, su
 
 **Options:**
 
-key | value | description
-:--|:--|:--
-field | string | The name of the field containing the HTTP request (e.g., `"request"`)
-patterns | list of strings | A list of URL patterns to match when unpacking the request
-queryKeys | list of strings | An allow list of keys in the URL query string to unpack
-prefix | string | A prefix to prepend to the unpacked field names
+| key       | value           | description                                                           |
+|-----------|-----------------|-----------------------------------------------------------------------|
+| field     | string          | The name of the field containing the HTTP request (e.g., `"request"`) |
+ | patterns  | list of strings | A list of URL patterns to match when unpacking the request            |
+ | queryKeys | list of strings | An allow list of keys in the URL query string to unpack               |
+ | prefix    | string          | A prefix to prepend to the unpacked field names                       |
 
 For example, with the following configuration:
 
