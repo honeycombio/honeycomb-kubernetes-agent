@@ -19,13 +19,17 @@ watchers:
 Each block in the `watchers` list describes a set of pods whose logs you want
 to handle in a specific way, and has the following keys:
 
-| key           | required? | type   | description                                                                                                                                                    |
-|---------------|-----------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| labelSelector | yes*      | string | A Kubernetes [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) identifying the set of pods to watch. |
-| parser        | yes       | string | Describes how this watcher should parse events.                                                                                                                |
-| dataset       | yes       | string | The dataset that this watcher should send events to.                                                                                                           |
-| containerName | no        | string | If you only want to consume logs from one container in a multi-container pod, the name of the container to watch.                                              |
-| processors    | no        | list   | A list of [processors](#processors) to apply to events after they're parsed                                                                                    |
+| key           | required? | type     | description                                                                                                                                                                |
+|---------------|-----------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| labelSelector | yes†      | string   | A Kubernetes [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) identifying the set of pods to watch.             |
+| parser        | yes       | string   | Describes how this watcher should parse events.                                                                                                                            |
+| dataset       | yes       | string   | The dataset that this watcher should send events to.                                                                                                                       |
+| containerName | no        | string   | If you only want to consume logs from one container in a multi-container pod, the name of the container to watch.                                                          |
+| processors    | no        | list     | A list of [processors](#processors) to apply to events after they're parsed                                                                                                |
+| paths         | no†       | []string | A list of paths to watch. Allows for glob matching, including `**`. Mutually exclusive with labelSelector.  Should only be used if labelSelector does not suite your needs |
+| exclude       | no        | []string | A list of paths to exclude from the watch. Only used when `labelSelector` is configured. Allows for glob matching, including `**`.                                         | 
+
+> † Exactly one of `labelSelector` or `paths` must be configured.
 
 ### Validating a configuration file
 To check a configuration file without needing to deploy it into the cluster,
