@@ -21,13 +21,13 @@ to handle in a specific way, and has the following keys:
 
 | key           | required? | type     | description                                                                                                                                                                |
 |---------------|-----------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| labelSelector | yes†      | string   | A Kubernetes [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) identifying the set of pods to watch.             |
+| labelSelector | †         | string   | A Kubernetes [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) identifying the set of pods to watch.             |
+| paths         | †         | []string | A list of paths to watch. Allows for glob matching, including `**`. Mutually exclusive with labelSelector.  Should only be used if labelSelector does not suite your needs |
 | parser        | yes       | string   | Describes how this watcher should parse events.                                                                                                                            |
 | dataset       | yes       | string   | The dataset that this watcher should send events to.                                                                                                                       |
 | containerName | no        | string   | If you only want to consume logs from one container in a multi-container pod, the name of the container to watch.                                                          |
 | processors    | no        | list     | A list of [processors](#processors) to apply to events after they're parsed                                                                                                |
-| paths         | no†       | []string | A list of paths to watch. Allows for glob matching, including `**`. Mutually exclusive with labelSelector.  Should only be used if labelSelector does not suite your needs |
-| exclude       | no        | []string | A list of paths to exclude from the watch. Only used when `labelSelector` is configured. Allows for glob matching, including `**`.                                         | 
+| exclude       | no        | []string | A list of paths to exclude from the watch. Only used when `labelSelector` is configured. Allows for glob matching, including `**`.                                         |
 
 > † Exactly one of `labelSelector` or `paths` must be configured.
 
@@ -149,7 +149,7 @@ The `scrub_field` processor will replace the specified field with a one-way hash
 
 **Options:**
 
-| key   | value  | description                     |
+|  key  | value  | description                     |
 |-------|--------|---------------------------------|
 | field | string | The name of the field to scrub. |
 
@@ -175,7 +175,7 @@ Events that do not have a `field` matching this configuration will be kept.
 
 | key    | value  | description                                                        |                                                          
 |--------|--------|--------------------------------------------------------------------|
- | field  | string | The name of the event field to match against the deny list         |           
+| field  | string | The name of the event field to match against the deny list         |           
 | values | list   | The set of field values that cause this processor to drop an event |   
 
 ### keep_event
