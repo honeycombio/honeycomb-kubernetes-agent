@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/honeycombio/dynsampler-go v0.2.1
 	github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8
-	github.com/honeycombio/honeytail v1.8.1
+	github.com/honeycombio/honeytail v1.8.2
 	github.com/honeycombio/libhoney-go v1.18.0
 	github.com/honeycombio/urlshaper v0.0.0-20211228212415-ac8d7d936154
 	github.com/hpcloud/tail v1.0.1-0.20170814160653-37f427138745
@@ -47,7 +47,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/klauspost/compress v1.15.11 // indirect
+	github.com/klauspost/compress v1.15.12 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
