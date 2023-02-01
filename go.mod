@@ -3,7 +3,7 @@ module github.com/honeycombio/honeycomb-kubernetes-agent
 go 1.18
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.3.0
+	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/boltdb/bolt v1.3.1
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/honeycombio/dynsampler-go v0.2.1
