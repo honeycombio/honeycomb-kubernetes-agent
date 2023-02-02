@@ -97,7 +97,7 @@ parser:
     prefixRegex: "(?P<timestamp>[0-9:\\-\\.TZ]+) AUDIT: "
 ```
 
-If whitespace-separated text is found that is not separated by `=` then they will be interpreted as keys without values.
+If whitespace-separated text is found that does not contain `=`, then it will be interpreted as a key without a value.
 For example, if `"This is a test"` is found, then the `keyval` parser will create an event that looks like
 
 ```json
