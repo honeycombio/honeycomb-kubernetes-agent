@@ -84,17 +84,33 @@ Parses logs produced by [redis](https://redis.io) 3.0+, which look like this:
 ```
 
 ### keyval
-Parses logs in `key=value` format.
+Parse logs in `key=value` format with key-value pairs being separated by whitespace.
 
 Key-value formatted logs often have a special prefix, such as a timestamp. You
 can specify a regular expression to parse that prefix using the following
 configuration:
+
 ```
 parser:
   name: keyval
   options:
     prefixRegex: "(?P<timestamp>[0-9:\\-\\.TZ]+) AUDIT: "
 ```
+
+If whitespace-separated text is found that does not contain `=`, then it will be interpreted as a key without a value.
+For example, if `"This is a test"` is found, then the `keyval` parser will create an event that looks like
+
+```json
+{
+  "This": true,
+  "is": true,
+  "a": true,
+  "test": true
+}
+```
+
+This will cause an explosion of columns in Honeycomb.  As this is a deliberate choice by the `keyval` parser, extra care
+should be taken when using it.
 
 ### audit
 Parses [Kubernetes audit logs](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-logs).
