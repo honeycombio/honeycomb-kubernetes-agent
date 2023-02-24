@@ -1,5 +1,30 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.7.0 2022-02-24
+
+### Fixes
+- fix: Validate label selector and paths are mutually exclusive (#334) | @TylerHelmuth
+- fix: do not accumulate if pod is not there anymore #333 (#348) | @enc
+
+### Maintenance
+- maint(deps): bump k8s.io/kubelet from 0.26.1 to 0.26.2 (#347)
+- maint(deps): bump k8s.io/client-go from 0.26.1 to 0.26.2 (#345)
+- maint(deps): bump github.com/honeycombio/dynsampler-go (#339)
+- maint(deps): bump golang.org/x/net from 0.5.0 to 0.7.0 (#342)
+- maint(deps): bump github.com/stretchr/testify from 1.8.1 to 1.8.2 (#344)
+- docs: Update keyval docs (#340) | @TylerHelmuth
+- docs: Add paths and exclude docs (#338) | @TylerHelmuth
+- maint(deps): bump k8s.io/client-go from 0.25.2 to 0.26.1 (#337)
+- maint(deps): bump k8s.io/kubelet from 0.25.3 to 0.26.1 (#335)
+- maint(deps): bump github.com/bmatcuk/doublestar/v4 from 4.3.0 to 4.6.0 (#326)
+- Bump github.com/honeycombio/honeytail from 1.8.1 to 1.8.2 (#316)
+- maint: don't spam the logs with filtered-out filenames (#331) | @kentquirk
+- Update CODEOWNERS (#328) | @TylerHelmuth
+- chore: update workflows (#327) | @kentquirk
+- chore: add maint: prefix to dependabot prs (#319) | @JamieDanielson
+- ci: update validate PR title workflow (#312) | @pkanal
+- ci: validate PR title (#311) | @pkanal
+
 ## 2.6.0 2022-11-21
 
 ### Added
