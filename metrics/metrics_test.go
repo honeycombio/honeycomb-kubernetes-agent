@@ -360,6 +360,20 @@ func TestNodeStats(t *testing.T) {
 	assert.Equal(t, 1, len(data.Resource.Labels))
 }
 
+func TestPodStatsOnDeadPod(t *testing.T) {
+	summary, metadata := createMockSourceAssets(true, true, nil, true)
+	acc := createMockAccumulator(metadata, ValidMetricGroups)
+
+	podStats := getPodStatsByUID(summary.Pods, "5997ad9b-1d2a-43cf-ab57-a98d8796dc34")
+	node := getNodeResource(summary.Node, metadata)
+	pod := getPodResource(node, podStats, metadata)
+	pod.PodMetadata = nil
+
+	acc.podStats(pod, podStats)
+	assert.Equal(t, 0, len(acc.Data))
+
+}
+
 func TestPodStats(t *testing.T) {
 	summary, metadata := createMockSourceAssets(true, true, nil, true)
 	acc := createMockAccumulator(metadata, ValidMetricGroups)

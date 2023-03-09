@@ -56,7 +56,13 @@ func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats
 		"name": podResource.Name,
 	}).Trace("podStats")
 
-	if !a.metricGroupsToCollect[PodMetricGroup] || podResource.PodMetadata.Pod == nil {
+	if !a.metricGroupsToCollect[PodMetricGroup] {
+		return
+	}
+	
+	// Metatdata can be nil if pod is terminted before metodata is fetched.
+	// no metrics are needed.
+	if podResource.PodMetadata == nil {
 		return
 	}
 
