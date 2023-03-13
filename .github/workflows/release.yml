@@ -2,6 +2,7 @@ name: Create helm chart issue on release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 jobs:
   create_issue:
     runs-on: ubuntu-latest
@@ -9,13 +10,13 @@ jobs:
       - name: Create an issue
         uses: actions-ecosystem/action-create-issue@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repo: github.com/honeycombio/helm-charts
-          title: ${{ steps.date.outputs.today }}
+          github_token: ${{ secrets.GHPROJECTS_TOKEN }}
+          repo: honeycombio/helm-charts
+          title: Bump Honeycomb Kubernetes Agent to Latest Version
           body: |
-            ## Bump Kubernetes Agent
+            ## Bump Honeycomb Kubernetes Agent
 
-            Update Kubernetes Agent to latest version
+            Update Honeycomb Kubernetes Agent to latest version
 
           labels: |
             type: dependencies
