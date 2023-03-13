@@ -1,6 +1,6 @@
 # Honeycomb Kubernetes Agent Changelog
 
-## 2.7.0 2022-02-24
+## 2.7.0 2022-03-13
 
 ### Fixes
 - fix: Validate label selector and paths are mutually exclusive (#334) | @TylerHelmuth
