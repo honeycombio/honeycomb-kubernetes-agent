@@ -50,7 +50,7 @@ func (m *Metadata) GetPodMetadataByUid(uid types.UID) (*PodMetadata, error) {
 	logrus.WithFields(logrus.Fields{
 		"podUid": uid,
 	}).Error("Metadata: Pod not found")
-	return &PodMetadata{}, errors.New("pod not found")
+	return nil, errors.New("pod not found")
 }
 
 type NodeMetadata struct {

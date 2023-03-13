@@ -59,6 +59,12 @@ func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats
 	if !a.metricGroupsToCollect[PodMetricGroup] {
 		return
 	}
+	
+	// Metatdata can be nil if pod is terminated before metadata is fetched.
+	// no metrics are needed.
+	if podResource.PodMetadata == nil {
+		return
+	}
 
 	a.accumulate(
 		podResource,
