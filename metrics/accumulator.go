@@ -60,7 +60,7 @@ func (a *MetricDataAccumulator) podStats(podResource *Resource, s stats.PodStats
 		return
 	}
 	
-	// Metatdata can be nil if pod is terminted before metodata is fetched.
+	// Metatdata can be nil if pod is terminated before metadata is fetched.
 	// no metrics are needed.
 	if podResource.PodMetadata == nil {
 		return
