@@ -29,5 +29,8 @@ ko publish \
   --tags "head,${VERSION}" \
   --base-import-paths \
   --platform "${PLATFORM}" \
+  --image-label org.opencontainers.image.source=https://github.com/honeycombio/honeycomb-kubernetes-agent \
+  --image-label org.opencontainers.image.licenses=Apache-2.0 \
+  --image-label org.opencontainers.image.revision=${CIRCLE_SHA1} \
   ${PUBLISH_ARGS-} \
   .
