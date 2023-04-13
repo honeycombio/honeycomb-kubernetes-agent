@@ -1,5 +1,17 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.7.1 2023-04-13
+
+### Maintenance
+
+- maint(deps): bump github.com/honeycombio/dynsampler-go (#356) | [dependabot[bot]](https://github.com/dependabot[bot])
+- maint(deps): bump k8s.io/kubelet from 0.26.2 to 0.26.3 (#357) | [dependabot[bot]](https://github.com/dependabot[bot])
+- maint(deps): bump k8s.io/client-go from 0.26.2 to 0.26.3 (#355) | [dependabot[bot]](https://github.com/dependabot[bot])
+- Update CHANGELOG.md (#350) | [Tyler Helmuth](https://github.com/TylerHelmuth)
+- Add labels to build (#354) | [Tyler Helmuth](https://github.com/TylerHelmuth)
+- Add LICENSES dir (#353) | [Tyler Helmuth](https://github.com/TylerHelmuth)
+- Update workflow to match refinery (#349) | [Tyler Helmuth](https://github.com/TylerHelmuth)
+
 ## 2.7.0 2023-03-13
 
 ### Fixes
