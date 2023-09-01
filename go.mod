@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/boltdb/bolt v1.3.1
-	github.com/hashicorp/golang-lru v0.5.4
+	github.com/hashicorp/golang-lru v1.0.2
 	github.com/honeycombio/dynsampler-go v0.5.1
 	github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8
 	github.com/honeycombio/honeytail v1.8.3
