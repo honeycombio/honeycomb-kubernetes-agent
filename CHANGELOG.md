@@ -1,5 +1,39 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.7.2 2024-02-06
+
+### Maintenance
+
+- chore(github): set dependabot reviewers correctly (#404) | @lizthegrey
+- bump deps (#383) | @TylerHelmuth
+- maint: update codeowners to pipeline-team (#396) | @JamieDanielson
+- maint: update project workflow for pipeline (#395) | @JamieDanielson
+- maint: update codeowners to pipeline (#394) | @JamieDanielson
+- maint: update dependabot.yml (#364) | @vreynolds
+- maint(deps): bump k8s.io/kubelet from 0.28.2 to 0.29.0 (#397) | @Dependabot
+- maint(deps): bump k8s.io/kubelet from 0.29.0 to 0.29.1 (#403) | @Dependabot
+- maint(deps): bump github.com/honeycombio/honeytail from 1.8.3 to 1.9.0 (#401) | @Dependabot
+- maint(deps): bump github.com/honeycombio/dynsampler-go (#399) | @Dependabot
+- maint(deps): bump k8s.io/client-go from 0.29.0 to 0.29.1 (#400) | @Dependabot
+- maint(deps): bump github.com/bmatcuk/doublestar/v4 from 4.6.0 to 4.6.1 (#392) | @Dependabot
+- maint(deps): bump k8s.io/client-go from 0.28.2 to 0.28.3 (#389) | @Dependabot
+- maint(deps): bump k8s.io/api from 0.28.2 to 0.28.3 (#388) | @Dependabot
+- maint(deps): bump golang.org/x/net from 0.13.0 to 0.17.0 (#387) | @Dependabot
+- maint(deps): bump k8s.io/kubelet from 0.28.1 to 0.28.2 (#384) | @Dependabot
+- maint(deps): bump github.com/honeycombio/dynsampler-go (#371) | @Dependabot
+- maint(deps): bump k8s.io/client-go from 0.27.2 to 0.27.3 (#374) | @Dependabot
+- maint(deps): bump github.com/honeycombio/libhoney-go (#373) | @Dependabot
+- maint(deps): bump k8s.io/kubelet from 0.27.2 to 0.27.3 (#372) | @Dependabot
+- maint(deps): bump github.com/sirupsen/logrus from 1.9.2 to 1.9.3 (#375) | @Dependabot
+- maint(deps): bump github.com/sirupsen/logrus from 1.9.0 to 1.9.2 (#370) | @Dependabot
+- maint(deps): bump k8s.io/client-go from 0.27.1 to 0.27.2 (#368) | @Dependabot
+- maint(deps): bump k8s.io/kubelet from 0.27.1 to 0.27.2 (#367) | @Dependabot
+- maint(deps): bump github.com/stretchr/testify from 1.8.2 to 1.8.4 (#369) | @Dependabot
+- maint(deps): bump k8s.io/api from 0.27.1 to 0.27.2 (#366) | @Dependabot
+- maint(deps): bump github.com/honeycombio/honeytail from 1.8.2 to 1.8.3 (#363) | @Dependabot
+- maint(deps): bump k8s.io/kubelet from 0.26.3 to 0.27.1 (#365) | @Dependabot
+- maint(deps): bump k8s.io/client-go from 0.26.3 to 0.27.1 (#362) | @Dependabot
+
 ## 2.7.1 2023-04-13
 
 ### Maintenance
