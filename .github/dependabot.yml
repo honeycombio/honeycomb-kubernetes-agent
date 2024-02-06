@@ -12,8 +12,7 @@ updates:
     labels:
       - "type: dependencies"
     reviewers:
-      - "honeycombio/collection-team"
-      - "lizthegrey"
+      - "honeycombio/pipeline-team"
     commit-message:
       prefix: "maint"
       include: "scope"
