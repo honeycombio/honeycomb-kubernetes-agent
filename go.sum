@@ -54,8 +54,8 @@ github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25d
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=
 github.com/hashicorp/golang-lru v1.0.2 h1:dV3g9Z/unq5DpblPpw+Oqcv4dU/1omnb4Ok8iPY6p1c=
 github.com/hashicorp/golang-lru v1.0.2/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
-github.com/honeycombio/dynsampler-go v0.5.1 h1:rwOsxLaSlE8RiriiCgBo/LoZjiLEe24CuXPABOGXV+k=
-github.com/honeycombio/dynsampler-go v0.5.1/go.mod h1:pJqWFeoMN3syX74PEvlusieyGBbtIBjmTVjLc3thmK4=
+github.com/honeycombio/dynsampler-go v0.6.0 h1:fs4mrfeFGU5V+ClwpblFzbWqn4Apb+lKlE7Ja5zL22I=
+github.com/honeycombio/dynsampler-go v0.6.0/go.mod h1:pJqWFeoMN3syX74PEvlusieyGBbtIBjmTVjLc3thmK4=
 github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8 h1:rOkOm6ixU8JxjK/OmJBaWhGQ4YX0sO/e8YUz7twniRc=
 github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8/go.mod h1:b5vehEHPr2kpld6NR9gSja7nMX8lGQbU5ACKOd9aa9g=
 github.com/honeycombio/honeytail v1.8.3 h1:AHbv0Mfo0vgYJebWxbR/swomtQiOMUedtNpe38iWo/o=
