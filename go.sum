@@ -60,8 +60,8 @@ github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8 h1:rOkOm6ixU8Jx
 github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8/go.mod h1:b5vehEHPr2kpld6NR9gSja7nMX8lGQbU5ACKOd9aa9g=
 github.com/honeycombio/honeytail v1.9.0 h1:Ues9rEkRsMO3BBZNaNQ4KqgPScc8bcFj1kpr1K5ikCI=
 github.com/honeycombio/honeytail v1.9.0/go.mod h1:A1HJV3rX0sA7w+wkZByhJsiIMIP4uuowTRs5fidoThw=
-github.com/honeycombio/libhoney-go v1.20.0 h1:PL54R0P9vxIyb28H3twbLb+DCqQlJdMQM55VZg1abKA=
-github.com/honeycombio/libhoney-go v1.20.0/go.mod h1:RIaurCpfg5NDWSEV8t3QLcda9dUAiVNyWeHRAaSpN90=
+github.com/honeycombio/libhoney-go v1.21.0 h1:uiiSfUipFSrmBucKTrwD9Bm4K60kY98p0hVLjtSLseM=
+github.com/honeycombio/libhoney-go v1.21.0/go.mod h1:RIaurCpfg5NDWSEV8t3QLcda9dUAiVNyWeHRAaSpN90=
 github.com/honeycombio/urlshaper v0.0.0-20211228212415-ac8d7d936154 h1:v+0yi/S8nhtgw+bSRi6nIPi0DH5Hlgk4/7XeS3M0Fro=
 github.com/honeycombio/urlshaper v0.0.0-20211228212415-ac8d7d936154/go.mod h1:2CQJZ3RJ2uC2Mp3zJbSkVbFw9iZdCpWwymuADPZYFu4=
 github.com/hpcloud/tail v1.0.1-0.20170814160653-37f427138745 h1:8as8OQ+RF1QrsHvWWsKBtBKINhD9QaD1iozA1wrO4aA=
