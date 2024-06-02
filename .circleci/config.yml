@@ -10,7 +10,7 @@ tag_filters: &tag_filters
 jobs:
   build_agent:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.22
     # needed to build docker images, attach mount points, etc
     steps:
       - setup_remote_docker
