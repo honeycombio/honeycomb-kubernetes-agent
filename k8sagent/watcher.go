@@ -157,17 +157,26 @@ func runInformer(
 
 	watchlist := &cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}
 	resyncPeriod := time.Minute
-	_, controller := cache.NewInformer(
-		watchlist,
-		&v1.Pod{},
-		resyncPeriod,
-		handler,
-	)
+	go func() {
+		for {
+			_, controller := cache.NewInformer(
+				watchlist,
+				&v1.Pod{},
+				resyncPeriod,
+				handler,
+			)
 
-	logrus.WithFields(logrus.Fields{
-		"labelSelector": labelSelector,
-		"namespace":     namespace,
-		"fieldSelector": fieldSelector,
-	}).Debug("Starting informer")
-	go controller.Run(wait.NeverStop)
+			logrus.WithFields(logrus.Fields{
+				"labelSelector": labelSelector,
+				"namespace":     namespace,
+				"fieldSelector": fieldSelector,
+			}).Debug("Starting informer")
+			controller.Run(wait.NeverStop)
+			logrus.WithFields(logrus.Fields{
+				"labelSelector": labelSelector,
+				"namespace":     namespace,
+				"fieldSelector": fieldSelector,
+			}).Warning("Informer unexpectedly stopped")
+		}
+	}()
 }
