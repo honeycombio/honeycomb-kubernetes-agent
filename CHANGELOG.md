@@ -1,5 +1,23 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.7.3 2024-09-19
+
+## Fixes
+
+- fix: retry watcher if it stops; fixes #416 (#418) | @lizthegrey
+
+## Maintenance
+
+- maint(deps): bump the minor-patch group across 1 directory with 4 updates (#422) | [dependabot[bot]](https://github.com/dependabot[bot])
+- docs: update vulnerability reporting process (#420) | @robbkidd
+- maint(deps): bump the minor-patch group with 6 updates (#419) | [dependabot[bot]](https://github.com/dependabot[bot])
+- maint(deps): upgrade to supported Go version, upgrade all deps (#417) | @lizthegrey
+- maint(deps): bump the minor-patch group with 4 updates (#414) | [dependabot[bot]](https://github.com/dependabot[bot])
+- maint(deps): bump google.golang.org/protobuf from 1.31.0 to 1.33.0 (#411) | [dependabot[bot]](https://github.com/dependabot[bot])
+- maint(deps): bump the minor-patch group with 6 updates (#413) | [dependabot[bot]](https://github.com/dependabot[bot])
+- maint: group patch updates for go deps (#412) | @codeboten
+- maint: add labels to release.yml for auto-generated grouping (#410) | @JamieDanielson
+
 ## 2.7.2 2024-02-06
 
 ### Maintenance
