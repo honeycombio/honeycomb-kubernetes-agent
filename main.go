@@ -59,11 +59,11 @@ func init() {
 func main() {
 	flags, err := parseFlags()
 	if err != nil {
-		fmt.Printf("Error parsing options:\n%v\n", err)
+		logrus.WithError(err).Error("Error parsing options")
 	}
 	cfg, err := config.ReadFromFile(flags.ConfigPath)
 	if err != nil {
-		fmt.Printf("Error reading configuration:\n%v\n", err)
+		logrus.WithError(err).Fatal("Error reading configuration")
 		os.Exit(1)
 	}
 
@@ -142,7 +142,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("running")
+	logrus.Info("running")
 	waitForSignal()
 }
 
