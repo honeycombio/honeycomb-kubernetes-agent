@@ -3,13 +3,13 @@ module github.com/honeycombio/honeycomb-kubernetes-agent
 go 1.22.0
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/boltdb/bolt v1.3.1
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/honeycombio/dynsampler-go v0.6.0
 	github.com/honeycombio/gonx v1.3.1-0.20171118020637-f9b2468e9ef8
 	github.com/honeycombio/honeytail v1.10.0
-	github.com/honeycombio/libhoney-go v1.23.1
+	github.com/honeycombio/libhoney-go v1.24.0
 	github.com/honeycombio/urlshaper v0.0.0-20240306233602-40940cefe5f9
 	github.com/hpcloud/tail v1.0.1-0.20170814160653-37f427138745
 	github.com/jessevdk/go-flags v1.6.1
@@ -17,12 +17,12 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.31.0
-	k8s.io/apimachinery v0.31.0
-	k8s.io/client-go v0.31.0
-	k8s.io/kubelet v0.31.0
+	k8s.io/api v0.31.3
+	k8s.io/apimachinery v0.31.3
+	k8s.io/client-go v0.31.3
+	k8s.io/kubelet v0.31.3
 )
 
 require (
