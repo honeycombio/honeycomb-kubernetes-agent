@@ -16,7 +16,7 @@ filters_publish: &filters_publish
 executors:
   docker-go:
     docker:
-      - image: cimg/go:1.22
+      - image: cimg/go:1.24
 
 jobs:
   build_agent:

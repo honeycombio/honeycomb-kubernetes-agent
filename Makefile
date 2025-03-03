@@ -4,16 +4,17 @@ MAKEFLAGS += --no-builtin-variables
 
 .PHONY: install-tools
 install-tools:
-	go install github.com/google/go-licenses@latest
+	go get -tool github.com/google/go-licenses/v2@v2.0.0-alpha.1
+	go mod tidy
 
 .PHONY: update-licenses
 update-licenses: install-tools
 	rm -rf LICENSES; \
-	go-licenses save . --save_path LICENSES;
+	go tool go-licenses save . --save_path LICENSES;
 
 .PHONY: verify-licenses
 verify-licenses: install-tools
-	go-licenses save . --save_path temp; \
+	go tool go-licenses save . --save_path temp; \
     if diff temp LICENSES > /dev/null; then \
       echo "Passed"; \
       rm -rf temp; \
