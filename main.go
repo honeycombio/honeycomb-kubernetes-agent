@@ -50,7 +50,7 @@ func init() {
 		version.VERSION = "dev"
 	}
 	// init libhoney user agent properly
-	libhoney.UserAgentAddition = fmt.Sprintf("kubernetes/" + version.VERSION)
+	libhoney.UserAgentAddition = "kubernetes/" + version.VERSION
 	logrus.WithFields(logrus.Fields{
 		"version": version.VERSION,
 	}).Info("Initializing agent")
