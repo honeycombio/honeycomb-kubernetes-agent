@@ -1,7 +1,6 @@
 module github.com/honeycombio/honeycomb-kubernetes-agent
 
 go 1.24.0
-
 require (
 	github.com/bmatcuk/doublestar/v4 v4.8.1
 	github.com/boltdb/bolt v1.3.1
@@ -19,10 +18,10 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.32.2
-	k8s.io/apimachinery v0.32.2
-	k8s.io/client-go v0.32.2
-	k8s.io/kubelet v0.32.2
+	k8s.io/api v0.32.3
+	k8s.io/apimachinery v0.32.3
+	k8s.io/client-go v0.32.3
+	k8s.io/kubelet v0.32.3
 )
 
 require (
