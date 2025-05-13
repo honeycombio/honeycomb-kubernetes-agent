@@ -1,5 +1,20 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.7.4 2025-05-13
+
+### Fixes
+
+- fix: messages to console should be structured logs (#425) | @robbkidd
+
+### Maintenance
+
+- maint: update go version to 1.24 (#433) | @TylerHelmuth
+- maint(deps): bump golang.org/x/net from 0.33.0 to 0.38.0 (#436) | @dependabot
+- maint(deps): bump the minor-patch group with 4 updates (#435) | @dependabot
+- maint(deps): bump the minor-patch group across 1 directory with 5 updates (#432) | @dependabot
+- maint(deps): bump golang.org/x/net from 0.26.0 to 0.33.0 (#430) | @dependabot
+- maint(deps): bump the minor-patch group across 1 directory with 7 updates (#428) | @dependabot
+
 ## 2.7.3 2024-09-19
 
 ## Fixes
