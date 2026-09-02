@@ -1,8 +1,8 @@
-FROM bitnami/kubectl:1.18
+FROM alpine/k8s:1.21.13
 USER 0
-RUN install_packages jq netcat
+RUN apk add --no-cache netcat-openbsd
 RUN mkdir /.kube
-RUN chown 1001 .kube
+RUN chown 1001 /.kube
 USER 1001
 COPY ./test_internal.sh /
 COPY ./testspec.yaml /
