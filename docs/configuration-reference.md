@@ -252,6 +252,29 @@ The above configuration would route events where `host` exists and is equal to
 `www.example.com` to the `www` dataset. All others would be routed to the
 default dataset for this watcher.
 
+### dataset_from_field
+
+The `dataset_from_field` processor sets the event's dataset from the value of a field. Unlike
+`route_event` it needs no list of values, so it suits an Environments & Services environment where
+each service has its own dataset and the log events already carry `service.name`.
+
+The event's dataset is left as the watcher configured it when the field is absent, empty, or not a
+string.
+
+**Options:**
+
+| key   | value  | description                                        |
+|-------|--------|----------------------------------------------------|
+| field | string | The name of the event field to take the dataset from |
+
+Example configuration
+
+```yaml
+processors:
+- dataset_from_field:
+    field: service.name
+```
+
 ### rename_field
 
 The `rename_field` processor will rename the specified field in all events, if it exists, before sending them to Honeycomb. You can use this to standardize field names across data sources, for example. Note that if the `new` field already exists, it will be overwritten with the value in the `original` field.
