@@ -25,6 +25,7 @@ to handle in a specific way, and has the following keys:
 | paths         | †         | []string | A list of paths to watch. Allows for glob matching, including `**`. Mutually exclusive with labelSelector.  Should only be used if labelSelector does not suite your needs |
 | parser        | yes       | string   | Describes how this watcher should parse events.                                                                                                                            |
 | dataset       | yes       | string   | The dataset that this watcher should send events to.                                                                                                                       |
+| apiKey        | no        | string   | Send this watcher's events with a different API key than the top-level one, selecting a different Honeycomb environment. Defaults to the top-level `apiKey`.                |
 | containerName | no        | string   | If you only want to consume logs from one container in a multi-container pod, the name of the container to watch.                                                          |
 | processors    | no        | list     | A list of [processors](#processors) to apply to events after they're parsed                                                                                                |
 | exclude       | no        | []string | A list of paths to exclude from the watch. Only used when `labelSelector` is configured. Allows for glob matching, including `**`.                                         |

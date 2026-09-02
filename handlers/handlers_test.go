@@ -96,6 +96,42 @@ func TestInvalidConfigurations(t *testing.T) {
 	}
 }
 
+func TestPerWatcherAPIKey(t *testing.T) {
+	testCases := []*testCase{
+		{
+			config:        `{"dataset": "kubernetestest", "apiKey": "watcher-key", "parser": "json"}`,
+			unwrapperType: raw,
+			lines:         []string{`{"field": "value"}`},
+			output: []event.Event{
+				{
+					Data:       map[string]interface{}{"field": "value"},
+					APIKey:     "watcher-key",
+					Dataset:    "kubernetestest",
+					Path:       "/tmp/testpath",
+					RawMessage: `{"field": "value"}`,
+				},
+			},
+		},
+		{
+			config:        `{"dataset": "kubernetestest", "parser": "json"}`,
+			unwrapperType: raw,
+			lines:         []string{`{"field": "value"}`},
+			output: []event.Event{
+				{
+					Data:       map[string]interface{}{"field": "value"},
+					Dataset:    "kubernetestest",
+					Path:       "/tmp/testpath",
+					RawMessage: `{"field": "value"}`,
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc.check(t)
+	}
+}
+
 func TestNginxParsing(t *testing.T) {
 	testCases := []*testCase{
 		{

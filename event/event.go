@@ -3,6 +3,7 @@ package event
 import "time"
 
 type Event struct {
+	APIKey     string
 	Dataset    string
 	Path       string
 	SampleRate uint
