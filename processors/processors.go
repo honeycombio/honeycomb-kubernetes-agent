@@ -47,6 +47,8 @@ func NewProcessor(name string, options map[string]interface{}) (Processor, error
 	switch name {
 	case "route_event":
 		p = &EventRouter{}
+	case "dataset_from_field":
+		p = &DatasetResolver{}
 	case "request_shape":
 		p = &RequestShaper{}
 	case "drop_field":
