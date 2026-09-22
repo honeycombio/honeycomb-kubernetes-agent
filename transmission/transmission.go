@@ -27,6 +27,9 @@ type HoneycombTransmitter struct {
 func (ht *HoneycombTransmitter) Send(ev *event.Event) {
 
 	libhoneyEvent := libhoney.NewEvent()
+	if ev.APIKey != "" {
+		libhoneyEvent.WriteKey = ev.APIKey
+	}
 	libhoneyEvent.Dataset = ev.Dataset
 	if ev.SampleRate != 0 {
 		libhoneyEvent.SampleRate = ev.SampleRate

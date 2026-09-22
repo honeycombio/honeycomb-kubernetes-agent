@@ -27,6 +27,7 @@ type Config struct {
 
 type WatcherConfig struct {
 	Parser    *ParserConfig
+	APIKey    string `yaml:"apiKey"`
 	Dataset   string
 	Namespace string
 	// Distinguish between nil and empty string in the LabelSelector

@@ -111,6 +111,7 @@ func (h *LineHandlerImpl) Handle(rawLine string) {
 		// TODO: is there a better way to handle this?
 		return
 	}
+	event.APIKey = h.config.APIKey
 	event.Dataset = h.config.Dataset
 	event.Path = h.path
 	for _, p := range h.processors {
