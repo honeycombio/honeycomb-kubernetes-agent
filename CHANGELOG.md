@@ -1,5 +1,16 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.8.0 2026-09-23
+
+### Features
+
+- feat: allow a per-watcher apiKey (#446) | @joaovieira-ca
+- feat: add a dataset_from_field processor (#447) | @joaovieira-ca
+
+### Maintenance
+
+- ci: base the e2e image on alpine/k8s (#448) | @joaovieira-ca
+
 ## 2.7.4 2025-05-13
 
 ### Fixes
