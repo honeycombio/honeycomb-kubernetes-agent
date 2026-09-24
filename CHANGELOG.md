@@ -10,7 +10,6 @@
 ### Maintenance
 
 - ci: base the e2e image on alpine/k8s (#448) | @joaovieira-ca
-- ci(OTEL-125): remove pipeline-team dependabot reviewer (#443) | @MikeGoldsmith
 
 ## 2.7.4 2025-05-13
 
