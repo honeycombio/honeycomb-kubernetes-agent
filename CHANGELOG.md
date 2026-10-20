@@ -2,6 +2,10 @@
 
 ## 2.8.1 2026-10-20
 
+### Fixes
+
+- fix: keep the pod informer on plain list+watch with client-go v0.37 (#453) | @lizthegrey
+
 ### Maintenance
 
 - maint: update go version to 1.27.3 (#452) | @lizthegrey
