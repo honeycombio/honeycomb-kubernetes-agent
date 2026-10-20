@@ -1,5 +1,16 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.8.1 2026-10-20
+
+### Fixes
+
+- fix: keep the pod informer on plain list+watch with client-go v0.37 (#453) | @lizthegrey
+
+### Maintenance
+
+- maint: update go version to 1.27.3 (#452) | @lizthegrey
+- maint(deps): update go dependencies, including k8s.io/* to v0.37.1 (#453) | @lizthegrey
+
 ## 2.8.0 2026-09-23
 
 ### Features
