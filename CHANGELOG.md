@@ -1,5 +1,12 @@
 # Honeycomb Kubernetes Agent Changelog
 
+## 2.8.1 2026-10-20
+
+### Maintenance
+
+- maint: update go version to 1.27.3 | @lizthegrey
+- maint(deps): update all go dependencies, including k8s.io/* to v0.37.1 | @lizthegrey
+
 ## 2.8.0 2026-09-23
 
 ### Features
