@@ -155,7 +155,10 @@ func runInformer(
 		return client.Pods(namespace).Watch(context.Background(), listOptions)
 	}
 
-	watchlist := &cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}
+	// listFunc and watchFunc use fixed list options and ignore the ones the
+	// reflector passes, so streaming lists (client-go's default since v0.35)
+	// cannot work: the watch would never receive the initial pod events.
+	watchlist := listWatchWithoutWatchList{&cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}}
 	resyncPeriod := time.Minute
 	go func() {
 		for {
@@ -180,3 +183,11 @@ func runInformer(
 		}
 	}()
 }
+
+// listWatchWithoutWatchList tells client-go's reflector to use a plain
+// list followed by a watch instead of a streaming list.
+type listWatchWithoutWatchList struct {
+	*cache.ListWatch
+}
+
+func (listWatchWithoutWatchList) IsWatchListSemanticsUnSupported() bool { return true }
